@@ -1,5 +1,8 @@
 # LineageGuard
 
+[![CI](https://github.com/milos-plavsic/lineage-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/milos-plavsic/lineage-guard/actions/workflows/ci.yml)
+[![Demo](https://img.shields.io/badge/demo-GitHub%20Pages-5ee0b3)](https://milos-plavsic.github.io/lineage-guard/)
+
 LineageGuard turns DataHub lineage and governance context into safe, branch-specific incident
 containment. It finds the downstream blast radius of a quality failure, distinguishes materially
 affected branches from merely connected ones, proposes actions, and records approved decisions back

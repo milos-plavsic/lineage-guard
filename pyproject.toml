@@ -34,6 +34,7 @@ packages = ["src/lineage_guard"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
+pythonpath = ["."]
 testpaths = ["tests"]
 
 [tool.ruff]
