@@ -10,7 +10,8 @@ The Linux workflow runs on Python 3.11 and 3.14 and requires:
 
 - Ruff lint and formatting checks;
 - unit, integration, HTTP, integrity, and failure-path tests;
-- at least 85% branch-aware coverage across `lineage_guard` and `scripts`;
+- 100% line and branch coverage across `lineage_guard` and `scripts`, with no omitted files,
+  coverage exclusions, or suppression pragmas;
 - successful source and wheel builds; and
 - installation and CLI execution from the built wheel in an isolated environment.
 
