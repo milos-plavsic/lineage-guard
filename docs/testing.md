@@ -9,11 +9,13 @@ and does not start containers, browsers, or a local DataHub stack.
 The Linux workflow runs on Python 3.11 and 3.14 and requires:
 
 - Ruff lint and formatting checks;
-- unit, integration, HTTP, integrity, and failure-path tests;
+- unit, integration, authenticated HTTP, durable-journal, enforcement-contract, integrity, and
+  failure-path tests;
 - 100% line and branch coverage across `lineage_guard` and `scripts`, with no omitted files,
   coverage exclusions, or suppression pragmas;
 - successful source and wheel builds; and
-- installation and CLI execution from the built wheel in an isolated environment.
+- installation and CLI execution from the built wheel in an isolated environment;
+- a zero-error Pa11y 4.1.1 browser audit against the exported demo at WCAG 2 AA.
 
 Run the same gate locally:
 
@@ -38,10 +40,13 @@ credentials or local software.
 
 ## External integration boundary
 
-Tests use a contract-faithful fake MCP session to exercise DataHub reads, normalization, response
-bounds, missing tools, malformed/incomplete data, mutation gating, mutation contracts, and mutation
-failure. A genuine end-to-end run additionally requires a reachable DataHub GMS endpoint and a
-short-lived, least-privilege token. Follow `docs/live-datahub.md` when those are available.
+Tests use a contract-faithful fake MCP session to exercise dataset and field lineage, normalization,
+response bounds and truncation, missing tools, malformed/incomplete data, mutation gating, retryable
+mutation contracts, and failures. Real HTTP tests verify inbound HMAC authentication, event conflicts,
+busy retries, response sanitization, outbound signed default-hold enforcement, idempotency keys, and
+exact acknowledgements. SQLite tests cover concurrent leases, duplicates, failures, stale recovery,
+payload conflicts, bounds, and transition history. A genuine end-to-end run additionally requires a
+reachable DataHub GMS endpoint and a short-lived, least-privilege token.
 
 Do not substitute a local DataHub Quickstart on this memory-constrained workstation. Deferring that
 single external test preserves host reliability and does not weaken the deterministic or protocol

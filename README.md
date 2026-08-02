@@ -3,10 +3,11 @@
 [![CI](https://github.com/milos-plavsic/lineage-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/milos-plavsic/lineage-guard/actions/workflows/ci.yml)
 [![Demo](https://img.shields.io/badge/demo-GitHub%20Pages-5ee0b3)](https://milos-plavsic.github.io/lineage-guard/)
 
-LineageGuard turns DataHub lineage and governance context into safe, branch-specific incident
-containment. It finds the downstream blast radius of a quality failure, distinguishes materially
-affected branches from merely connected ones, proposes actions, and records approved decisions back
-into DataHub.
+LineageGuard is a deterministic safety agent for branch-specific data-incident containment. It
+receives authenticated quality events, retrieves dataset and field lineage through DataHub MCP,
+separates confirmed dependencies from proven exclusions and uncertain exposure, produces reviewable
+controls, and records approved decisions back into DataHub. An optional signed webhook applies an
+atomic hold/allow plan through an external orchestrator.
 
 This repository is being built for **Build with DataHub: The Agent Hackathon**.
 
@@ -17,8 +18,9 @@ LineageGuard quarantines the financially dependent billing branch while allowing
 demographics branch to continue. Proposed metadata mutations are dry-run by default.
 
 ```text
-raw_patients → staging_patients ┬→ mart_billing      QUARANTINE
-                                └→ mart_demographics CONTINUE
+raw_patients → staging_patients  MONITOR
+                  ├→ mart_billing      QUARANTINE (confirmed field dependency)
+                  └→ mart_demographics CONTINUE   (confirmed field exclusion)
 ```
 
 ## Run it
@@ -32,13 +34,16 @@ python -m pip install -e ".[dev]"
 lineage-guard --output incident-report.json
 lineage-guard --artifacts-dir remediation
 lineage-guard-web
+lineage-guard-agent --gms-url https://datahub.example/gms
 pytest
 ruff check .
 ```
 
 On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`.
 
-`--apply` demonstrates the explicit approval boundary against the in-memory adapter.
+`--apply` crosses the explicit approval boundary. In MCP mode it enables approved DataHub
+description/tag write-back; with `--enforcement-webhook`, it first sends an HMAC-signed,
+idempotent, fail-closed plan to an orchestrator. See [operations](docs/operations.md).
 
 For a real DataHub instance, install the `mcp` extra and follow the
 [live integration guide](docs/live-datahub.md). The adapter starts the official, version-pinned
@@ -56,13 +61,19 @@ Docker or executes downloaded scripts automatically.
 
 - `domain.py`: immutable incident evidence and decisions.
 - `service.py`: deterministic graph traversal and selective containment policy.
+- `events.py`: bounded, versioned quality-event contract.
+- `agent.py`: durable observe-contextualize-decide-act workflow.
+- `agent_web.py`: authenticated loopback webhook listener.
+- `journal.py`: SQLite deduplication, leases, retries, and stage history.
+- `enforcement.py`: signed orchestrator containment protocol.
 - `ports.py`: narrow interface for DataHub context and write-back.
 - `adapters/`: replaceable metadata graph implementations.
 - `remediation.py`: deterministic SQL, policy, report, and integrity-manifest generation.
 - `examples/`: judge-readable sample incidents and generated artifacts.
 
-The domain does not depend on an LLM or DataHub transport. The production adapter uses the
-official DataHub MCP Server for search, lineage, entity metadata, and approved mutation tools.
+The safety-critical authority does not depend on an LLM. That is deliberate: probabilistic output
+cannot authorize continuation or mutation. The agent instead executes a durable tool-using state
+machine through the official DataHub MCP Server, with explicit evidence and approval invariants.
 
 Architectural decisions are recorded under [`docs/adr`](docs/adr), including selective containment,
 reviewable remediation artifacts, and the lightweight operator interface.
@@ -77,8 +88,11 @@ The complete test matrix is documented in [the validation strategy](docs/testing
 - Read operations and proposed actions are separate from writes.
 - All metadata mutations require explicit approval.
 - Evidence and rationale accompany every branch decision.
-- Missing context must degrade to monitoring, never an unsupported claim of safety.
+- `continue` requires complete evidence that field lineage excludes the failed field.
+- Confirmed dependency can quarantine; descriptive metadata alone can only monitor.
+- Missing or incomplete evidence requires review, never an unsupported claim of safety.
 - Credentials are supplied through the environment and never stored in the repository.
+- Event and enforcement webhooks are independently HMAC authenticated and idempotent.
 
 ## Roadmap
 

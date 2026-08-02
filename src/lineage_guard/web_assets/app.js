@@ -14,6 +14,7 @@ async function loadIncident() {
   text('incident-id', data.report.incident_id);
   text('overall-status', data.summary.status);
   text('affected-count', data.summary.affectedBranches);
+  text('review-count', data.summary.reviewBranches);
   text('safe-count', data.summary.safeBranches);
   text('risk-score', data.summary.maxRisk);
 
@@ -21,7 +22,7 @@ async function loadIncident() {
   data.report.decisions.forEach((decision) => {
     const row = element('article', 'branch');
     row.append(element('div', 'branch-name', decision.asset.name));
-    row.append(element('div', 'branch-reason', decision.rationale));
+    row.append(element('div', 'branch-reason', `${decision.evidence_strength.replaceAll('_', ' ')} · ${decision.rationale}`));
     row.append(element('span', `decision ${decision.action}`, decision.action));
     branches.append(row);
   });

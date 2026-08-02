@@ -10,7 +10,7 @@ from importlib.resources import files
 from typing import Any
 
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
-from lineage_guard.demo import assets, edges, negative_billing_signal
+from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
 from lineage_guard.domain import Action
 from lineage_guard.remediation import RemediationGenerator
 from lineage_guard.service import IncidentAnalyzer
@@ -28,16 +28,20 @@ SECURITY_HEADERS = {
 
 
 def build_view_model() -> dict[str, Any]:
-    graph = InMemoryMetadataGraph(assets(), edges())
+    graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
     report = IncidentAnalyzer(graph).analyze(negative_billing_signal())
     artifacts = RemediationGenerator().generate(report)
     quarantined = sum(item.action == Action.QUARANTINE for item in report.decisions)
+    review = sum(
+        item.action in {Action.MONITOR, Action.REQUIRE_REVIEW} for item in report.decisions
+    )
     return {
         "report": report.as_dict(),
         "summary": {
             "status": "Contained",
             "affectedBranches": quarantined,
             "safeBranches": sum(item.action == Action.CONTINUE for item in report.decisions),
+            "reviewBranches": review,
             "maxRisk": max((item.risk_score for item in report.decisions), default=0),
         },
         "timeline": [
@@ -54,7 +58,8 @@ def build_view_model() -> dict[str, Any]:
             {
                 "stage": "Blast radius classified",
                 "detail": (
-                    f"{quarantined} branch requires quarantine; unaffected work can continue."
+                    f"{quarantined} branch requires quarantine, {review} requires review, "
+                    "and only evidence-backed unaffected work can continue."
                 ),
                 "state": "decision",
             },

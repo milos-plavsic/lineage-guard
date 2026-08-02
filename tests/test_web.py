@@ -14,7 +14,8 @@ def test_dashboard_model_exposes_decisions_timeline_and_artifacts() -> None:
     assert model["summary"] == {
         "status": "Contained",
         "affectedBranches": 1,
-        "safeBranches": 2,
+        "safeBranches": 1,
+        "reviewBranches": 1,
         "maxRisk": 100,
     }
     assert len(model["timeline"]) == 5

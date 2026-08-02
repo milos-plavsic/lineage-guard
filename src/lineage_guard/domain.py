@@ -16,6 +16,14 @@ class Action(StrEnum):
     CONTINUE = "continue"
     MONITOR = "monitor"
     QUARANTINE = "quarantine"
+    REQUIRE_REVIEW = "require_review"
+
+
+class EvidenceStrength(StrEnum):
+    CONFIRMED_DEPENDENCY = "confirmed_dependency"
+    CONFIRMED_EXCLUSION = "confirmed_exclusion"
+    METADATA_INDICATION = "metadata_indication"
+    INSUFFICIENT = "insufficient"
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,6 +46,8 @@ class LineageEdge:
 class LineageTarget:
     urn: str
     distance: int
+    dependent_fields: tuple[str, ...] = ()
+    field_lineage_complete: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +65,8 @@ class BranchDecision:
     asset: Asset
     distance: int
     matching_concerns: tuple[str, ...]
+    evidence_strength: EvidenceStrength
+    evidence: tuple[str, ...]
     risk_score: int
     action: Action
     rationale: str

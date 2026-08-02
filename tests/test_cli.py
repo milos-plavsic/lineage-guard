@@ -28,3 +28,55 @@ def test_mcp_mode_requires_connection_configuration(monkeypatch) -> None:
 
     with pytest.raises(SystemExit, match="MCP mode requires"):
         main(["--mode", "mcp"])
+
+
+def test_mcp_event_rejects_conflicting_source(tmp_path, monkeypatch) -> None:
+    event = {
+        "schema_version": 1,
+        "event_id": "assertion:1",
+        "occurred_at": "2026-08-02T12:30:00Z",
+        "producer": "datahub-actions",
+        "signal": {
+            "asset_urn": "urn:li:dataset:expected",
+            "field": "amount",
+            "rule": "non-negative",
+            "observed": "failed",
+            "severity": "high",
+            "affected_concerns": ["billing"],
+        },
+    }
+    path = tmp_path / "event.json"
+    path.write_text(json.dumps(event), encoding="utf-8")
+    monkeypatch.setenv("DATAHUB_GMS_TOKEN", "token")
+
+    with pytest.raises(SystemExit, match="does not match"):
+        main(
+            [
+                "--mode",
+                "mcp",
+                "--gms-url",
+                "http://gms",
+                "--source-urn",
+                "urn:li:dataset:different",
+                "--signal-file",
+                str(path),
+            ]
+        )
+
+
+def test_enforcement_requires_approval_and_secret(monkeypatch) -> None:
+    monkeypatch.setenv("DATAHUB_GMS_TOKEN", "token")
+    base = [
+        "--mode",
+        "mcp",
+        "--gms-url",
+        "http://gms",
+        "--source-urn",
+        "urn:li:dataset:source",
+        "--enforcement-webhook",
+        "https://orchestrator.example/hook",
+    ]
+    with pytest.raises(SystemExit, match="requires --apply"):
+        main(base)
+    with pytest.raises(SystemExit, match="ENFORCEMENT_SECRET"):
+        main([*base, "--apply"])

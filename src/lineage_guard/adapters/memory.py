@@ -6,9 +6,16 @@ from lineage_guard.domain import Asset, LineageEdge, LineageTarget
 
 
 class InMemoryMetadataGraph:
-    def __init__(self, assets: tuple[Asset, ...], edges: tuple[LineageEdge, ...]) -> None:
+    def __init__(
+        self,
+        assets: tuple[Asset, ...],
+        edges: tuple[LineageEdge, ...],
+        *,
+        field_dependencies: dict[str, tuple[str, ...]] | None = None,
+    ) -> None:
         self._assets = {asset.urn: asset for asset in assets}
         self._edges = edges
+        self._field_dependencies = field_dependencies
         self.descriptions: list[tuple[str, str]] = []
         self.tags: list[tuple[str, str]] = []
 
@@ -18,7 +25,9 @@ class InMemoryMetadataGraph:
         except KeyError as error:
             raise LookupError(f"Asset not found: {urn}") from error
 
-    def get_downstream_lineage(self, urn: str, max_hops: int) -> tuple[LineageTarget, ...]:
+    def get_downstream_lineage(
+        self, urn: str, max_hops: int, *, field: str | None = None
+    ) -> tuple[LineageTarget, ...]:
         adjacency: dict[str, list[str]] = defaultdict(list)
         for edge in self._edges:
             adjacency[edge.upstream_urn].append(edge.downstream_urn)
@@ -32,8 +41,14 @@ class InMemoryMetadataGraph:
                 if downstream not in distances:
                     distances[downstream] = distances[current] + 1
                     queue.append(downstream)
+        complete = field is not None and self._field_dependencies is not None
         return tuple(
-            LineageTarget(target, distance)
+            LineageTarget(
+                target,
+                distance,
+                self._field_dependencies.get(target, ()) if complete else (),
+                complete,
+            )
             for target, distance in distances.items()
             if target != urn
         )

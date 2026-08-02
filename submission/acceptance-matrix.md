@@ -6,9 +6,9 @@ published media, or organizer action; **optional** is not required for eligibili
 | Requirement | Status | Evidence / completion action |
 |---|---|---|
 | Project created during July 6–August 10, 2026 | Proved | First Git commit is dated inside the submission period; preserve Git history. |
-| Working software application | Proved locally | CLI, dashboard HTTP smoke test, generated SQL execution test, and package build. |
+| Working software application | Proved locally | CLI, authenticated agent listener, durable journal, dashboard, enforcement contract, SQL execution test, and package build. |
 | DataHub OSS plus an eligible agent technology | Proved live | Official MCP adapter plus `examples/live-datahub-verification.json`. |
-| Agents That Do Real Work category | Proved | `submission/submission.json` and Devpost copy. |
+| Agents That Do Real Work category | Proved | Durable event-driven DataHub tool loop plus approved orchestrator action and DataHub write-back. |
 | Meaningful context-graph use | Proved live | Six downstream assets resolved; approved description and tag write-back verified directly in DataHub. |
 | Function matches video and description | Pending external | Record only the committed workflow; verify final video against the runbook. |
 | Public, easily testable project URL | Proved externally | Public HTTPS demo: <https://milos-plavsic.github.io/lineage-guard/>; URL recorded in `submission/submission.json`. |
@@ -33,7 +33,7 @@ published media, or organizer action; **optional** is not required for eligibili
 | Criterion | Evidence |
 |---|---|
 | Use of DataHub | MCP lineage and entity reads; description and tag write-back; DataHub retains incident knowledge. |
-| Technical execution | Deterministic core, fail-closed adapter, executable artifact test, HTTP smoke test, CI, package build. |
-| Originality | Semantic branch containment rather than catalog Q&A or blanket downstream shutdown. |
-| Real-world usefulness | Preserves unaffected data availability while isolating financially exposed branches. |
-| Submission quality | Accessible dashboard, concise runbook, examples, architecture, disclosures, and 2:45 script. |
+| Technical execution | Field-aware deterministic authority, authenticated listener, durable retries/deduplication, fail-closed MCP and enforcement boundaries, 100% line/branch coverage, CI, package build. |
+| Originality | Evidence-bound branch containment rather than catalog Q&A, lexical guesswork, or blanket shutdown. |
+| Real-world usefulness | Applies a default-hold orchestrator plan while preserving only positively proven unaffected data availability. |
+| Submission quality | Responsive semantic dashboard with remote WCAG 2 AA browser gate, concise runbook, examples, architecture, disclosures, and 2:45 script. |

@@ -37,7 +37,7 @@ class RemediationGenerator:
             f'SELECT *\nFROM "{table}"\nWHERE "{field}" < 0'
         )
         branch_policy = {
-            "schema_version": 1,
+            "schema_version": 2,
             "incident_id": report.incident_id,
             "source_urn": report.source.urn,
             "default_action": "require-human-review",
@@ -47,7 +47,8 @@ class RemediationGenerator:
                     "asset_name": decision.asset.name,
                     "action": decision.action,
                     "risk_score": decision.risk_score,
-                    "evidence": list(decision.matching_concerns),
+                    "evidence_strength": decision.evidence_strength,
+                    "evidence": list(decision.evidence),
                     "rationale": decision.rationale,
                 }
                 for decision in report.decisions
@@ -103,6 +104,11 @@ class RemediationGenerator:
             for decision in report.decisions
             if decision.action == Action.CONTINUE
         ]
+        review = [
+            decision.asset.name
+            for decision in report.decisions
+            if decision.action in {Action.MONITOR, Action.REQUIRE_REVIEW}
+        ]
         return "\n".join(
             [
                 f"# Remediation proposal: {report.incident_id}",
@@ -111,6 +117,7 @@ class RemediationGenerator:
                 "",
                 f"Quarantine: {', '.join(quarantined) or 'none'}.",
                 f"Continue: {', '.join(continuing) or 'none'}.",
+                f"Review: {', '.join(review) or 'none'}.",
                 "",
                 f"Validation query: `quality/{test_name}.sql`.",
                 "",

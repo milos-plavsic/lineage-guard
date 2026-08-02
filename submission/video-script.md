@@ -8,25 +8,25 @@ at 1080p. Use only original narration and screen recording; do not add copyright
 Show the dashboard title and healthcare lineage.
 
 > A bad upstream field should not force an entire data platform offline. LineageGuard uses DataHub
-> context to contain the branch that is actually affected while healthy data products keep running.
+> context to hold uncertain work, contain confirmed impact, and continue only branches proven safe.
 
 ## 0:15–0:38 — Trigger and DataHub context
 
 Show the negative `billing_amount` signal, then DataHub lineage from `raw_patients` through staging to
 the billing and demographics marts.
 
-> Our synthetic healthcare pipeline reports negative billing values. LineageGuard calls DataHub's
-> official MCP Server for downstream lineage and batched entity context—descriptions, owners, tags,
-> usage, and business meaning.
+> Our synthetic healthcare pipeline emits a signed negative-billing event. LineageGuard durably
+> deduplicates it, then calls DataHub's official MCP Server for dataset lineage, field lineage, and
+> batched entity context.
 
 ## 0:38–1:10 — Selective decision
 
 Return to the blast-radius panel. Focus on the billing quarantine and demographics continue states.
 
-> Both marts are connected, but connection is not the same as impact. Billing carries the financial
-> concern and scores one hundred, so it is quarantined. Demographics has no dependency on billing
-> semantics, so it continues. Every result includes its evidence and rationale; missing context stops
-> analysis instead of being treated as safe.
+> Connection is not the same as field impact. Column lineage confirms billing depends on the failed
+> field, and business metadata makes it material, so it is quarantined. Complete field evidence
+> excludes demographics, so it can continue. Staging remains under review. Missing evidence never
+> becomes a claim of safety.
 
 ## 1:10–1:38 — Artifacts
 
@@ -41,17 +41,17 @@ Show the generated SQL, JSON policy, report, and manifest.
 Show dry-run output, then the approval boundary. If the live environment is available, show the
 description and quarantine tag in DataHub after approval.
 
-> The default is read-only. A write requires explicit approval in LineageGuard and mutation tools
-> independently enabled in DataHub MCP. Approved incident context is appended to the source and the
-> affected branch receives a quarantine tag, so the next person or agent inherits the decision.
+> The default is read-only. Approved mode can first send an idempotent, signed default-hold plan to an
+> orchestrator and requires its exact receipt. DataHub mutation tools are independently enabled;
+> incident context and the quarantine tag then preserve the decision for the next person or agent.
 
 ## 2:06–2:30 — Technical proof
 
 Show a terminal with tests and the MCP adapter filenames, then the health endpoint.
 
-> The decision core is deterministic, the MCP boundary fails closed, and automated tests cover
-> containment, write authorization, generated SQL, fixture integrity, HTTP behavior, and oversized
-> responses. The same core powers both the CLI and accessible dashboard.
+> The safety authority is deterministic, the MCP boundary fails closed, and the event journal handles
+> duplicates, conflicts, retries, and crashes. Full line and branch coverage includes authenticated
+> HTTP, field evidence, enforcement, write authorization, generated SQL, and oversized responses.
 
 ## 2:30–2:45 — Close
 

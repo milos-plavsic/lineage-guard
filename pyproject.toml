@@ -33,6 +33,7 @@ dev = [
 [project.scripts]
 lineage-guard = "lineage_guard.cli:main"
 lineage-guard-web = "lineage_guard.web:main"
+lineage-guard-agent = "lineage_guard.agent_web:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lineage_guard"]

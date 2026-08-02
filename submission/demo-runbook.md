@@ -10,17 +10,29 @@
 5. Confirm regenerated files produce no Git diff.
 6. If demonstrating live write-back, confirm the scoped DataHub service account, existing quarantine
    tag, and disposable demonstration metadata. Never display the token.
+7. If demonstrating the agent trigger, prepare the committed `examples/quality-event.json`; never
+   display either HMAC secret.
 
 ## Deterministic dashboard path
 
 1. Start `uv run lineage-guard-web`.
 2. Open `http://127.0.0.1:8765`.
 3. Establish the forked healthcare lineage and negative billing signal.
-4. Show billing at risk 100 with `quarantine`.
-5. Show demographics with `continue`.
-6. Walk through the five-stage evidence timeline.
-7. Show the artifact filenames and hashes.
-8. Open the committed SQL assertion and branch policy in the repository.
+4. Show staging at `monitor`: dependency is confirmed, but material branch impact needs review.
+5. Show billing at risk 100 with `quarantine` and confirmed field dependency.
+6. Show demographics with `continue` and confirmed field exclusion—not a missing keyword.
+7. Walk through the five-stage evidence timeline.
+8. Show the artifact filenames and hashes.
+9. Open the committed SQL assertion and branch policy in the repository.
+
+## Authenticated agent path
+
+1. Start the loopback listener with a disposable journal and read-only DataHub credentials.
+2. HMAC-sign and POST `examples/quality-event.json` to `/v1/quality-events`.
+3. Show the structured `proposed` result, generated artifacts, and journal stage history.
+4. Deliver the same event again and show `duplicate: true` without repeated DataHub work.
+5. Explain that approved mode independently requires mutation capability and, when configured, an
+   exact signed orchestrator receipt before DataHub write-back.
 
 ## Live DataHub path
 

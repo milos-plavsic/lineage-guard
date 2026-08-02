@@ -1,13 +1,20 @@
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
-from lineage_guard.demo import BILLING, DEMOGRAPHICS, assets, edges, negative_billing_signal
+from lineage_guard.demo import (
+    BILLING,
+    DEMOGRAPHICS,
+    assets,
+    edges,
+    field_dependencies,
+    negative_billing_signal,
+)
 from lineage_guard.domain import Action
 from lineage_guard.service import IncidentAnalyzer
 
 
 def test_selectively_quarantines_only_material_branch() -> None:
-    report = IncidentAnalyzer(InMemoryMetadataGraph(assets(), edges())).analyze(
-        negative_billing_signal()
-    )
+    report = IncidentAnalyzer(
+        InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
+    ).analyze(negative_billing_signal())
     decisions = {decision.asset.urn: decision for decision in report.decisions}
 
     assert decisions[BILLING].action is Action.QUARANTINE
@@ -18,7 +25,7 @@ def test_selectively_quarantines_only_material_branch() -> None:
 
 
 def test_writeback_requires_explicit_approval() -> None:
-    graph = InMemoryMetadataGraph(assets(), edges())
+    graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
     analyzer = IncidentAnalyzer(graph)
     report = analyzer.analyze(negative_billing_signal())
 
@@ -34,7 +41,7 @@ def test_writeback_requires_explicit_approval() -> None:
 
 
 def test_approved_writeback_is_auditable() -> None:
-    graph = InMemoryMetadataGraph(assets(), edges())
+    graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
     analyzer = IncidentAnalyzer(graph)
     report = analyzer.analyze(negative_billing_signal())
 

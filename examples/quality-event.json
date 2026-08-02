@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "event_id": "datahub-assertion:negative-billing:2026-08-02T12:30:00Z",
+  "occurred_at": "2026-08-02T12:30:00Z",
+  "producer": "datahub-actions",
+  "signal": {
+    "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)",
+    "field": "billing_amount",
+    "rule": "values must be non-negative",
+    "observed": "37 negative values in the latest batch",
+    "severity": "high",
+    "affected_concerns": [
+      "billing",
+      "financial"
+    ]
+  }
+}

@@ -35,9 +35,13 @@
       },
       "distance": 1,
       "matching_concerns": [],
-      "risk_score": 60,
-      "action": "continue",
-      "rationale": "No branch-specific dependency on the failing concern was found."
+      "evidence_strength": "confirmed_dependency",
+      "evidence": [
+        "column lineage depends on billing_amount"
+      ],
+      "risk_score": 85,
+      "action": "monitor",
+      "rationale": "Exposure is plausible; validate it before allowing promotion."
     },
     {
       "asset": {
@@ -58,9 +62,13 @@
         "billing",
         "financial"
       ],
+      "evidence_strength": "confirmed_dependency",
+      "evidence": [
+        "column lineage depends on billing_amount"
+      ],
       "risk_score": 100,
       "action": "quarantine",
-      "rationale": "The failing concern is material to this branch and the impact score is high."
+      "rationale": "Field-level lineage confirms exposure and the impact score is high."
     },
     {
       "asset": {
@@ -77,15 +85,19 @@
       },
       "distance": 2,
       "matching_concerns": [],
+      "evidence_strength": "confirmed_exclusion",
+      "evidence": [
+        "complete column lineage excludes billing_amount"
+      ],
       "risk_score": 63,
       "action": "continue",
-      "rationale": "No branch-specific dependency on the failing concern was found."
+      "rationale": "Complete field-level lineage confirms this branch excludes the failed field."
     }
   ],
   "proposed_writeback": {
     "append_description": {
       "urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)",
-      "markdown": "\n\n### LineageGuard incident 9edb78125e19\nSource: `raw_patients`; field: `billing_amount`; rule: values must be non-negative; observed: 37 negative values in the latest batch. Branch decisions: staging_patients=continue, mart_billing=quarantine, mart_demographics=continue."
+      "markdown": "\n\n### LineageGuard incident 9edb78125e19\nSource: `raw_patients`; field: `billing_amount`; rule: values must be non-negative; observed: 37 negative values in the latest batch. Branch decisions: staging_patients=monitor, mart_billing=quarantine, mart_demographics=continue."
     },
     "add_tag": [
       {

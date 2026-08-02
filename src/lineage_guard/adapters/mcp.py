@@ -16,6 +16,27 @@ class McpIntegrationError(RuntimeError):
 
 MAX_TOOL_PAYLOAD_BYTES = 2_000_000
 
+_SAFE_ENVIRONMENT_KEYS = frozenset(
+    {
+        "HOME",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "NO_PROXY",
+        "PATH",
+        "PATHEXT",
+        "SSL_CERT_DIR",
+        "SSL_CERT_FILE",
+        "SYSTEMROOT",
+        "TEMP",
+        "TMP",
+        "USERPROFILE",
+        "UV_CACHE_DIR",
+        "WINDIR",
+        "XDG_CACHE_HOME",
+    }
+)
+
 
 class ToolSession(Protocol):
     async def list_tools(self) -> Any: ...
@@ -32,7 +53,10 @@ class StdioMcpConfig:
     enable_mutations: bool = False
 
     def environment(self) -> dict[str, str]:
-        environment = os.environ.copy()
+        # Do not expose unrelated CI or developer secrets to the child process.
+        environment = {
+            key: value for key, value in os.environ.items() if key.upper() in _SAFE_ENVIRONMENT_KEYS
+        }
         environment.update(
             {
                 "DATAHUB_GMS_URL": self.gms_url,
@@ -83,6 +107,7 @@ class DataHubMcpGraph:
         self._assets = dict(assets)
         self._targets = targets
         self._pending: list[tuple[str, dict[str, Any]]] = []
+        self._completed: list[tuple[str, dict[str, Any]]] = []
 
     @classmethod
     async def load(
@@ -92,6 +117,7 @@ class DataHubMcpGraph:
         *,
         max_hops: int = 5,
         max_results: int = 100,
+        source_field: str | None = None,
     ) -> DataHubMcpGraph:
         available = {tool.name for tool in (await session.list_tools()).tools}
         missing = cls.REQUIRED_READ_TOOLS - available
@@ -108,10 +134,32 @@ class DataHubMcpGraph:
             },
         )
         lineage = _tool_payload(lineage_result)
-        search_results = lineage.get("downstreams", {}).get("searchResults", [])
-        if not isinstance(search_results, list) or len(search_results) > max_results:
-            raise McpIntegrationError("DataHub returned an invalid lineage result count")
+        search_results = _bounded_lineage_results(lineage, max_results)
         targets = tuple(_lineage_target(item) for item in search_results)
+        if source_field:
+            field_result = await session.call_tool(
+                "get_lineage",
+                {
+                    "urn": _schema_field_urn(source_urn, source_field),
+                    "upstream": False,
+                    "max_hops": max_hops,
+                    "max_results": max_results,
+                },
+            )
+            field_payload = _tool_payload(field_result)
+            affected = {
+                _lineage_target(item).urn
+                for item in _bounded_lineage_results(field_payload, max_results)
+            }
+            targets = tuple(
+                LineageTarget(
+                    target.urn,
+                    target.distance,
+                    (source_field,) if target.urn in affected else (),
+                    False,
+                )
+                for target in targets
+            )
         urns = [source_urn, *(target.urn for target in targets)]
         entities_result = await session.call_tool("get_entities", {"urns": urns})
         entities_payload = _tool_payload(entities_result)
@@ -130,22 +178,28 @@ class DataHubMcpGraph:
         except KeyError as error:
             raise LookupError(f"Asset not present in MCP snapshot: {urn}") from error
 
-    def get_downstream_lineage(self, urn: str, max_hops: int) -> tuple[LineageTarget, ...]:
+    def get_downstream_lineage(
+        self, urn: str, max_hops: int, *, field: str | None = None
+    ) -> tuple[LineageTarget, ...]:
         del urn
+        del field
         return tuple(target for target in self._targets if target.distance <= max_hops)
 
     def append_incident_summary(self, urn: str, summary: str) -> None:
-        self._pending.append(
-            (
-                "update_description",
-                {"entity_urn": urn, "operation": "append", "description": summary},
-            )
+        self._queue(
+            "update_description",
+            {"entity_urn": urn, "operation": "append", "description": summary},
         )
 
     def add_tag(self, urn: str, tag: str) -> None:
         if not tag.startswith("urn:li:tag:"):
             raise ValueError("DataHub tags must be supplied as tag URNs")
-        self._pending.append(("add_tags", {"tag_urns": [tag], "entity_urns": [urn]}))
+        self._queue("add_tags", {"tag_urns": [tag], "entity_urns": [urn]})
+
+    def _queue(self, name: str, arguments: dict[str, Any]) -> None:
+        operation = (name, arguments)
+        if operation not in self._pending and operation not in self._completed:
+            self._pending.append(operation)
 
     async def flush(self) -> None:
         if not self._pending:
@@ -157,11 +211,40 @@ class DataHubMcpGraph:
                 "Mutation tools are unavailable. Set TOOLS_IS_MUTATION_ENABLED=true "
                 f"for the MCP server. Missing: {sorted(missing)}"
             )
-        pending, self._pending = self._pending, []
-        for name, arguments in pending:
+        while self._pending:
+            name, arguments = self._pending[0]
             result = await self._session.call_tool(name, arguments)
             if getattr(result, "isError", False):
-                raise McpIntegrationError(f"DataHub MCP mutation failed: {name}")
+                raise McpIntegrationError(
+                    f"DataHub MCP mutation failed: {name}; "
+                    f"{len(self._pending)} operation(s) remain retryable"
+                )
+            self._completed.append(self._pending.pop(0))
+
+
+def _bounded_lineage_results(payload: Any, max_results: int) -> list[Mapping[str, Any]]:
+    downstreams = payload.get("downstreams", {}) if isinstance(payload, Mapping) else {}
+    search_results = downstreams.get("searchResults", [])
+    if not isinstance(search_results, list) or len(search_results) > max_results:
+        raise McpIntegrationError("DataHub returned an invalid lineage result count")
+    total = downstreams.get("total")
+    if isinstance(total, int) and total > len(search_results):
+        raise McpIntegrationError("DataHub lineage response is truncated")
+    if len(search_results) == max_results and total is None:
+        raise McpIntegrationError(
+            "DataHub lineage may be truncated at max_results; increase the bound or narrow scope"
+        )
+    if not all(isinstance(item, Mapping) for item in search_results):
+        raise McpIntegrationError("DataHub returned malformed lineage entries")
+    return search_results
+
+
+def _schema_field_urn(dataset_urn: str, field: str) -> str:
+    if not field or any(character in field for character in "(),"):
+        raise McpIntegrationError(
+            "Field cannot be represented safely as a DataHub schema-field URN"
+        )
+    return f"urn:li:schemaField:({dataset_urn},{field})"
 
 
 def _tool_payload(result: Any) -> Any:

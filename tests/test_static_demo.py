@@ -18,6 +18,8 @@ def test_static_demo_is_self_contained_and_integrity_manifested(tmp_path) -> Non
     html = (tmp_path / "index.html").read_text(encoding="utf-8")
     assert 'href="app.css"' in html
     assert 'src="app.js"' in html
+    assert 'id="review-count"' in html
+    assert incident["summary"]["reviewBranches"] == 1
     assert _entry("sample", b"data") == {
         "path": "sample",
         "bytes": 4,

@@ -37,7 +37,7 @@ from scripts import audit_submission, export_static_demo, fetch_healthcare
 def test_mcp_config_and_payload_variants(monkeypatch) -> None:
     monkeypatch.setenv("PRESERVED", "yes")
     environment = StdioMcpConfig("http://gms", "secret", enable_mutations=True).environment()
-    assert environment["PRESERVED"] == "yes"
+    assert "PRESERVED" not in environment
     assert environment["TOOLS_IS_MUTATION_ENABLED"] == "true"
 
     with pytest.raises(McpIntegrationError, match="returned an error"):
@@ -278,13 +278,21 @@ async def test_mcp_cli_complete_flow(tmp_path, monkeypatch, capsys) -> None:
         configs.append(config)
         yield object()
 
-    async def load(session_value, source_urn):
+    async def load(session_value, source_urn, *, source_field=None):
         assert session_value is not None and source_urn == RAW
+        assert source_field == "billing_amount"
         return graph
 
     monkeypatch.setattr(cli, "open_stdio_session", session)
     monkeypatch.setattr(cli.DataHubMcpGraph, "load", load)
     monkeypatch.setenv("DATAHUB_GMS_TOKEN", "token")
+    monkeypatch.setenv("LINEAGE_GUARD_ENFORCEMENT_SECRET", "x" * 32)
+    enforced = []
+    monkeypatch.setattr(
+        cli.SignedWebhookEnforcer,
+        "enforce",
+        lambda self, report: enforced.append(report.incident_id),
+    )
     output = tmp_path / "report.json"
     artifacts = tmp_path / "artifacts"
     args = argparse.Namespace(
@@ -295,19 +303,25 @@ async def test_mcp_cli_complete_flow(tmp_path, monkeypatch, capsys) -> None:
         concerns=["billing"],
         artifacts_dir=artifacts,
         output=output,
+        enforcement_webhook="http://localhost/hook",
     )
     assert await cli._run_mcp(args) == 0
     assert configs[-1].enable_mutations is True
     assert output.is_file() and (artifacts / "manifest.json").is_file()
     assert graph.flushed
+    assert enforced
     assert "incident_id" in capsys.readouterr().out
 
     args.apply = False
     args.concerns = None
     args.artifacts_dir = None
     args.output = None
+    args.enforcement_webhook = None
     assert await cli._run_mcp(args) == 0
     assert configs[-1].enable_mutations is False
+
+    args.apply = True
+    assert await cli._run_mcp(args) == 0
 
 
 def test_demo_cli_without_optional_outputs(capsys) -> None:

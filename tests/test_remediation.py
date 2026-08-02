@@ -5,15 +5,15 @@ from dataclasses import replace
 import pytest
 
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
-from lineage_guard.demo import assets, edges, negative_billing_signal
+from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
 from lineage_guard.remediation import RemediationGenerator
 from lineage_guard.service import IncidentAnalyzer
 
 
 def report():
-    return IncidentAnalyzer(InMemoryMetadataGraph(assets(), edges())).analyze(
-        negative_billing_signal()
-    )
+    return IncidentAnalyzer(
+        InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
+    ).analyze(negative_billing_signal())
 
 
 def test_generates_sql_policy_and_auditable_manifest(tmp_path) -> None:
@@ -28,6 +28,9 @@ def test_generates_sql_policy_and_auditable_manifest(tmp_path) -> None:
     assert {branch["asset_name"]: branch["action"] for branch in policy["branches"]}[
         "mart_billing"
     ] == "quarantine"
+    assert {branch["asset_name"]: branch["evidence_strength"] for branch in policy["branches"]}[
+        "mart_billing"
+    ] == "confirmed_dependency"
     assert [item["sha256"] for item in manifest["artifacts"]] == [
         artifact.sha256 for artifact in artifacts
     ]

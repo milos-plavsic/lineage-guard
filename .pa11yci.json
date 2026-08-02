@@ -1,0 +1,11 @@
+{
+  "defaults": {
+    "standard": "WCAG2AA",
+    "timeout": 15000,
+    "wait": 1000,
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    }
+  }
+}

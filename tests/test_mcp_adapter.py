@@ -6,6 +6,8 @@ from lineage_guard.adapters.mcp import (
     MAX_TOOL_PAYLOAD_BYTES,
     DataHubMcpGraph,
     McpIntegrationError,
+    _bounded_lineage_results,
+    _schema_field_urn,
     _tool_payload,
 )
 from lineage_guard.demo import BILLING, DEMOGRAPHICS, RAW, STAGING
@@ -29,6 +31,16 @@ class FakeSession:
     async def call_tool(self, name, arguments):
         self.calls.append((name, arguments))
         if name == "get_lineage":
+            if arguments["urn"].startswith("urn:li:schemaField:"):
+                return result(
+                    {
+                        "downstreams": {
+                            "searchResults": [
+                                {"entity": {"urn": BILLING}, "degree": 2},
+                            ]
+                        }
+                    }
+                )
             return result(
                 {
                     "downstreams": {
@@ -67,6 +79,23 @@ async def test_loads_normalized_snapshot_from_official_tools() -> None:
         (BILLING, 2),
         (DEMOGRAPHICS, 2),
     ]
+
+
+@pytest.mark.asyncio
+async def test_loads_field_lineage_as_positive_dependency_evidence() -> None:
+    session = FakeSession()
+
+    graph = await DataHubMcpGraph.load(session, RAW, source_field="billing_amount")
+
+    targets = graph.get_downstream_lineage(RAW, 5, field="billing_amount")
+    dependencies = {target.urn: target.dependent_fields for target in targets}
+    assert dependencies[BILLING] == ("billing_amount",)
+    assert dependencies[DEMOGRAPHICS] == ()
+    assert any(
+        arguments["urn"] == _schema_field_urn(RAW, "billing_amount")
+        for name, arguments in session.calls
+        if name == "get_lineage"
+    )
 
 
 @pytest.mark.asyncio
@@ -147,6 +176,32 @@ async def test_mutation_failure_is_reported() -> None:
     session.call_tool = failing
     with pytest.raises(McpIntegrationError, match="mutation failed"):
         await graph.flush()
+
+    session.call_tool = original
+    graph.append_incident_summary(RAW, "summary")
+    await graph.flush()
+    assert sum(name == "update_description" for name, _ in session.calls) == 1
+
+    graph.append_incident_summary(RAW, "summary")
+    await graph.flush()
+    assert sum(name == "update_description" for name, _ in session.calls) == 1
+
+
+def test_lineage_bounds_and_schema_field_urn_fail_closed() -> None:
+    with pytest.raises(McpIntegrationError, match="truncated"):
+        _bounded_lineage_results({"downstreams": {"searchResults": [], "total": 1}}, 100)
+    with pytest.raises(McpIntegrationError, match="may be truncated"):
+        _bounded_lineage_results(
+            {"downstreams": {"searchResults": [{"entity": {"urn": RAW}, "degree": 1}]}},
+            1,
+        )
+    with pytest.raises(McpIntegrationError, match="malformed lineage"):
+        _bounded_lineage_results({"downstreams": {"searchResults": ["bad"]}}, 100)
+    with pytest.raises(McpIntegrationError, match="schema-field URN"):
+        _schema_field_urn(RAW, "bad,field")
+    with pytest.raises(McpIntegrationError, match="schema-field URN"):
+        _schema_field_urn(RAW, "")
+    assert _bounded_lineage_results(None, 100) == []
 
 
 def test_text_payload_requires_valid_bounded_json() -> None:

@@ -39,6 +39,15 @@ def edges() -> tuple[LineageEdge, ...]:
     )
 
 
+def field_dependencies() -> dict[str, tuple[str, ...]]:
+    """Fixture evidence representing complete column lineage from the source dataset."""
+    return {
+        STAGING: ("billing_amount", "patient_age"),
+        BILLING: ("billing_amount",),
+        DEMOGRAPHICS: ("patient_age",),
+    }
+
+
 def negative_billing_signal() -> QualitySignal:
     return QualitySignal(
         asset_urn=RAW,
