@@ -4,7 +4,7 @@ import argparse
 import json
 import subprocess
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -119,9 +119,9 @@ def _created_in_submission_period(root: Path) -> bool:
     lines = result.stdout.splitlines()
     if not lines:
         return False
-    created = datetime.fromisoformat(lines[0]).astimezone(timezone.utc)
-    begins = datetime(2026, 7, 6, 13, 0, tzinfo=timezone.utc)
-    ends = datetime(2026, 8, 10, 21, 0, tzinfo=timezone.utc)
+    created = datetime.fromisoformat(lines[0]).astimezone(UTC)
+    begins = datetime(2026, 7, 6, 13, 0, tzinfo=UTC)
+    ends = datetime(2026, 8, 10, 21, 0, tzinfo=UTC)
     return begins <= created <= ends
 
 
