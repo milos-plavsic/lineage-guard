@@ -22,6 +22,11 @@ failure reproduction, null/negative detection, row and non-target preservation, 
 coverage, integer-total tolerance, deterministic output, certificate issuance/non-issuance, and
 tamper detection. Invalid, duplicate, oversized, and ambiguous scenario values are rejected.
 
+Chronos tests cover Genome/certificate/fixture binding, all three temporal decisions, historical
+failure replay, context-fingerprint expiry, prevention artifacts, executable regression SQL,
+immunity coverage, in-toto Statement structure, passport tampering, and invalid context/change
+contracts. Packaged-wheel smoke tests execute the full Chronos path.
+
 Run the same gate locally:
 
 ```bash

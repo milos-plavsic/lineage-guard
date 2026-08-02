@@ -61,6 +61,25 @@
       </div>
     </section>
 
+    <section class="panel immunity-panel" aria-labelledby="immunity-title">
+      <div class="panel-heading">
+        <div><p class="eyebrow">Chronos · causal immunity</p><h2 id="immunity-title">The platform remembers across time</h2></div>
+        <div class="status-pill immunity">Incident immunized</div>
+      </div>
+      <p class="section-intro">Containment maps the damage. Recovery proves the cure. Chronos compiles both into an Incident Genome, replays the historical failure against future changes, and expires proof when DataHub context drifts.</p>
+      <div class="genome-strip">
+        <div><span>Incident Genome</span><strong id="genome-id">Loading</strong></div>
+        <div><span>Prevention controls</span><strong id="control-count">—</strong></div>
+        <div><span>Learned invariants</span><strong id="invariant-count">—</strong></div>
+        <div><span>Context</span><code id="genome-context">Loading</code></div>
+      </div>
+      <div id="change-evaluations" class="change-grid" aria-live="polite"></div>
+      <div class="immunity-lower">
+        <div><p class="eyebrow">Immunity coverage</p><div id="immunity-coverage" class="coverage-list"></div></div>
+        <div class="passport"><p class="eyebrow">in-toto Statement v1</p><h3>Change passport</h3><p>Safe changes become eligible for approval—not automatic deployment.</p><code id="passport-hash">Loading</code></div>
+      </div>
+    </section>
+
     <div class="two-column">
       <section class="panel" aria-labelledby="timeline-title">
         <div class="panel-heading"><div><p class="eyebrow">Evidence trail</p><h2 id="timeline-title">Incident timeline</h2></div></div>
@@ -72,6 +91,6 @@
       </section>
     </div>
   </main>
-  <footer>Authenticated events · Evidence-bound containment · Counterfactual verification · Proof-gated recovery</footer>
+  <footer>Evidence-bound containment · Proof-carrying recovery · Temporal causal immunity</footer>
 </body>
 </html>

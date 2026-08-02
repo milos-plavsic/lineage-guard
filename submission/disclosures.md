@@ -7,6 +7,9 @@
   Python SDK.
 - DataHub integration uses the official Apache-2.0 `mcp-server-datahub` package, pinned to version
   `0.6.0` by default.
+- Chronos change passports follow the in-toto Statement v1 data shape for interoperability. No
+  in-toto implementation is vendored or added as a runtime dependency, and demo passports are
+  explicitly unsigned: they prove content integrity, not signer identity or deployment approval.
 - The optional synthetic healthcare fixture comes from DataHub's Apache-2.0 `static-assets`
   repository at the exact revision documented in `scripts/fetch_healthcare.py`.
 - No proprietary data, third-party music, or unlicensed media is included.
@@ -18,3 +21,6 @@
   a product-specific Airflow, Dagster, or dbt receiver is not bundled or claimed.
 - `continue` in the deterministic fixture relies on explicitly complete field-dependency evidence.
   Live environments without trustworthy column lineage produce monitoring/review, not inferred safety.
+- Chronos evaluates bounded, application-owned change proposals in the deterministic demo. It does
+  not execute arbitrary pull-request code, and its DataHub immunity write-back is an approval-gated
+  proposal rather than a claimed live mutation.

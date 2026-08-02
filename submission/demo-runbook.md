@@ -23,9 +23,10 @@
 6. Show demographics with `continue` and confirmed field exclusion—not a missing keyword.
 7. Show the recovery twin: clamp-to-zero passes the target check but fails total conservation.
 8. Show trusted restoration passing all six invariants and receiving a recovery certificate.
-9. Walk through the seven-stage evidence timeline.
-10. Show the artifact filenames and hashes.
-11. Open the committed candidate SQL, evaluations, certificate, and branch policy.
+9. Show Chronos blocking guard removal and passporting guard preservation.
+10. Show a new lineage edge expiring the otherwise-safe proof.
+11. Walk through the ten-stage evidence timeline.
+12. Open the Incident Genome, regression fixture, passport, coverage map, and manifest.
 
 ## Authenticated agent path
 

@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "evaluations": [
+    {
+      "change": {
+        "change_id": "pr-unsafe-guard-removal",
+        "title": "Remove the billing quality guard",
+        "quality_guard_enabled": false
+      },
+      "evaluated_context_sha256": "5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04",
+      "decision": "blocked",
+      "checks": [
+        {
+          "name": "historical_failure_replayed",
+          "passed": true,
+          "detail": "replayed incident 9edb78125e19"
+        },
+        {
+          "name": "context_fingerprint_matches",
+          "passed": true,
+          "detail": "expected 5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04; observed 5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04"
+        },
+        {
+          "name": "quality_guard_detects_recurrence",
+          "passed": false,
+          "detail": "historical invalid row reaches the pipeline"
+        },
+        {
+          "name": "recovery_invariants_registered",
+          "passed": true,
+          "detail": "6 invariant(s) remain policy inputs"
+        }
+      ],
+      "passport": null
+    },
+    {
+      "change": {
+        "change_id": "pr-safe-guard-preserved",
+        "title": "Preserve the billing quality guard",
+        "quality_guard_enabled": true
+      },
+      "evaluated_context_sha256": "5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04",
+      "decision": "eligible_for_approval",
+      "checks": [
+        {
+          "name": "historical_failure_replayed",
+          "passed": true,
+          "detail": "replayed incident 9edb78125e19"
+        },
+        {
+          "name": "context_fingerprint_matches",
+          "passed": true,
+          "detail": "expected 5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04; observed 5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04"
+        },
+        {
+          "name": "quality_guard_detects_recurrence",
+          "passed": true,
+          "detail": "historical invalid row is rejected"
+        },
+        {
+          "name": "recovery_invariants_registered",
+          "passed": true,
+          "detail": "6 invariant(s) remain policy inputs"
+        }
+      ],
+      "passport": {
+        "statement": {
+          "_type": "https://in-toto.io/Statement/v1",
+          "subject": [
+            {
+              "name": "pr-safe-guard-preserved",
+              "digest": {
+                "sha256": "1bc6fe4cd0e485541ab2f63043c4d77fcdf2623f99fd456d8741c4a00edc58c4"
+              }
+            }
+          ],
+          "predicateType": "https://lineageguard.dev/attestations/change-passport/v1",
+          "predicate": {
+            "genome_id": "lg-genome-26c677d5a45f7e6c",
+            "genome_sha256": "26c677d5a45f7e6ccfd5ab584da937665d787a9135b3d496fe8d3c33959e9233",
+            "context_sha256": "5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04",
+            "decision": "eligible_for_approval",
+            "checks": [
+              {
+                "name": "historical_failure_replayed",
+                "passed": true,
+                "detail": "replayed incident 9edb78125e19"
+              },
+              {
+                "name": "context_fingerprint_matches",
+                "passed": true,
+                "detail": "expected 5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04; observed 5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04"
+              },
+              {
+                "name": "quality_guard_detects_recurrence",
+                "passed": true,
+                "detail": "historical invalid row is rejected"
+              },
+              {
+                "name": "recovery_invariants_registered",
+                "passed": true,
+                "detail": "6 invariant(s) remain policy inputs"
+              }
+            ]
+          }
+        },
+        "statement_sha256": "4d7ec63403f4d72dd828199e38b3835088ef523da89c50dfd50814f7af7cffb4"
+      }
+    },
+    {
+      "change": {
+        "change_id": "pr-context-drift",
+        "title": "Add a new downstream ML dependency",
+        "quality_guard_enabled": true
+      },
+      "evaluated_context_sha256": "5617f720b2e03580cbfb1ccc8fc16a1d17da5d3c6ff4163ebdde1baa0dff97c2",
+      "decision": "revalidation_required",
+      "checks": [
+        {
+          "name": "historical_failure_replayed",
+          "passed": true,
+          "detail": "replayed incident 9edb78125e19"
+        },
+        {
+          "name": "context_fingerprint_matches",
+          "passed": false,
+          "detail": "expected 5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04; observed 5617f720b2e03580cbfb1ccc8fc16a1d17da5d3c6ff4163ebdde1baa0dff97c2"
+        },
+        {
+          "name": "quality_guard_detects_recurrence",
+          "passed": true,
+          "detail": "historical invalid row is rejected"
+        },
+        {
+          "name": "recovery_invariants_registered",
+          "passed": true,
+          "detail": "6 invariant(s) remain policy inputs"
+        }
+      ],
+      "passport": null
+    }
+  ]
+}

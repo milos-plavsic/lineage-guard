@@ -6,8 +6,9 @@ from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
 
+from lineage_guard.chronos import ChronosBundle
 from lineage_guard.domain import Action, IncidentReport
-from lineage_guard.recovery import DEFAULT_CANDIDATES, RecoveryBundle
+from lineage_guard.recovery import DEFAULT_CANDIDATES, RecoveryBundle, canonical_sha256
 
 _SQL_IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -29,7 +30,10 @@ class RemediationGenerator:
     """Generate reviewable artifacts without executing changes against source systems."""
 
     def generate(
-        self, report: IncidentReport, recovery: RecoveryBundle | None = None
+        self,
+        report: IncidentReport,
+        recovery: RecoveryBundle | None = None,
+        chronos: ChronosBundle | None = None,
     ) -> tuple[GeneratedArtifact, ...]:
         table = self._identifier(report.source.name, "source asset name")
         field = self._identifier(report.signal.field, "quality signal field")
@@ -66,15 +70,20 @@ class RemediationGenerator:
             ),
             GeneratedArtifact.create(f"reports/{report.incident_id}.md", summary),
         )
-        return artifacts + self._recovery_artifacts(recovery)
+        return (
+            artifacts
+            + self._recovery_artifacts(recovery)
+            + self._chronos_artifacts(report, chronos)
+        )
 
     def write(
         self,
         report: IncidentReport,
         destination: Path,
         recovery: RecoveryBundle | None = None,
+        chronos: ChronosBundle | None = None,
     ) -> tuple[GeneratedArtifact, ...]:
-        artifacts = self.generate(report, recovery)
+        artifacts = self.generate(report, recovery, chronos)
         root = destination.resolve()
         for artifact in artifacts:
             target = (root / artifact.relative_path).resolve()
@@ -126,6 +135,131 @@ class RemediationGenerator:
                 ),
             )
         return artifacts
+
+    @classmethod
+    def _chronos_artifacts(
+        cls, report: IncidentReport, chronos: ChronosBundle | None
+    ) -> tuple[GeneratedArtifact, ...]:
+        if chronos is None:
+            return ()
+        if chronos.genome.incident_id != report.incident_id:
+            raise ValueError("Chronos genome does not match the incident report")
+        if canonical_sha256([asdict(row) for row in chronos.historical_fixture]) != (
+            chronos.genome.historical_fixture_sha256
+        ):
+            raise ValueError("Chronos historical fixture does not match the incident genome")
+        fixture = "\n".join(
+            [
+                "CREATE TABLE historical_negative_billing (",
+                "    record_id TEXT PRIMARY KEY,",
+                "    billing_amount_cents INTEGER NOT NULL,",
+                "    region TEXT NOT NULL",
+                ");",
+                *(
+                    f"INSERT INTO historical_negative_billing VALUES "
+                    f"({cls._sql_literal(row.record_id)}, {row.billing_amount_cents}, "
+                    f"{cls._sql_literal(row.region)});"
+                    for row in chronos.historical_fixture
+                ),
+            ]
+        )
+        assertion = "SELECT *\nFROM historical_negative_billing\nWHERE billing_amount_cents < 0"
+        policy = {
+            "schema_version": 1,
+            "genome_id": chronos.genome.genome_id,
+            "context_sha256": chronos.genome.context_sha256,
+            "required_invariants": list(chronos.genome.required_invariants),
+            "rule": (
+                "block when the historical failure is not detected; revalidate on context drift"
+            ),
+        }
+        writeback = {
+            "schema_version": 1,
+            "requires_explicit_approval": True,
+            "append_description": {
+                "urn": report.source.urn,
+                "markdown": (
+                    f"\n\n### LineageGuard immunity {chronos.genome.genome_id}\n"
+                    f"Incident `{report.incident_id}` compiled into preventive controls. "
+                    f"Context: `{chronos.genome.context_sha256}`."
+                ),
+            },
+            "add_tag": [
+                {"urn": item.asset_urn, "tag": "urn:li:tag:LineageGuard_Immunized"}
+                for item in chronos.coverage
+                if item.status == "immunized"
+            ],
+        }
+        artifacts = (
+            GeneratedArtifact.create(
+                f"immunity/genomes/{chronos.genome.genome_id}.json",
+                json.dumps(asdict(chronos.genome), indent=2),
+            ),
+            GeneratedArtifact.create(f"immunity/regression/{report.incident_id}.sql", fixture),
+            GeneratedArtifact.create(
+                f"immunity/assertions/{report.signal.field}_historical_failure.sql",
+                assertion,
+            ),
+            GeneratedArtifact.create(
+                f"immunity/policies/{chronos.genome.genome_id}.json",
+                json.dumps(policy, indent=2),
+            ),
+            GeneratedArtifact.create(
+                "immunity/evaluations.json",
+                json.dumps(
+                    {
+                        "schema_version": chronos.schema_version,
+                        "evaluations": [asdict(item) for item in chronos.evaluations],
+                    },
+                    indent=2,
+                ),
+            ),
+            GeneratedArtifact.create(
+                "immunity/coverage.json",
+                json.dumps(
+                    {
+                        "schema_version": chronos.schema_version,
+                        "coverage": [asdict(item) for item in chronos.coverage],
+                    },
+                    indent=2,
+                ),
+            ),
+            GeneratedArtifact.create(
+                "immunity/datahub-writeback.json", json.dumps(writeback, indent=2)
+            ),
+            GeneratedArtifact.create(
+                f"immunity/runbooks/{chronos.genome.genome_id}.md",
+                cls._immunity_runbook(chronos),
+            ),
+        )
+        passports = tuple(
+            GeneratedArtifact.create(
+                f"immunity/passports/{item.change.change_id}.intoto.json",
+                json.dumps(asdict(item.passport), indent=2),
+            )
+            for item in chronos.evaluations
+            if item.passport is not None
+        )
+        return artifacts + passports
+
+    @staticmethod
+    def _sql_literal(value: str) -> str:
+        return "'" + value.replace("'", "''") + "'"
+
+    @staticmethod
+    def _immunity_runbook(chronos: ChronosBundle) -> str:
+        return "\n".join(
+            [
+                f"# Immunity runbook: {chronos.genome.genome_id}",
+                "",
+                f"Historical incident: `{chronos.genome.incident_id}`.",
+                f"Context fingerprint: `{chronos.genome.context_sha256}`.",
+                "",
+                "Replay the historical fixture before approving an intersecting change.",
+                "Block recurrence, require revalidation after context drift, and treat a passport",
+                "as eligibility for approval—not deployment authorization.",
+            ]
+        )
 
     @staticmethod
     def _identifier(value: str, label: str) -> str:

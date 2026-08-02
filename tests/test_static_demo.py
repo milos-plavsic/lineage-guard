@@ -21,9 +21,13 @@ def test_static_demo_is_self_contained_and_integrity_manifested(tmp_path) -> Non
     assert 'id="review-count"' in html
     assert 'id="recovery-candidates"' in html
     assert 'id="certificate-hash"' in html
+    assert 'id="change-evaluations"' in html
+    assert 'id="immunity-coverage"' in html
     assert incident["summary"]["reviewBranches"] == 1
     assert incident["recovery"]["evaluations"][0]["verdict"] == "rejected"
     assert incident["recovery"]["evaluations"][1]["verdict"] == "verified"
+    assert incident["chronos"]["evaluations"][0]["decision"] == "blocked"
+    assert incident["chronos"]["evaluations"][2]["decision"] == "revalidation_required"
     assert _entry("sample", b"data") == {
         "path": "sample",
         "bytes": 4,

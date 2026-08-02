@@ -18,6 +18,10 @@ include production tokens or sensitive catalog content.
 - Generated repair SQL executes only against a fresh, bounded in-memory demo shadow; candidate SQL is
   application-owned and never runs against source systems.
 - Recovery certificates provide integrity linkage, not issuer authentication or release approval.
+- Chronos evaluates bounded, typed demo changes; it does not clone repositories or execute arbitrary
+  pull-request code.
+- Change passports use the in-toto Statement v1 shape but remain unsigned until a deployment supplies
+  an authenticated signing envelope. A passport is never automatic deployment authority.
 - The built-in dashboard binds to loopback and has no authentication. Never expose it directly to an
   untrusted network.
 

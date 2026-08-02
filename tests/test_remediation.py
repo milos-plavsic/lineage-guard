@@ -1,15 +1,17 @@
 import json
 import sqlite3
-from dataclasses import replace
+from dataclasses import asdict, replace
 
 import pytest
 
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
+from lineage_guard.chronos import build_demo_chronos
 from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
 from lineage_guard.recovery import (
     CounterfactualRecoveryLab,
     RecoveryRow,
     RecoveryScenario,
+    canonical_sha256,
     demo_recovery_scenario,
 )
 from lineage_guard.remediation import RemediationGenerator
@@ -85,6 +87,74 @@ def test_rejected_recovery_writes_evidence_without_a_certificate(tmp_path) -> No
 
     assert len(artifacts) == 6
     assert not (tmp_path / "recovery" / "certificates").exists()
+
+
+def test_generates_executable_temporal_immunity_pack(tmp_path) -> None:
+    incident = report()
+    recovery = CounterfactualRecoveryLab().evaluate(incident, demo_recovery_scenario())
+    chronos = build_demo_chronos(incident, recovery)
+
+    artifacts = RemediationGenerator().write(incident, tmp_path, recovery, chronos)
+
+    genome = json.loads(next((tmp_path / "immunity" / "genomes").iterdir()).read_text())
+    evaluations = json.loads((tmp_path / "immunity" / "evaluations.json").read_text())
+    passport = json.loads(next((tmp_path / "immunity" / "passports").iterdir()).read_text())
+    writeback = json.loads((tmp_path / "immunity" / "datahub-writeback.json").read_text())
+    fixture_sql = next((tmp_path / "immunity" / "regression").iterdir()).read_text()
+    assertion_sql = next((tmp_path / "immunity" / "assertions").iterdir()).read_text()
+    connection = sqlite3.connect(":memory:")
+    connection.executescript(fixture_sql)
+
+    assert len(artifacts) == 16
+    assert connection.execute(assertion_sql).fetchall() == [("patient-001", -5_000, "north")]
+    assert genome["historical_fixture_sha256"] == chronos.genome.historical_fixture_sha256
+    assert [item["decision"] for item in evaluations["evaluations"]] == [
+        "blocked",
+        "eligible_for_approval",
+        "revalidation_required",
+    ]
+    assert passport["statement"]["_type"] == "https://in-toto.io/Statement/v1"
+    assert passport["statement_sha256"] == chronos.evaluations[1].passport.statement_sha256
+    assert writeback["requires_explicit_approval"] is True
+    assert writeback["add_tag"][0]["tag"] == "urn:li:tag:LineageGuard_Immunized"
+    assert (tmp_path / "immunity" / "coverage.json").is_file()
+    assert next((tmp_path / "immunity" / "runbooks").iterdir()).is_file()
+
+
+def test_immunity_artifacts_reject_detached_evidence() -> None:
+    incident = report()
+    recovery = CounterfactualRecoveryLab().evaluate(incident, demo_recovery_scenario())
+    chronos = build_demo_chronos(incident, recovery)
+    generator = RemediationGenerator()
+
+    with pytest.raises(ValueError, match="does not match the incident report"):
+        generator.generate(
+            incident,
+            recovery,
+            replace(chronos, genome=replace(chronos.genome, incident_id="different")),
+        )
+
+    quoted_fixture = (
+        replace(chronos.historical_fixture[0], record_id="patient'quoted"),
+        *chronos.historical_fixture[1:],
+    )
+    with pytest.raises(ValueError, match="fixture does not match"):
+        generator.generate(incident, recovery, replace(chronos, historical_fixture=quoted_fixture))
+
+    bound = replace(
+        chronos,
+        historical_fixture=quoted_fixture,
+        genome=replace(
+            chronos.genome,
+            historical_fixture_sha256=canonical_sha256([asdict(row) for row in quoted_fixture]),
+        ),
+    )
+    sql = next(
+        artifact.content
+        for artifact in generator.generate(incident, recovery, bound)
+        if artifact.relative_path.startswith("immunity/regression/")
+    )
+    assert "patient''quoted" in sql
 
 
 def test_generated_assertion_executes_and_returns_only_violations() -> None:

@@ -67,6 +67,21 @@ part of the proof context. In production, retrieve it through a governed point-i
 dataset-specific invariants, authenticate the certificate issuer, and route the proposed transition
 through the same approval and signed enforcement boundary used for containment.
 
+## Chronos temporal immunity
+
+```bash
+lineage-guard --chronos --artifacts-dir prevention-pack --output immunity-report.json
+```
+
+Review `immunity/evaluations.json` before the passport. `blocked` means the historical failure escaped
+the proposed guard. `revalidation_required` means the DataHub context fingerprint changed, even if
+the guard itself still passes. Only `eligible_for_approval` produces a passport, and that passport is
+an unsigned in-toto Statement until a deployment signer wraps it in an authenticated envelope.
+
+The deterministic demonstration never reads a Git repository or runs change-supplied code. A future
+PR integration must use an isolated, resource-limited runner, immutable checkout, least-privilege
+token, reviewed parser, and authenticated attestation service.
+
 ## Backup and rollback
 
 LineageGuard does not own source data. DataHub write-back is append-only incident context plus a

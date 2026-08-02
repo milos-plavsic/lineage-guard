@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "requires_explicit_approval": true,
+  "append_description": {
+    "urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)",
+    "markdown": "\n\n### LineageGuard immunity lg-genome-26c677d5a45f7e6c\nIncident `9edb78125e19` compiled into preventive controls. Context: `5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04`."
+  },
+  "add_tag": [
+    {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_billing,PROD)",
+      "tag": "urn:li:tag:LineageGuard_Immunized"
+    }
+  ]
+}

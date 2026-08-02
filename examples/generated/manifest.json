@@ -29,6 +29,42 @@
     {
       "path": "recovery/certificates/0b5495ecf48a7373.json",
       "sha256": "f9a7a8805f30d1c544613fcd96e1be55367b6b39a1603f2b833522ae6aebf0eb"
+    },
+    {
+      "path": "immunity/genomes/lg-genome-26c677d5a45f7e6c.json",
+      "sha256": "40ba4672723ac75c46756f94a80bd8767c4ee81c303d700cfec0a54664a0010e"
+    },
+    {
+      "path": "immunity/regression/9edb78125e19.sql",
+      "sha256": "75f4cd07210372f07f94f545b45a7fc98d7cc3bef4b0759db1ba247366ff0522"
+    },
+    {
+      "path": "immunity/assertions/billing_amount_historical_failure.sql",
+      "sha256": "82859edd7ed9a9b7e4564a9dd216d59408bc713c940de462e10704e5a74399e4"
+    },
+    {
+      "path": "immunity/policies/lg-genome-26c677d5a45f7e6c.json",
+      "sha256": "46e391b8f49a7a34072489ea99a01735d98bc04bf099d1b6acdb4a2255b3b3a7"
+    },
+    {
+      "path": "immunity/evaluations.json",
+      "sha256": "01b3f50955ff13dca73329258bf5e7fb7b79c5733ef4843205a719cb5085360d"
+    },
+    {
+      "path": "immunity/coverage.json",
+      "sha256": "8b18add201c9524fa0d0a9e3b0deb9d5bae374719a79b400df8ba447db03c95c"
+    },
+    {
+      "path": "immunity/datahub-writeback.json",
+      "sha256": "2286a9e52f1dc67d5e74154a417273e6b0f0265a5810cf5ddaa6162484d0776e"
+    },
+    {
+      "path": "immunity/runbooks/lg-genome-26c677d5a45f7e6c.md",
+      "sha256": "b5cd1725f4c9ad5ad94c3a68ebb2cbcd1e832abf8f386dfed8f0f2a9265953fb"
+    },
+    {
+      "path": "immunity/passports/pr-safe-guard-preserved.intoto.json",
+      "sha256": "dfe833ec1e39b2ff42cc06b03170b33069a640937c93830fdcd96104a84b3209"
     }
   ]
 }

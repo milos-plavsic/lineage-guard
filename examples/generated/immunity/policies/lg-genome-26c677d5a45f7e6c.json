@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "genome_id": "lg-genome-26c677d5a45f7e6c",
+  "context_sha256": "5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04",
+  "required_invariants": [
+    "source_failure_reproduced",
+    "quality_rule_passed",
+    "row_count_preserved",
+    "non_target_data_preserved",
+    "trusted_replacements_available",
+    "trusted_total_within_tolerance"
+  ],
+  "rule": "block when the historical failure is not detected; revalidate on context drift"
+}

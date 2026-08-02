@@ -50,6 +50,30 @@ async function loadIncident() {
   text('certificate-transition', data.recovery.certificate.transition.replace('_to_', ' → '));
   text('certificate-hash', `sha256:${data.recovery.certificate.certificate_sha256}`);
 
+  text('genome-id', data.chronos.genome.genome_id);
+  text('control-count', data.chronos.genome.prevention_controls.length);
+  text('invariant-count', data.chronos.genome.required_invariants.length);
+  text('genome-context', `sha256:${data.chronos.genome.context_sha256}`);
+  const changes = document.getElementById('change-evaluations');
+  data.chronos.evaluations.forEach((evaluation) => {
+    const card = element('article', `change-card ${evaluation.decision}`);
+    card.append(element('span', 'change-label', evaluation.change.change_id));
+    card.append(element('h3', '', evaluation.change.title));
+    card.append(element('span', `change-decision ${evaluation.decision}`, evaluation.decision.replaceAll('_', ' ')));
+    const failed = evaluation.checks.filter((check) => !check.passed);
+    card.append(element('p', '', failed.length ? failed[0].detail : 'Historical failure prevented; context remains valid.'));
+    changes.append(card);
+  });
+  const coverage = document.getElementById('immunity-coverage');
+  data.chronos.coverage.forEach((entry) => {
+    const row = element('div', 'coverage-row');
+    row.append(element('strong', '', entry.asset_name));
+    row.append(element('span', `coverage-status ${entry.status}`, entry.status.replaceAll('_', ' ')));
+    coverage.append(row);
+  });
+  const passport = data.chronos.evaluations.find((item) => item.passport);
+  text('passport-hash', `sha256:${passport.passport.statement_sha256}`);
+
   const timeline = document.getElementById('timeline');
   data.timeline.forEach((event) => {
     const item = element('li');

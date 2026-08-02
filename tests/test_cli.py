@@ -49,6 +49,33 @@ def test_recovery_lab_rejects_live_mcp_mode() -> None:
         main(["--mode", "mcp", "--recovery-lab"])
 
 
+def test_cli_compiles_temporal_immunity_pack(tmp_path) -> None:
+    output = tmp_path / "report.json"
+    artifacts = tmp_path / "artifacts"
+
+    assert (
+        main(
+            [
+                "--chronos",
+                "--output",
+                str(output),
+                "--artifacts-dir",
+                str(artifacts),
+            ]
+        )
+        == 0
+    )
+    payload = json.loads(output.read_text())
+    assert payload["chronos"]["evaluations"][0]["decision"] == "blocked"
+    assert payload["chronos"]["evaluations"][1]["passport"]["statement"]
+    assert (artifacts / "immunity" / "coverage.json").is_file()
+
+
+def test_chronos_rejects_live_mcp_mode() -> None:
+    with pytest.raises(SystemExit, match="deterministic demo scenarios"):
+        main(["--mode", "mcp", "--chronos"])
+
+
 def test_mcp_mode_requires_connection_configuration(monkeypatch) -> None:
     monkeypatch.delenv("DATAHUB_GMS_TOKEN", raising=False)
 

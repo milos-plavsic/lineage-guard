@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "coverage": [
+    {
+      "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)",
+      "asset_name": "staging_patients",
+      "status": "partial_review",
+      "reason": "the branch still requires evidence or operator review"
+    },
+    {
+      "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_billing,PROD)",
+      "asset_name": "mart_billing",
+      "status": "immunized",
+      "reason": "historical exposure is covered by prevention and recovery proof"
+    },
+    {
+      "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_demographics,PROD)",
+      "asset_name": "mart_demographics",
+      "status": "proven_excluded",
+      "reason": "complete field evidence excludes the historical failure"
+    }
+  ]
+}

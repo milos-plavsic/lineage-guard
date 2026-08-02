@@ -2,7 +2,7 @@
 
 ## Tagline
 
-Contain the broken branch, not the whole data platform.
+Contain what is exposed. Release what is proven. Prevent what is remembered.
 
 ## Inspiration
 
@@ -40,6 +40,13 @@ to an orchestrator endpoint and requires an exact receipt. It then writes incide
 quarantine tag to DataHub, leaving durable knowledge for the next person or agent. Dry-run is the
 default; mutation capability, approval, and enforcement credentials are independent gates.
 
+Chronos completes the loop. It compiles the containment decision, recovery certificate, historical
+fixture, and DataHub context fingerprint into an Incident Genome and Prevention Pack. Removing the
+billing guard replays the learned failure and is blocked. Preserving it receives an in-toto-shaped
+change passport. Adding a new lineage edge invalidates that same proof and requires revalidation.
+Every incident can therefore become preventive memory without pretending yesterday's evidence is
+eternally valid.
+
 ## How we built it
 
 The Python domain core is deterministic and transport-independent. A durable agent state machine
@@ -72,6 +79,7 @@ tools. Generated source-system remediation remains reviewable output rather than
 - Authenticated event ingestion with durable deduplication, crash leases, retries, and stage history.
 - A real signed orchestrator action protocol with default-hold semantics and exact receipts.
 - Counterfactual repair execution that rejects a green-but-wrong fix and certifies a safe candidate.
+- Temporal causal immunity: Incident Genomes, historical replay, proof passports, and drift expiry.
 - Reproducible, executable remediation artifacts with integrity hashes.
 - Fail-closed handling for malformed, incomplete, or oversized MCP context.
 - A judge-readable demo that runs without credentials while retaining the real MCP boundary.

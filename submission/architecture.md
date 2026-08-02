@@ -17,6 +17,12 @@ flowchart LR
     C --> C1[Candidate A: rejected regression]
     C --> C2[Candidate B: verified repair]
     C2 --> N[Hash-bound recovery certificate]
+    N --> T[Chronos Incident Genome]
+    T --> V[Historical failure replay]
+    V -->|unsafe| B[Block change]
+    V -->|safe + same context| K[in-toto change passport]
+    V -->|context drift| Z[Revalidation required]
+    T --> D
     N --> G
     P --> G{Explicit approval + capability}
     G -->|approved| E[Signed orchestrator plan]
@@ -38,6 +44,12 @@ reproduces the failure and tests two reviewable SQL candidates. A candidate rece
 certificate only if it fixes the target while preserving row count, non-target identity, trusted
 replacement coverage, and the governed business total. The certificate binds the exact incident,
 context, SQL, output, and checks; explicit approval remains necessary to release anything.
+
+Chronos closes the time dimension. It compiles the incident, recovery proof, historical fixture, and
+DataHub schema/lineage/governance fingerprint into an Incident Genome. Typed future changes replay
+the learned failure: unsafe recurrence is blocked, an unchanged safe context receives an unsigned
+in-toto-shaped passport, and context drift expires proof. The passport means eligibility for
+approval, never deployment authority.
 
 The agent is a durable state machine rather than a chatbot. It authenticates and deduplicates an
 event, calls DataHub tools for context, decides, generates evidence, optionally sends an atomic

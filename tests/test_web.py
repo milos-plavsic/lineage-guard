@@ -18,8 +18,10 @@ def test_dashboard_model_exposes_decisions_timeline_and_artifacts() -> None:
         "reviewBranches": 1,
         "maxRisk": 100,
     }
-    assert len(model["timeline"]) == 7
-    assert {artifact["relative_path"] for artifact in model["artifacts"]} == {
+    assert len(model["timeline"]) == 10
+    artifact_paths = {artifact["relative_path"] for artifact in model["artifacts"]}
+    assert len(artifact_paths) == 16
+    assert {
         "quality/assert_billing_amount_non_negative.sql",
         "policies/9edb78125e19.json",
         "reports/9edb78125e19.md",
@@ -27,12 +29,20 @@ def test_dashboard_model_exposes_decisions_timeline_and_artifacts() -> None:
         "recovery/candidates/restore-trusted-value.sql",
         "recovery/evaluations.json",
         f"recovery/certificates/{model['recovery']['certificate']['certificate_id']}.json",
-    }
+        "immunity/evaluations.json",
+        "immunity/coverage.json",
+        "immunity/datahub-writeback.json",
+    } <= artifact_paths
     assert [item["verdict"] for item in model["recovery"]["evaluations"]] == [
         "rejected",
         "verified",
     ]
     assert model["recovery"]["certificate"]["transition"] == "quarantine_to_release"
+    assert [item["decision"] for item in model["chronos"]["evaluations"]] == [
+        "blocked",
+        "eligible_for_approval",
+        "revalidation_required",
+    ]
 
 
 def test_dashboard_declares_browser_security_boundaries() -> None:
@@ -57,6 +67,7 @@ def test_http_server_exposes_health_page_and_incident_api() -> None:
             payload = json.load(response)
             assert payload["report"]["incident_id"] == "9edb78125e19"
             assert payload["recovery"]["certificate"]["candidate_id"] == "restore-trusted-value"
+            assert payload["chronos"]["genome"]["genome_id"].startswith("lg-genome-")
         with urlopen(f"{base_url}/app.css", timeout=2) as response:
             assert response.headers["Cache-Control"] == "public, max-age=3600"
             assert response.headers["Content-Type"].startswith("text/css")

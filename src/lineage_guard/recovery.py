@@ -153,14 +153,7 @@ class CounterfactualRecoveryLab:
         report: IncidentReport,
         scenario: RecoveryScenario,
     ) -> RecoveryBundle:
-        context_sha256 = _digest(
-            {
-                "report": report.as_dict(),
-                "current": [asdict(row) for row in scenario.current],
-                "trusted": [asdict(row) for row in scenario.trusted],
-                "total_tolerance_cents": scenario.total_tolerance_cents,
-            }
-        )
+        context_sha256 = recovery_context_sha256(report, scenario)
         evaluations = tuple(
             self._evaluate_candidate(candidate, scenario) for candidate in DEFAULT_CANDIDATES
         )
@@ -262,7 +255,7 @@ class CounterfactualRecoveryLab:
             trusted_total,
             candidate_total,
             sha256((candidate.query.rstrip() + "\n").encode()).hexdigest(),
-            _digest(output),
+            canonical_sha256(output),
         )
 
 
@@ -293,7 +286,7 @@ def verify_certificate(certificate: RecoveryCertificate) -> bool:
         "output_sha256": certificate.output_sha256,
         "checks": [asdict(check) for check in certificate.checks],
     }
-    return _digest(body) == certificate.certificate_sha256
+    return canonical_sha256(body) == certificate.certificate_sha256
 
 
 def _certificate(
@@ -323,9 +316,20 @@ def _certificate(
         evaluation.query_sha256,
         evaluation.output_sha256,
         evaluation.checks,
-        _digest(body),
+        canonical_sha256(body),
     )
 
 
-def _digest(value: Any) -> str:
+def canonical_sha256(value: Any) -> str:
     return sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def recovery_context_sha256(report: IncidentReport, scenario: RecoveryScenario) -> str:
+    return canonical_sha256(
+        {
+            "report": report.as_dict(),
+            "current": [asdict(row) for row in scenario.current],
+            "trusted": [asdict(row) for row in scenario.trusted],
+            "total_tolerance_cents": scenario.total_tolerance_cents,
+        }
+    )

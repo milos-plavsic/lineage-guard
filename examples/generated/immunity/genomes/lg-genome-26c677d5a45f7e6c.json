@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "genome_id": "lg-genome-26c677d5a45f7e6c",
+  "incident_id": "9edb78125e19",
+  "source_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)",
+  "failed_field": "billing_amount",
+  "failure_rule": "values must be non-negative",
+  "context_sha256": "5ef6490a1b35f1f6eb2562becdfbebd29750a3be1051a149aa4fd77d46d6cf04",
+  "recovery_certificate_id": "0b5495ecf48a7373",
+  "recovery_certificate_sha256": "b4b2e580e72d11e198900ffe34eda0f66e301123f235362ec65e650f9414ac41",
+  "historical_fixture_sha256": "7896bf2d443b6d468a2e181cc0c196e03d3a45f13f5a186b831352c6aad6ec3c",
+  "exposed_assets": [
+    "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_billing,PROD)"
+  ],
+  "excluded_assets": [
+    "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_demographics,PROD)"
+  ],
+  "review_assets": [
+    "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)"
+  ],
+  "required_invariants": [
+    "source_failure_reproduced",
+    "quality_rule_passed",
+    "row_count_preserved",
+    "non_target_data_preserved",
+    "trusted_replacements_available",
+    "trusted_total_within_tolerance"
+  ],
+  "prevention_controls": [
+    "datahub_assertion",
+    "historical_regression_fixture",
+    "context_drift_gate",
+    "change_passport"
+  ],
+  "genome_sha256": "26c677d5a45f7e6ccfd5ab584da937665d787a9135b3d496fe8d3c33959e9233"
+}

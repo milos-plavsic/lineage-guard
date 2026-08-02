@@ -210,7 +210,7 @@ def test_service_empty_summary_and_escape_guard(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(
         generator,
         "generate",
-        lambda report, recovery=None: (GeneratedArtifact.create("../escape", "x"),),
+        lambda report, recovery=None, chronos=None: (GeneratedArtifact.create("../escape", "x"),),
     )
     with pytest.raises(ValueError, match="escapes destination"):
         generator.write(report, tmp_path)

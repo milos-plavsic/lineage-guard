@@ -1,8 +1,8 @@
 # Operator dashboard
 
-The dashboard presents the same deterministic incident analysis, counterfactual recovery evidence,
-and artifacts exposed by the CLI. It is a judge-facing demonstration and an operator decision aid,
-not a production control plane.
+The dashboard presents the same deterministic containment, counterfactual recovery, Chronos temporal
+immunity, and artifacts exposed by the CLI. It is a judge-facing demonstration and an operator
+decision aid, not a production control plane.
 
 ```bash
 uv sync --extra dev
@@ -12,8 +12,8 @@ uv run lineage-guard-web
 Open `http://127.0.0.1:8765`. The server binds to loopback by default and exposes:
 
 - `/` — accessible incident console;
-- `/api/incidents/current` — current evidence, decisions, recovery candidates, certificate,
-  timeline, and artifact hashes;
+- `/api/incidents/current` — current evidence, recovery candidates, certificate, Incident Genome,
+  change evaluations, coverage, timeline, and artifact hashes;
 - `/healthz` — process health probe.
 
 Use `--host 0.0.0.0` only behind an authenticated reverse proxy. The built-in server deliberately
@@ -24,6 +24,10 @@ The recovery panel intentionally shows one rejected and one verified candidate. 
 demonstrates why passing the target assertion is insufficient; its billing total diverges from the
 trusted snapshot. The certificate is an integrity-bound proposal for release, not evidence that an
 operator already approved or executed release.
+
+The Chronos panel shows three intentionally different outcomes: a recurring failure is blocked, an
+unchanged safe proposal receives a passport, and a safe guard under changed lineage requires
+revalidation. The passport uses the in-toto Statement v1 shape but is unsigned in the demonstration.
 
 The interface supports keyboard navigation, narrow screens, reduced-motion preferences, semantic
 headings and landmarks, a skip link, textual status labels, and color-independent decisions.

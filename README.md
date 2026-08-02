@@ -3,7 +3,8 @@
 [![CI](https://github.com/milos-plavsic/lineage-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/milos-plavsic/lineage-guard/actions/workflows/ci.yml)
 [![Demo](https://img.shields.io/badge/demo-GitHub%20Pages-5ee0b3)](https://milos-plavsic.github.io/lineage-guard/)
 
-LineageGuard is a deterministic safety agent for branch-specific data-incident containment. It
+LineageGuard is a deterministic immune system for data platforms: contain what is exposed, release
+what is proven, and prevent what is remembered. It
 receives authenticated quality events, retrieves dataset and field lineage through DataHub MCP,
 separates confirmed dependencies from proven exclusions and uncertain exposure, produces reviewable
 controls, and records approved decisions back into DataHub. An optional signed webhook applies an
@@ -55,6 +56,16 @@ The isolated counterfactual lab rejects a repair that merely turns the quality c
 a trusted-snapshot repair against six invariants, and issues a hash-bound recovery certificate. The
 certificate proposes release but never bypasses explicit approval.
 
+Compile containment and recovery evidence into temporal immunity:
+
+```bash
+lineage-guard --chronos --output immunity-report.json --artifacts-dir prevention-pack
+```
+
+Chronos creates an Incident Genome, replays the historical failure against unsafe and safe changes,
+issues an in-toto-shaped passport only for the safe change, and invalidates that proof after simulated
+DataHub context drift. A passport is eligibility for approval—not deployment authorization.
+
 For a real DataHub instance, install the `mcp` extra and follow the
 [live integration guide](docs/live-datahub.md). The adapter starts the official, version-pinned
 DataHub MCP Server and uses its lineage, entity, description, and tag tools.
@@ -81,6 +92,8 @@ Docker or executes downloaded scripts automatically.
 - `adapters/`: replaceable metadata graph implementations.
 - `remediation.py`: deterministic SQL, policy, report, and integrity-manifest generation.
 - `recovery.py`: bounded counterfactual SQL evaluation and hash-bound recovery certification.
+- `chronos.py`: Incident Genome compilation, historical replay, proof passports, drift expiry, and
+  immunity coverage.
 - `examples/`: judge-readable sample incidents and generated artifacts.
 
 The safety-critical authority does not depend on an LLM. That is deliberate: probabilistic output

@@ -20,6 +20,9 @@ and the integrity of DataHub write-back.
 - a repair that passes the target assertion while damaging rows, unrelated fields, or business totals;
 - arbitrary SQL escaping the counterfactual evaluation boundary;
 - a recovery certificate reused with different incident context or output.
+- stale prevention proof reused after schema, lineage, or governance drift;
+- a historical fixture detached from the Incident Genome that learned from it;
+- an unsigned passport mistaken for authenticated deployment authorization.
 
 ## Controls
 
@@ -44,6 +47,9 @@ and the integrity of DataHub write-back.
 | Superficial repair | Six independent recovery invariants; all must pass | Recovery tests and sample evaluations |
 | Counterfactual SQL escape | Only application-owned queries; bounded rows; fresh in-memory SQLite database | Recovery ADR and tests |
 | Certificate/context substitution | Canonical incident, input, SQL, output, and check digests | Certificate tamper test |
+| Stale change proof | Exact schema/lineage/governance fingerprint; drift forces revalidation | Chronos drift test |
+| Detached historical fixture | Fixture digest embedded in the Incident Genome and checked at generation | Prevention Pack tests |
+| Passport overreach | Decision is only `eligible_for_approval`; unsigned status documented and tested | Chronos ADR and passport tests |
 
 ## Residual risks
 
