@@ -23,3 +23,10 @@ The interface supports keyboard navigation, narrow screens, reduced-motion prefe
 headings and landmarks, a skip link, textual status labels, and color-independent decisions.
 Browser responses include a restrictive Content Security Policy, clickjacking protection, MIME
 sniffing protection, and a no-referrer policy.
+
+## Static judge demo
+
+`uv run python scripts/export_static_demo.py site` exports the packaged interface plus a deterministic
+incident evidence bundle and integrity manifest. GitHub Pages publishes this bundle without a
+long-running service. The header labels it as a demo environment; live DataHub verification remains a
+separate documented workflow.

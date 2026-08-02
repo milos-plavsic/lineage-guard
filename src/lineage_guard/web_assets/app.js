@@ -7,7 +7,8 @@ const element = (tag, className, content) => {
 };
 
 async function loadIncident() {
-  const response = await fetch('/api/incidents/current', { headers: { Accept: 'application/json' } });
+  let response = await fetch('api/incidents/current', { headers: { Accept: 'application/json' } });
+  if (!response.ok) response = await fetch('incident.json', { headers: { Accept: 'application/json' } });
   if (!response.ok) throw new Error(`Incident service returned ${response.status}`);
   const data = await response.json();
   text('incident-id', data.report.incident_id);

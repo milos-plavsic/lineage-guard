@@ -9,3 +9,4 @@ build/
 .env
 /incident-report.json
 /.fixtures/
+/site/

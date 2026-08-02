@@ -43,6 +43,7 @@ DataHub MCP Server and uses its lineage, entity, description, and tag tools.
 
 The lightweight [operator dashboard](docs/operator-demo.md) runs at `http://127.0.0.1:8765` and
 visualizes the downstream blast radius, evidence timeline, decisions, and artifact integrity hashes.
+The same verified view can be exported as a static judge demo for GitHub Pages.
 
 The [healthcare fixture workflow](docs/healthcare-fixture.md) fetches DataHub's official synthetic
 scenario from a pinned commit using streamed downloads and integrity validation. It never starts
