@@ -109,13 +109,16 @@ def _clean_worktree(root: Path) -> bool:
 
 
 def _created_in_submission_period(root: Path) -> bool:
-    result = subprocess.run(
-        ["git", "log", "--reverse", "--format=%cI"],
-        cwd=root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "log", "--reverse", "--format=%cI"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return False
     lines = result.stdout.splitlines()
     if not lines:
         return False

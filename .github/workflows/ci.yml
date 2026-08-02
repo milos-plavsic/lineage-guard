@@ -32,5 +32,11 @@ jobs:
       - run: uv sync --locked --extra dev --extra mcp
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run pytest
+      - run: uv run pytest --cov --cov-report=term-missing
       - run: uv build
+      - name: Smoke-test built wheel
+        shell: bash
+        run: |
+          wheel=$(find dist -name '*.whl' -print -quit)
+          uv run --isolated --no-project --with "$wheel" lineage-guard --output smoke-report.json
+          test -s smoke-report.json
