@@ -21,10 +21,13 @@ insufficient evidence. It produces a deterministic risk score and explanation, p
 for confirmed material impact, permits continuation only for a proven exclusion, and routes every
 uncertain branch to review.
 
-For the healthcare demonstration, negative billing values enter `raw_patients`. Both billing and
-demographics marts share the upstream pipeline, but only the financial branch depends on the failing
-concern. LineageGuard proposes quarantine for `mart_billing` while allowing
-`mart_demographics` to continue.
+For the deterministic healthcare demonstration, negative billing values enter `raw_patients`.
+Both billing and demographics marts share the upstream pipeline, but only the financial branch
+depends on the failing field. LineageGuard quarantines `mart_billing` and permits
+`mart_demographics` only because the fixture explicitly proves complete field exclusion. In the
+live DataHub verification, four stored billing paths were confirmed; the two demographic paths had
+no complete exclusion proof, so LineageGuard conservatively required review instead of claiming
+they were safe.
 
 It then generates a PR-ready SQL assertion, machine-readable branch policy, operator report, and
 SHA-256 manifest. With explicit approval, it first sends an HMAC-signed, idempotent default-hold plan
@@ -35,10 +38,11 @@ default; mutation capability, approval, and enforcement credentials are independ
 ## How we built it
 
 The Python domain core is deterministic and transport-independent. A durable agent state machine
-authenticates events, manages SQLite leases/retries/conflicts, calls dataset and schema-field
-`get_lineage` plus batched `get_entities`, records each stage, and uses `update_description` and
-`add_tags` only after approval. The listener, CLI, operator dashboard, and generated artifacts share
-the same decision model.
+authenticates events, manages SQLite leases/retries/conflicts, calls dataset and column lineage plus
+batched entity context through the official MCP server, records each stage, and uses
+`update_description` and `add_tags` only after approval. A bounded exact-path fallback handles an
+upstream compact-column-query incompatibility without turning absent paths into false exclusions.
+The listener, CLI, operator dashboard, and generated artifacts share the same decision model.
 
 The demonstration uses DataHub's official synthetic healthcare fixture pinned to an immutable
 upstream commit. Acquisition streams files to disk and verifies their sizes and Git object hashes.

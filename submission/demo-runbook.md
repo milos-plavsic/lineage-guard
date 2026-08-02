@@ -39,7 +39,9 @@
 1. Use a remotely hosted DataHub instance; do not start Quickstart on the constrained workstation.
 2. Follow `docs/healthcare-fixture.md` to ingest and enrich the fixture.
 3. Run the MCP command from `docs/live-datahub.md` without `--apply` first.
-4. Compare live entity URNs and decisions with the deterministic output.
+4. Contrast the evidence honestly: the deterministic fixture proves demographic exclusion and may
+   continue it; the live graph confirms four billing dependencies but holds two unproven
+   demographic branches for review.
 5. Enable `--apply` only on disposable demonstration metadata and show the resulting description and
    quarantine tag.
 
