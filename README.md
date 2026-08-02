@@ -82,8 +82,8 @@ The complete test matrix is documented in [the validation strategy](docs/testing
 
 ## Roadmap
 
-1. Validate the pinned healthcare fixture against a reachable DataHub instance.
-2. Package the public demo, three-minute video, and Devpost submission.
+1. Record the public demonstration video using the committed runbook.
+2. Finalize and submit the Devpost entry.
 
 ## License
 

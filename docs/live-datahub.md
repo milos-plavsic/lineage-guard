@@ -51,3 +51,12 @@ LineageGuard rejects missing tools, malformed JSON, incomplete entity context, i
 failed MCP mutations. Tokens are inherited by the child process and are never rendered in reports.
 For shared or production environments, scope the service account to the smallest applicable DataHub
 view and permissions.
+
+## Verified compatibility
+
+The complete workflow was verified on August 2, 2026 in a disposable 4-core, 16 GB GitHub
+Codespace against DataHub GMS 1.6.0, DataHub CLI 1.6.0.17 on Python 3.11, and the pinned DataHub MCP
+Server 0.6.0. The test covered fixture ingestion, six lineage relationships, entity context reads,
+selective containment, mutation gating, description write-back, and quarantine-tag write-back.
+Sanitized machine-readable results are available in
+[`examples/live-datahub-verification.json`](../examples/live-datahub-verification.json).

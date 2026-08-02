@@ -7,9 +7,9 @@ published media, or organizer action; **optional** is not required for eligibili
 |---|---|---|
 | Project created during July 6–August 10, 2026 | Proved | First Git commit is dated inside the submission period; preserve Git history. |
 | Working software application | Proved locally | CLI, dashboard HTTP smoke test, generated SQL execution test, and package build. |
-| DataHub OSS plus an eligible agent technology | Proved in code | Official DataHub MCP adapter in `src/lineage_guard/adapters/mcp.py`. |
+| DataHub OSS plus an eligible agent technology | Proved live | Official MCP adapter plus `examples/live-datahub-verification.json`. |
 | Agents That Do Real Work category | Proved | `submission/submission.json` and Devpost copy. |
-| Meaningful context-graph use | Proved | Downstream lineage, entity context, branch decisions, and approved write-back. |
+| Meaningful context-graph use | Proved live | Six downstream assets resolved; approved description and tag write-back verified directly in DataHub. |
 | Function matches video and description | Pending external | Record only the committed workflow; verify final video against the runbook. |
 | Public, easily testable project URL | Proved externally | Public HTTPS demo: <https://milos-plavsic.github.io/lineage-guard/>; URL recorded in `submission/submission.json`. |
 | Public source repository | Proved externally | Public repository: <https://github.com/milos-plavsic/lineage-guard>. |
