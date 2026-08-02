@@ -45,3 +45,8 @@ short-lived, least-privilege token. Follow `docs/live-datahub.md` when those are
 Do not substitute a local DataHub Quickstart on this memory-constrained workstation. Deferring that
 single external test preserves host reliability and does not weaken the deterministic or protocol
 boundary tests.
+
+For disposable remote validation, `.devcontainer/devcontainer.json` requests four CPUs, at least
+12 GB RAM, Docker-in-Docker, and SSH access. Use a short Codespaces idle timeout and retention period,
+store DataHub credentials only as Codespaces secrets or ephemeral environment variables, and delete
+the Codespace after exporting sanitized test evidence.
