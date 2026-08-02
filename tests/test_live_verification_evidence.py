@@ -4,7 +4,9 @@ from pathlib import Path
 
 def test_live_datahub_evidence_records_selective_verified_writeback() -> None:
     evidence = json.loads(
-        (Path(__file__).resolve().parents[1] / "examples/live-datahub-verification.json").read_text()
+        (
+            Path(__file__).resolve().parents[1] / "examples/live-datahub-verification.json"
+        ).read_text()
     )
 
     assert evidence["result"] == "pass"
