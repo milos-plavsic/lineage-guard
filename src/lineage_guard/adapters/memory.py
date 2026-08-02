@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from lineage_guard.domain import Asset, LineageEdge
+from collections import defaultdict, deque
+
+from lineage_guard.domain import Asset, LineageEdge, LineageTarget
 
 
 class InMemoryMetadataGraph:
@@ -16,9 +18,25 @@ class InMemoryMetadataGraph:
         except KeyError as error:
             raise LookupError(f"Asset not found: {urn}") from error
 
-    def get_downstream_lineage(self, urn: str, max_hops: int) -> tuple[LineageEdge, ...]:
-        del urn, max_hops
-        return self._edges
+    def get_downstream_lineage(self, urn: str, max_hops: int) -> tuple[LineageTarget, ...]:
+        adjacency: dict[str, list[str]] = defaultdict(list)
+        for edge in self._edges:
+            adjacency[edge.upstream_urn].append(edge.downstream_urn)
+        distances = {urn: 0}
+        queue = deque([urn])
+        while queue:
+            current = queue.popleft()
+            if distances[current] >= max_hops:
+                continue
+            for downstream in adjacency[current]:
+                if downstream not in distances:
+                    distances[downstream] = distances[current] + 1
+                    queue.append(downstream)
+        return tuple(
+            LineageTarget(target, distance)
+            for target, distance in distances.items()
+            if target != urn
+        )
 
     def append_incident_summary(self, urn: str, summary: str) -> None:
         self.descriptions.append((urn, summary))

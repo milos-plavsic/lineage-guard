@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict, deque
 from hashlib import sha256
 
 from lineage_guard.domain import (
@@ -30,12 +29,10 @@ class IncidentAnalyzer:
             raise ValueError("max_hops must be at least 1")
 
         source = self._graph.get_asset(signal.asset_urn)
-        edges = self._graph.get_downstream_lineage(signal.asset_urn, max_hops)
-        distances = self._distances(source.urn, edges, max_hops)
+        targets = self._graph.get_downstream_lineage(signal.asset_urn, max_hops)
         decisions = tuple(
-            self._decision(self._graph.get_asset(urn), distance, signal)
-            for urn, distance in sorted(distances.items(), key=lambda item: (item[1], item[0]))
-            if urn != source.urn
+            self._decision(self._graph.get_asset(target.urn), target.distance, signal)
+            for target in sorted(targets, key=lambda item: (item.distance, item.urn))
         )
         incident_id = sha256(
             f"{signal.asset_urn}|{signal.field}|{signal.rule}|{signal.observed}".encode()
@@ -51,7 +48,10 @@ class IncidentAnalyzer:
             decisions=decisions,
             proposed_writeback={
                 "append_description": {"urn": source.urn, "markdown": summary},
-                "add_tag": [{"urn": urn, "tag": "LineageGuard:Quarantined"} for urn in quarantined],
+                "add_tag": [
+                    {"urn": urn, "tag": "urn:li:tag:LineageGuard_Quarantined"}
+                    for urn in quarantined
+                ],
             },
         )
 
@@ -62,23 +62,6 @@ class IncidentAnalyzer:
         self._graph.append_incident_summary(description["urn"], description["markdown"])
         for mutation in report.proposed_writeback["add_tag"]:
             self._graph.add_tag(mutation["urn"], mutation["tag"])
-
-    @staticmethod
-    def _distances(source: str, edges: tuple, max_hops: int) -> dict[str, int]:
-        adjacency: dict[str, list[str]] = defaultdict(list)
-        for edge in edges:
-            adjacency[edge.upstream_urn].append(edge.downstream_urn)
-        distances = {source: 0}
-        queue = deque([source])
-        while queue:
-            current = queue.popleft()
-            if distances[current] >= max_hops:
-                continue
-            for downstream in adjacency[current]:
-                if downstream not in distances:
-                    distances[downstream] = distances[current] + 1
-                    queue.append(downstream)
-        return distances
 
     @staticmethod
     def _decision(asset: Asset, distance: int, signal: QualitySignal) -> BranchDecision:

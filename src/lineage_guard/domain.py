@@ -35,6 +35,12 @@ class LineageEdge:
 
 
 @dataclass(frozen=True, slots=True)
+class LineageTarget:
+    urn: str
+    distance: int
+
+
+@dataclass(frozen=True, slots=True)
 class QualitySignal:
     asset_urn: str
     field: str

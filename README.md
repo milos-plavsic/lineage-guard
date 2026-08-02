@@ -33,8 +33,11 @@ ruff check .
 
 On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`.
 
-`--apply` demonstrates the explicit approval boundary against the in-memory adapter. It does not
-contact a real DataHub instance in this milestone.
+`--apply` demonstrates the explicit approval boundary against the in-memory adapter.
+
+For a real DataHub instance, install the `mcp` extra and follow the
+[live integration guide](docs/live-datahub.md). The adapter starts the official, version-pinned
+DataHub MCP Server and uses its lineage, entity, description, and tag tools.
 
 ## Architecture
 
@@ -59,13 +62,11 @@ See [ADR 0001](docs/adr/0001-safe-selective-containment.md) for the safety ratio
 
 ## Roadmap
 
-1. Connect the official DataHub MCP Server.
-2. Ingest the provided healthcare dataset and assertions.
-3. Generate dbt/SQL remediation artifacts and validation evidence.
-4. Add an operator-facing web demonstration and incident timeline.
-5. Package the public demo, three-minute video, and Devpost submission.
+1. Ingest the provided healthcare dataset and assertions.
+2. Generate dbt/SQL remediation artifacts and validation evidence.
+3. Add an operator-facing web demonstration and incident timeline.
+4. Package the public demo, three-minute video, and Devpost submission.
 
 ## License
 
 Apache License 2.0. See `LICENSE`.
-

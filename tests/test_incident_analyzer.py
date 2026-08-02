@@ -13,7 +13,7 @@ def test_selectively_quarantines_only_material_branch() -> None:
     assert decisions[BILLING].action is Action.QUARANTINE
     assert decisions[DEMOGRAPHICS].action is Action.CONTINUE
     assert report.proposed_writeback["add_tag"] == [
-        {"urn": BILLING, "tag": "LineageGuard:Quarantined"}
+        {"urn": BILLING, "tag": "urn:li:tag:LineageGuard_Quarantined"}
     ]
 
 
@@ -40,6 +40,6 @@ def test_approved_writeback_is_auditable() -> None:
 
     analyzer.apply_writeback(report, approved=True)
 
-    assert graph.tags == [(BILLING, "LineageGuard:Quarantined")]
+    assert graph.tags == [(BILLING, "urn:li:tag:LineageGuard_Quarantined")]
     assert graph.descriptions[0][0] == report.source.urn
     assert report.incident_id in graph.descriptions[0][1]
