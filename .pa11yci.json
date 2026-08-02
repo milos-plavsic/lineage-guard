@@ -3,6 +3,11 @@
     "standard": "WCAG2AA",
     "timeout": 15000,
     "wait": 1000,
+    "chromeLaunchConfig": {
+      "args": [
+        "--no-sandbox"
+      ]
+    },
     "viewport": {
       "width": 1280,
       "height": 800
