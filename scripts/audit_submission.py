@@ -4,6 +4,7 @@ import argparse
 import json
 import subprocess
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -20,6 +21,11 @@ def audit(root: Path) -> tuple[Check, ...]:
     checks = [
         Check("Apache 2.0 license", "Apache License" in (root / "LICENSE").read_text(), "LICENSE"),
         Check(
+            "Created during submission period",
+            _created_in_submission_period(root),
+            "first Git commit timestamp",
+        ),
+        Check(
             "English description",
             (root / "submission/devpost.md").stat().st_size > 1000,
             "submission/devpost.md",
@@ -28,6 +34,16 @@ def audit(root: Path) -> tuple[Check, ...]:
             "Video script",
             "2 minutes 45 seconds" in (root / "submission/video-script.md").read_text(),
             "submission/video-script.md",
+        ),
+        Check(
+            "Acceptance matrix",
+            "Hackathon acceptance matrix" in (root / "submission/acceptance-matrix.md").read_text(),
+            "submission/acceptance-matrix.md",
+        ),
+        Check(
+            "Third-party disclosure",
+            (root / "THIRD_PARTY_NOTICES.md").is_file(),
+            "THIRD_PARTY_NOTICES.md",
         ),
         Check(
             "Sample output",
@@ -42,14 +58,19 @@ def audit(root: Path) -> tuple[Check, ...]:
         Check("Setup instructions", "## Run it" in (root / "README.md").read_text(), "README.md"),
         Check(
             "Repository URL",
-            _public_url(metadata.get("repositoryUrl")),
+            _public_url(metadata.get("repositoryUrl"), hosts={"github.com"}),
             str(metadata.get("repositoryUrl")),
         ),
         Check(
             "Project URL", _public_url(metadata.get("projectUrl")), str(metadata.get("projectUrl"))
         ),
         Check(
-            "Public video URL", _public_url(metadata.get("videoUrl")), str(metadata.get("videoUrl"))
+            "Public video URL",
+            _public_url(
+                metadata.get("videoUrl"),
+                hosts={"youtube.com", "www.youtube.com", "youtu.be", "vimeo.com", "youku.com"},
+            ),
+            str(metadata.get("videoUrl")),
         ),
         Check(
             "Video under 3 minutes",
@@ -61,11 +82,15 @@ def audit(root: Path) -> tuple[Check, ...]:
     return tuple(checks)
 
 
-def _public_url(value: object) -> bool:
+def _public_url(value: object, *, hosts: set[str] | None = None) -> bool:
     if not isinstance(value, str):
         return False
     parsed = urlparse(value)
-    return parsed.scheme == "https" and bool(parsed.netloc)
+    return (
+        parsed.scheme == "https"
+        and bool(parsed.netloc)
+        and (hosts is None or parsed.hostname in hosts)
+    )
 
 
 def _valid_duration(value: object) -> bool:
@@ -81,6 +106,23 @@ def _clean_worktree(root: Path) -> bool:
         text=True,
     )
     return not result.stdout.strip()
+
+
+def _created_in_submission_period(root: Path) -> bool:
+    result = subprocess.run(
+        ["git", "log", "--reverse", "--format=%cI"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    lines = result.stdout.splitlines()
+    if not lines:
+        return False
+    created = datetime.fromisoformat(lines[0]).astimezone(timezone.utc)
+    begins = datetime(2026, 7, 6, 13, 0, tzinfo=timezone.utc)
+    ends = datetime(2026, 8, 10, 21, 0, tzinfo=timezone.utc)
+    return begins <= created <= ends
 
 
 def main() -> int:
