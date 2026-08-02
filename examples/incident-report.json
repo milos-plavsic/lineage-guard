@@ -1,0 +1,97 @@
+{
+  "incident_id": "9edb78125e19",
+  "source": {
+    "urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)",
+    "name": "raw_patients",
+    "description": "Raw healthcare records",
+    "owners": [
+      "Data Platform"
+    ],
+    "tags": [],
+    "usage_count": 0
+  },
+  "signal": {
+    "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)",
+    "field": "billing_amount",
+    "rule": "values must be non-negative",
+    "observed": "37 negative values in the latest batch",
+    "severity": "high",
+    "affected_concerns": [
+      "billing",
+      "financial"
+    ]
+  },
+  "decisions": [
+    {
+      "asset": {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)",
+        "name": "staging_patients",
+        "description": "Standardized patient records",
+        "owners": [
+          "Data Platform"
+        ],
+        "tags": [],
+        "usage_count": 0
+      },
+      "distance": 1,
+      "matching_concerns": [],
+      "risk_score": 60,
+      "action": "continue",
+      "rationale": "No branch-specific dependency on the failing concern was found."
+    },
+    {
+      "asset": {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_billing,PROD)",
+        "name": "mart_billing",
+        "description": "Financial billing and insurance reporting",
+        "owners": [
+          "Finance Analytics"
+        ],
+        "tags": [
+          "Critical",
+          "billing"
+        ],
+        "usage_count": 240
+      },
+      "distance": 2,
+      "matching_concerns": [
+        "billing",
+        "financial"
+      ],
+      "risk_score": 100,
+      "action": "quarantine",
+      "rationale": "The failing concern is material to this branch and the impact score is high."
+    },
+    {
+      "asset": {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_demographics,PROD)",
+        "name": "mart_demographics",
+        "description": "Population age and demographic reporting",
+        "owners": [
+          "Clinical Analytics"
+        ],
+        "tags": [
+          "demographics"
+        ],
+        "usage_count": 80
+      },
+      "distance": 2,
+      "matching_concerns": [],
+      "risk_score": 63,
+      "action": "continue",
+      "rationale": "No branch-specific dependency on the failing concern was found."
+    }
+  ],
+  "proposed_writeback": {
+    "append_description": {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)",
+      "markdown": "\n\n### LineageGuard incident 9edb78125e19\nSource: `raw_patients`; field: `billing_amount`; rule: values must be non-negative; observed: 37 negative values in the latest batch. Branch decisions: staging_patients=continue, mart_billing=quarantine, mart_demographics=continue."
+    },
+    "add_tag": [
+      {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_billing,PROD)",
+        "tag": "LineageGuard:Quarantined"
+      }
+    ]
+  }
+}

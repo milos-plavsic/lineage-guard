@@ -7,5 +7,4 @@ dist/
 build/
 *.egg-info/
 .env
-incident-report.json
-
+/incident-report.json
