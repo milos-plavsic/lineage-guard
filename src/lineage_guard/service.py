@@ -61,7 +61,9 @@ class IncidentAnalyzer:
         if not approved:
             raise PermissionError("DataHub mutations require explicit approval")
         description = report.proposed_writeback["append_description"]
-        self._graph.append_incident_summary(description["urn"], description["markdown"])
+        incident_marker = f"### LineageGuard incident {report.incident_id}"
+        if incident_marker not in report.source.description:
+            self._graph.append_incident_summary(description["urn"], description["markdown"])
         for mutation in report.proposed_writeback["add_tag"]:
             self._graph.add_tag(mutation["urn"], mutation["tag"])
 

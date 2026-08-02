@@ -70,6 +70,34 @@ def test_approved_writeback_is_auditable() -> None:
     assert report.incident_id in graph.descriptions[0][1]
 
 
+def test_retry_does_not_append_an_existing_incident_summary() -> None:
+    initial = assets()
+    first = initial[0]
+    graph = InMemoryMetadataGraph(
+        (
+            type(first)(
+                first.urn,
+                first.name,
+                "### LineageGuard incident 9edb78125e19\nAlready recorded.",
+                first.owners,
+                first.tags,
+                first.usage_count,
+            ),
+            *initial[1:],
+        ),
+        edges(),
+        field_dependencies=field_dependencies(),
+    )
+    analyzer = IncidentAnalyzer(graph)
+    report = analyzer.analyze(negative_billing_signal())
+    assert report.incident_id == "9edb78125e19"
+
+    analyzer.apply_writeback(report, approved=True)
+
+    assert graph.descriptions == []
+    assert graph.tags == [(BILLING, "urn:li:tag:LineageGuard_Quarantined")]
+
+
 def test_analysis_rejects_invalid_hop_limit() -> None:
     analyzer = IncidentAnalyzer(InMemoryMetadataGraph(assets(), edges()))
 
