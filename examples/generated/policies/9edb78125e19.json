@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "incident_id": "9edb78125e19",
+  "source_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)",
+  "default_action": "require-human-review",
+  "branches": [
+    {
+      "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)",
+      "asset_name": "staging_patients",
+      "action": "continue",
+      "risk_score": 60,
+      "evidence": [],
+      "rationale": "No branch-specific dependency on the failing concern was found."
+    },
+    {
+      "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_billing,PROD)",
+      "asset_name": "mart_billing",
+      "action": "quarantine",
+      "risk_score": 100,
+      "evidence": [
+        "billing",
+        "financial"
+      ],
+      "rationale": "The failing concern is material to this branch and the impact score is high."
+    },
+    {
+      "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_demographics,PROD)",
+      "asset_name": "mart_demographics",
+      "action": "continue",
+      "risk_score": 63,
+      "evidence": [],
+      "rationale": "No branch-specific dependency on the failing concern was found."
+    }
+  ]
+}

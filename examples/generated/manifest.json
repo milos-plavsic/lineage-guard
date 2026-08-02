@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "incident_id": "9edb78125e19",
+  "artifacts": [
+    {
+      "path": "quality/assert_billing_amount_non_negative.sql",
+      "sha256": "cf5d0b7cbde21122814d018d639441b26984d56a0208c5ded2974cf61c10315c"
+    },
+    {
+      "path": "policies/9edb78125e19.json",
+      "sha256": "506c802598591ffeb22052ed3bd81c42b7700f2cdcffa7e8e6f1508ccb66ed29"
+    },
+    {
+      "path": "reports/9edb78125e19.md",
+      "sha256": "39373bcfeaab8e90f785a03c017d428aa8ef7dd9a0863366fdd910ecd0a39e54"
+    }
+  ]
+}

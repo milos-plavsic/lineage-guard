@@ -11,6 +11,7 @@ from lineage_guard.adapters.mcp import DataHubMcpGraph, StdioMcpConfig, open_std
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
 from lineage_guard.demo import assets, edges, negative_billing_signal
 from lineage_guard.domain import QualitySignal, Severity
+from lineage_guard.remediation import RemediationGenerator
 from lineage_guard.service import IncidentAnalyzer
 
 
@@ -25,6 +26,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--gms-url", help="DataHub GMS URL for MCP mode.")
     parser.add_argument("--source-urn", help="Source dataset URN for MCP mode.")
+    parser.add_argument(
+        "--artifacts-dir", type=Path, help="Write reviewable remediation artifacts here."
+    )
     parser.add_argument("--field", default="billing_amount", help="Failing field name.")
     parser.add_argument(
         "--concern",
@@ -47,6 +51,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     graph = InMemoryMetadataGraph(assets(), edges())
     analyzer = IncidentAnalyzer(graph)
     report = analyzer.analyze(negative_billing_signal())
+    if args.artifacts_dir:
+        RemediationGenerator().write(report, args.artifacts_dir)
     if args.apply:
         analyzer.apply_writeback(report, approved=True)
     rendered = json.dumps(report.as_dict(), indent=2)
@@ -73,6 +79,8 @@ async def _run_mcp(args: argparse.Namespace) -> int:
         graph = await DataHubMcpGraph.load(session, args.source_urn)
         analyzer = IncidentAnalyzer(graph)
         report = analyzer.analyze(signal)
+        if args.artifacts_dir:
+            RemediationGenerator().write(report, args.artifacts_dir)
         if args.apply:
             analyzer.apply_writeback(report, approved=True)
             await graph.flush()

@@ -27,6 +27,7 @@ python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
 lineage-guard --output incident-report.json
+lineage-guard --artifacts-dir remediation
 pytest
 ruff check .
 ```
@@ -45,12 +46,14 @@ DataHub MCP Server and uses its lineage, entity, description, and tag tools.
 - `service.py`: deterministic graph traversal and selective containment policy.
 - `ports.py`: narrow interface for DataHub context and write-back.
 - `adapters/`: replaceable metadata graph implementations.
+- `remediation.py`: deterministic SQL, policy, report, and integrity-manifest generation.
 - `examples/`: judge-readable sample incidents and generated artifacts.
 
 The domain does not depend on an LLM or DataHub transport. The production adapter will use the
 official DataHub MCP Server for search, lineage, entity metadata, and approved mutation tools.
 
-See [ADR 0001](docs/adr/0001-safe-selective-containment.md) for the safety rationale.
+See [ADR 0001](docs/adr/0001-safe-selective-containment.md) for the containment rationale and
+[ADR 0002](docs/adr/0002-reviewable-remediation-artifacts.md) for the artifact trust boundary.
 
 ## Safety model
 
@@ -63,9 +66,8 @@ See [ADR 0001](docs/adr/0001-safe-selective-containment.md) for the safety ratio
 ## Roadmap
 
 1. Ingest the provided healthcare dataset and assertions.
-2. Generate dbt/SQL remediation artifacts and validation evidence.
-3. Add an operator-facing web demonstration and incident timeline.
-4. Package the public demo, three-minute video, and Devpost submission.
+2. Add an operator-facing web demonstration and incident timeline.
+3. Package the public demo, three-minute video, and Devpost submission.
 
 ## License
 
