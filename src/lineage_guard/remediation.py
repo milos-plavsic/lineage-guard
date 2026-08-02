@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
 
 from lineage_guard.domain import Action, IncidentReport
+from lineage_guard.recovery import DEFAULT_CANDIDATES, RecoveryBundle
 
 _SQL_IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -27,7 +28,9 @@ class GeneratedArtifact:
 class RemediationGenerator:
     """Generate reviewable artifacts without executing changes against source systems."""
 
-    def generate(self, report: IncidentReport) -> tuple[GeneratedArtifact, ...]:
+    def generate(
+        self, report: IncidentReport, recovery: RecoveryBundle | None = None
+    ) -> tuple[GeneratedArtifact, ...]:
         table = self._identifier(report.source.name, "source asset name")
         field = self._identifier(report.signal.field, "quality signal field")
         test_name = f"assert_{field}_non_negative"
@@ -55,7 +58,7 @@ class RemediationGenerator:
             ],
         }
         summary = self._summary(report, test_name)
-        return (
+        artifacts = (
             GeneratedArtifact.create(f"quality/{test_name}.sql", sql),
             GeneratedArtifact.create(
                 f"policies/{report.incident_id}.json",
@@ -63,9 +66,15 @@ class RemediationGenerator:
             ),
             GeneratedArtifact.create(f"reports/{report.incident_id}.md", summary),
         )
+        return artifacts + self._recovery_artifacts(recovery)
 
-    def write(self, report: IncidentReport, destination: Path) -> tuple[GeneratedArtifact, ...]:
-        artifacts = self.generate(report)
+    def write(
+        self,
+        report: IncidentReport,
+        destination: Path,
+        recovery: RecoveryBundle | None = None,
+    ) -> tuple[GeneratedArtifact, ...]:
+        artifacts = self.generate(report, recovery)
         root = destination.resolve()
         for artifact in artifacts:
             target = (root / artifact.relative_path).resolve()
@@ -84,6 +93,38 @@ class RemediationGenerator:
         (root / "manifest.json").write_text(
             json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
         )
+        return artifacts
+
+    @staticmethod
+    def _recovery_artifacts(recovery: RecoveryBundle | None) -> tuple[GeneratedArtifact, ...]:
+        if recovery is None:
+            return ()
+        candidates = {candidate.candidate_id: candidate for candidate in DEFAULT_CANDIDATES}
+        artifacts = tuple(
+            GeneratedArtifact.create(
+                f"recovery/candidates/{evaluation.candidate_id}.sql",
+                candidates[evaluation.candidate_id].query,
+            )
+            for evaluation in recovery.evaluations
+        )
+        evaluation_document = {
+            "schema_version": recovery.schema_version,
+            "incident_id": recovery.incident_id,
+            "context_sha256": recovery.context_sha256,
+            "evaluations": [asdict(evaluation) for evaluation in recovery.evaluations],
+        }
+        artifacts += (
+            GeneratedArtifact.create(
+                "recovery/evaluations.json", json.dumps(evaluation_document, indent=2)
+            ),
+        )
+        if recovery.certificate is not None:
+            artifacts += (
+                GeneratedArtifact.create(
+                    f"recovery/certificates/{recovery.certificate.certificate_id}.json",
+                    json.dumps(asdict(recovery.certificate), indent=2),
+                ),
+            )
         return artifacts
 
     @staticmethod

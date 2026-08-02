@@ -43,6 +43,24 @@
       <div id="branches" class="branches" aria-live="polite"></div>
     </section>
 
+    <section class="panel recovery-panel" aria-labelledby="recovery-title">
+      <div class="panel-heading">
+        <div><p class="eyebrow">Proof-carrying recovery</p><h2 id="recovery-title">Counterfactual recovery lab</h2></div>
+        <div class="status-pill proof">Release proof ready</div>
+      </div>
+      <p class="section-intro">A green quality check is insufficient. Every candidate must reproduce the failure, repair the target, preserve rows and non-target data, retain trusted business totals, and carry exact provenance.</p>
+      <div class="reality-twin" aria-label="Current and candidate states">
+        <article><span>Observed reality</span><strong>Billing branch quarantined</strong><small>1 invalid row · total 150.00</small></article>
+        <div aria-hidden="true">→</div>
+        <article><span>Verified candidate</span><strong>Trusted value restored</strong><small>0 invalid rows · total 300.00</small></article>
+      </div>
+      <div id="recovery-candidates" class="candidate-grid" aria-live="polite"></div>
+      <div class="certificate" aria-labelledby="certificate-title">
+        <div><span class="eyebrow">Machine-verifiable evidence</span><h3 id="certificate-title">Recovery certificate</h3></div>
+        <dl><div><dt>Certificate</dt><dd><code id="certificate-id">Loading</code></dd></div><div><dt>Transition</dt><dd id="certificate-transition">Loading</dd></div><div><dt>Integrity</dt><dd><code id="certificate-hash">Loading</code></dd></div></dl>
+      </div>
+    </section>
+
     <div class="two-column">
       <section class="panel" aria-labelledby="timeline-title">
         <div class="panel-heading"><div><p class="eyebrow">Evidence trail</p><h2 id="timeline-title">Incident timeline</h2></div></div>
@@ -54,6 +72,6 @@
       </section>
     </div>
   </main>
-  <footer>Authenticated events · Evidence-bound decisions · Explicit approval · DataHub-backed context</footer>
+  <footer>Authenticated events · Evidence-bound containment · Counterfactual verification · Proof-gated recovery</footer>
 </body>
 </html>

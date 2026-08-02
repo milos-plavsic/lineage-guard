@@ -8,7 +8,7 @@ published media, or organizer action; **optional** is not required for eligibili
 | Project created during July 6–August 10, 2026 | Proved | First Git commit is dated inside the submission period; preserve Git history. |
 | Working software application | Proved locally | CLI, authenticated agent listener, durable journal, dashboard, enforcement contract, SQL execution test, and package build. |
 | DataHub OSS plus an eligible agent technology | Proved live | Official MCP adapter plus `examples/live-datahub-verification.json`. |
-| Agents That Do Real Work category | Proved | Durable event-driven DataHub tool loop plus approved orchestrator action and DataHub write-back. |
+| Agents That Do Real Work category | Proved | Durable DataHub tool loop, approved orchestrator action, graph write-back, and proof-gated recovery. |
 | Meaningful context-graph use | Proved live | Six downstream assets resolved; approved description and tag write-back verified directly in DataHub. |
 | Function matches video and description | Pending external | Record only the committed workflow; verify final video against the runbook. |
 | Public, easily testable project URL | Proved externally | Public HTTPS demo: <https://milos-plavsic.github.io/lineage-guard/>; URL recorded in `submission/submission.json`. |
@@ -33,7 +33,7 @@ published media, or organizer action; **optional** is not required for eligibili
 | Criterion | Evidence |
 |---|---|
 | Use of DataHub | MCP lineage and entity reads; description and tag write-back; DataHub retains incident knowledge. |
-| Technical execution | Field-aware deterministic authority, authenticated listener, durable retries/deduplication, fail-closed MCP and enforcement boundaries, 100% line/branch coverage, CI, package build. |
-| Originality | Evidence-bound branch containment rather than catalog Q&A, lexical guesswork, or blanket shutdown. |
-| Real-world usefulness | Applies a default-hold orchestrator plan while preserving only positively proven unaffected data availability. |
+| Technical execution | Field-aware authority, authenticated listener, durable retries, fail-closed boundaries, isolated counterfactual SQL, tamper-detecting certificates, 100% line/branch coverage, CI, package build. |
+| Originality | Evidence-bound containment plus proof-carrying recovery that rejects a green-but-wrong repair. |
+| Real-world usefulness | Applies default-hold containment, preserves proven unaffected availability, and supplies auditable evidence for safe recovery. |
 | Submission quality | Responsive semantic dashboard with remote WCAG 2 AA browser gate, concise runbook, examples, architecture, disclosures, and 2:45 script. |

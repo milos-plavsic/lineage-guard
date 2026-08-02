@@ -12,6 +12,7 @@ from typing import Any
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
 from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
 from lineage_guard.domain import Action
+from lineage_guard.recovery import CounterfactualRecoveryLab, demo_recovery_scenario
 from lineage_guard.remediation import RemediationGenerator
 from lineage_guard.service import IncidentAnalyzer
 
@@ -30,7 +31,8 @@ SECURITY_HEADERS = {
 def build_view_model() -> dict[str, Any]:
     graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
     report = IncidentAnalyzer(graph).analyze(negative_billing_signal())
-    artifacts = RemediationGenerator().generate(report)
+    recovery = CounterfactualRecoveryLab().evaluate(report, demo_recovery_scenario())
+    artifacts = RemediationGenerator().generate(report, recovery)
     quarantined = sum(item.action == Action.QUARANTINE for item in report.decisions)
     review = sum(
         item.action in {Action.MONITOR, Action.REQUIRE_REVIEW} for item in report.decisions
@@ -69,6 +71,22 @@ def build_view_model() -> dict[str, Any]:
                 "state": "ready",
             },
             {
+                "stage": "Counterfactual repairs evaluated",
+                "detail": (
+                    "A superficial clamp passed the quality rule but failed value conservation; "
+                    "trusted restoration passed every invariant."
+                ),
+                "state": "verified",
+            },
+            {
+                "stage": "Recovery proof issued",
+                "detail": (
+                    f"Certificate {recovery.certificate.certificate_id} binds the incident, "
+                    "DataHub context, repair SQL, output, and checks."
+                ),
+                "state": "certified",
+            },
+            {
                 "stage": "Approval required",
                 "detail": (
                     "DataHub write-back remains dry-run until an operator explicitly approves it."
@@ -77,6 +95,7 @@ def build_view_model() -> dict[str, Any]:
             },
         ],
         "artifacts": [asdict(artifact) for artifact in artifacts],
+        "recovery": recovery.as_dict(),
     }
 
 

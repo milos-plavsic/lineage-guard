@@ -17,6 +17,11 @@ The Linux workflow runs on Python 3.11 and 3.14 and requires:
 - installation and CLI execution from the built wheel in an isolated environment;
 - a zero-error Pa11y 4.1.1 browser audit against the exported demo at WCAG 2 AA.
 
+Recovery tests execute both candidate SQL queries in fresh in-memory SQLite databases. They verify
+failure reproduction, null/negative detection, row and non-target preservation, trusted replacement
+coverage, integer-total tolerance, deterministic output, certificate issuance/non-issuance, and
+tamper detection. Invalid, duplicate, oversized, and ambiguous scenario values are rejected.
+
 Run the same gate locally:
 
 ```bash

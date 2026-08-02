@@ -208,7 +208,9 @@ def test_service_empty_summary_and_escape_guard(tmp_path, monkeypatch) -> None:
     assert "Branch decisions: none" in report.proposed_writeback["append_description"]["markdown"]
     generator = RemediationGenerator()
     monkeypatch.setattr(
-        generator, "generate", lambda report: (GeneratedArtifact.create("../escape", "x"),)
+        generator,
+        "generate",
+        lambda report, recovery=None: (GeneratedArtifact.create("../escape", "x"),),
     )
     with pytest.raises(ValueError, match="escapes destination"):
         generator.write(report, tmp_path)

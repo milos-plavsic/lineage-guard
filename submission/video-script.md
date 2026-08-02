@@ -28,22 +28,22 @@ Return to the blast-radius panel. Focus on the billing quarantine and demographi
 > excludes demographics, so it can continue. Staging remains under review. Missing evidence never
 > becomes a claim of safety.
 
-## 1:10–1:38 — Artifacts
+## 1:10–1:42 — Proof-carrying recovery
 
-Show the generated SQL, JSON policy, report, and manifest.
+Scroll to the before/after recovery twin and both candidate cards.
 
-> LineageGuard now generates a SQL assertion that returns violating rows, a machine-readable branch
-> policy, a human remediation report, and SHA-256 integrity hashes. These artifacts are ready for a
-> pull request and can be reviewed without running the platform.
+> Fixing the check is not enough. In an isolated shadow pipeline, clamping negatives to zero makes
+> the assertion green but destroys the trusted billing total, so LineageGuard rejects it. Restoring
+> the governed snapshot passes six invariants. The recovery certificate binds the incident, DataHub
+> context, SQL, output, and checks—but still cannot release anything without approval.
 
-## 1:38–2:06 — Write-back and safety
+## 1:42–2:05 — Artifacts and action
 
-Show dry-run output, then the approval boundary. If the live environment is available, show the
-description and quarantine tag in DataHub after approval.
+Show candidate SQL, evaluation JSON, certificate, manifest, then the approval boundary.
 
-> The default is read-only. Approved mode can first send an idempotent, signed default-hold plan to an
-> orchestrator and requires its exact receipt. DataHub mutation tools are independently enabled;
-> incident context and the quarantine tag then preserve the decision for the next person or agent.
+> Every artifact has an integrity hash and is ready for review. Approved mode sends an idempotent,
+> signed default-hold plan to an orchestrator and requires its exact receipt. DataHub then preserves
+> the incident and quarantine decision for the next person or agent.
 
 ## 2:06–2:30 — Technical proof
 
@@ -51,11 +51,12 @@ Show a terminal with tests and the MCP adapter filenames, then the health endpoi
 
 > The safety authority is deterministic, the MCP boundary fails closed, and the event journal handles
 > duplicates, conflicts, retries, and crashes. Full line and branch coverage includes authenticated
-> HTTP, field evidence, enforcement, write authorization, generated SQL, and oversized responses.
+> HTTP, field evidence, counterfactual SQL, certificate tampering, enforcement, write authorization,
+> and oversized responses.
 
 ## 2:30–2:45 — Close
 
 Return to the full dashboard.
 
-> LineageGuard turns DataHub's context graph into safe operational action: contain what is broken,
-> preserve what is healthy, and write the knowledge back.
+> LineageGuard turns DataHub's context graph into safe operational action: contain only what is
+> exposed, and release only what is proven.

@@ -21,9 +21,11 @@
 4. Show staging at `monitor`: dependency is confirmed, but material branch impact needs review.
 5. Show billing at risk 100 with `quarantine` and confirmed field dependency.
 6. Show demographics with `continue` and confirmed field exclusion—not a missing keyword.
-7. Walk through the five-stage evidence timeline.
-8. Show the artifact filenames and hashes.
-9. Open the committed SQL assertion and branch policy in the repository.
+7. Show the recovery twin: clamp-to-zero passes the target check but fails total conservation.
+8. Show trusted restoration passing all six invariants and receiving a recovery certificate.
+9. Walk through the seven-stage evidence timeline.
+10. Show the artifact filenames and hashes.
+11. Open the committed candidate SQL, evaluations, certificate, and branch policy.
 
 ## Authenticated agent path
 

@@ -35,6 +35,17 @@ h2 { margin: 0; font-size: 1.45rem; letter-spacing: -.03em; }
 .metrics small { color: var(--muted); font-size: .75rem; }
 .panel { background: linear-gradient(145deg, rgb(17 37 34 / 90%), rgb(10 24 22 / 95%)); border: 1px solid var(--line); border-radius: 18px; padding: clamp(1.2rem, 3vw, 2rem); margin-bottom: 1.25rem; }
 .panel-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: end; margin-bottom: 1.5rem; }
+.section-intro { color: var(--muted); max-width: 850px; line-height: 1.65; }
+.status-pill.proof { color: #d7c5ff; border-color: #745cac; background: #281f41; }
+.reality-twin { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; margin: 1.5rem 0; }
+.reality-twin article { border: 1px solid var(--line); border-radius: 14px; background: rgb(5 15 13 / 52%); padding: 1rem; }
+.reality-twin span, .reality-twin small { display: block; color: var(--muted); font-size: .75rem; }.reality-twin strong { display: block; margin: .35rem 0; }
+.candidate-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+.candidate { border: 1px solid var(--line); border-radius: 14px; padding: 1rem; background: rgb(5 15 13 / 52%); }.candidate.rejected { border-color: #69332e; }.candidate.verified { border-color: #367f69; }
+.candidate-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }.candidate h3, .certificate h3 { margin: 0; font-size: 1rem; }
+.verdict { border-radius: 999px; padding: .35rem .55rem; font-size: .65rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }.verdict.rejected { color: #ffd4cf; background: #4a1c19; }.verdict.verified { color: #aaf5d9; background: #123a2f; }
+.candidate-metrics { color: var(--muted); font-size: .78rem; }.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; font-size: .75rem; }.checks li { display: flex; gap: .5rem; }.checks .passed { color: #b9ead8; }.checks .failed { color: #ffaaa1; }
+.certificate { display: grid; grid-template-columns: .7fr 1.3fr; gap: 1rem; margin-top: 1rem; padding: 1rem; border: 1px solid #745cac; border-radius: 14px; background: #17142a; }.certificate dl { display: grid; gap: .65rem; margin: 0; }.certificate dl div { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: .5rem; }.certificate dt { color: var(--muted); font-size: .72rem; }.certificate dd { margin: 0; font-size: .78rem; overflow: hidden; text-overflow: ellipsis; }.certificate code { color: #d7c5ff; }
 .legend { color: var(--muted); font-size: .78rem; display: flex; align-items: center; gap: .45rem; }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: .45rem; }
 .dot.quarantine { background: var(--red); }.dot.monitor { background: #e8b968; }.dot.continue { background: var(--mint); }
@@ -54,5 +65,5 @@ h2 { margin: 0; font-size: 1.45rem; letter-spacing: -.03em; }
 .artifacts strong { font-size: .8rem; display: block; }.artifacts code { display: block; color: var(--muted); font-size: .68rem; margin-top: .35rem; overflow: hidden; text-overflow: ellipsis; }
 .error { border: 1px solid var(--red); color: #ffd4cf; background: #3b1816; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
 footer { color: var(--muted); text-align: center; padding: 2rem; border-top: 1px solid var(--line); font-size: .75rem; }
-@media (max-width: 760px) { .hero { align-items: start; flex-direction: column; }.metrics, .two-column { grid-template-columns: 1fr; }.branch { grid-template-columns: 1fr; }.legend { display: none; } main { padding-top: 2.5rem; } }
+@media (max-width: 760px) { .hero { align-items: start; flex-direction: column; }.metrics, .two-column, .candidate-grid, .certificate { grid-template-columns: 1fr; }.reality-twin { grid-template-columns: 1fr; }.reality-twin > div { transform: rotate(90deg); justify-self: center; }.branch { grid-template-columns: 1fr; }.legend { display: none; } main { padding-top: 2.5rem; } }
 @media (prefers-reduced-motion: no-preference) { .panel, .metrics { animation: reveal .45s ease both; } @keyframes reveal { from { opacity: 0; transform: translateY(8px); } } }

@@ -45,12 +45,23 @@ On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1
 description/tag write-back; with `--enforcement-webhook`, it first sends an HMAC-signed,
 idempotent, fail-closed plan to an orchestrator. See [operations](docs/operations.md).
 
+Run the proof-carrying recovery demonstration and emit its complete evidence bundle:
+
+```bash
+lineage-guard --recovery-lab --output recovery-report.json --artifacts-dir recovery-evidence
+```
+
+The isolated counterfactual lab rejects a repair that merely turns the quality check green, verifies
+a trusted-snapshot repair against six invariants, and issues a hash-bound recovery certificate. The
+certificate proposes release but never bypasses explicit approval.
+
 For a real DataHub instance, install the `mcp` extra and follow the
 [live integration guide](docs/live-datahub.md). The adapter starts the official, version-pinned
 DataHub MCP Server and uses its lineage, entity, description, and tag tools.
 
 The lightweight [operator dashboard](docs/operator-demo.md) runs at `http://127.0.0.1:8765` and
-visualizes the downstream blast radius, evidence timeline, decisions, and artifact integrity hashes.
+visualizes the downstream blast radius, before/after recovery twin, candidate verdicts, certificate,
+evidence timeline, decisions, and artifact integrity hashes.
 The same verified view can be exported as a static judge demo for GitHub Pages.
 
 The [healthcare fixture workflow](docs/healthcare-fixture.md) fetches DataHub's official synthetic
@@ -69,6 +80,7 @@ Docker or executes downloaded scripts automatically.
 - `ports.py`: narrow interface for DataHub context and write-back.
 - `adapters/`: replaceable metadata graph implementations.
 - `remediation.py`: deterministic SQL, policy, report, and integrity-manifest generation.
+- `recovery.py`: bounded counterfactual SQL evaluation and hash-bound recovery certification.
 - `examples/`: judge-readable sample incidents and generated artifacts.
 
 The safety-critical authority does not depend on an LLM. That is deliberate: probabilistic output
@@ -76,7 +88,7 @@ cannot authorize continuation or mutation. The agent instead executes a durable 
 machine through the official DataHub MCP Server, with explicit evidence and approval invariants.
 
 Architectural decisions are recorded under [`docs/adr`](docs/adr), including selective containment,
-reviewable remediation artifacts, and the lightweight operator interface.
+reviewable remediation artifacts, the lightweight operator interface, and proof-carrying recovery.
 
 Operational boundaries are documented in the [security policy](SECURITY.md),
 [threat model](docs/threat-model.md), and [failure-recovery guide](docs/operations.md). CI verifies

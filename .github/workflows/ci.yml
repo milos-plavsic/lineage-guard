@@ -38,8 +38,10 @@ jobs:
         shell: bash
         run: |
           wheel=$(find dist -name '*.whl' -print -quit)
-          uv run --isolated --no-project --with "$wheel" lineage-guard --output smoke-report.json
+          uv run --isolated --no-project --with "$wheel" lineage-guard --recovery-lab \
+            --output smoke-report.json --artifacts-dir smoke-artifacts
           test -s smoke-report.json
+          test -s smoke-artifacts/recovery/evaluations.json
 
   accessibility:
     runs-on: ubuntu-latest

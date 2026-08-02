@@ -18,12 +18,21 @@ def test_dashboard_model_exposes_decisions_timeline_and_artifacts() -> None:
         "reviewBranches": 1,
         "maxRisk": 100,
     }
-    assert len(model["timeline"]) == 5
+    assert len(model["timeline"]) == 7
     assert {artifact["relative_path"] for artifact in model["artifacts"]} == {
         "quality/assert_billing_amount_non_negative.sql",
         "policies/9edb78125e19.json",
         "reports/9edb78125e19.md",
+        "recovery/candidates/clamp-to-zero.sql",
+        "recovery/candidates/restore-trusted-value.sql",
+        "recovery/evaluations.json",
+        f"recovery/certificates/{model['recovery']['certificate']['certificate_id']}.json",
     }
+    assert [item["verdict"] for item in model["recovery"]["evaluations"]] == [
+        "rejected",
+        "verified",
+    ]
+    assert model["recovery"]["certificate"]["transition"] == "quarantine_to_release"
 
 
 def test_dashboard_declares_browser_security_boundaries() -> None:
@@ -47,6 +56,7 @@ def test_http_server_exposes_health_page_and_incident_api() -> None:
         with urlopen(f"{base_url}/api/incidents/current", timeout=2) as response:
             payload = json.load(response)
             assert payload["report"]["incident_id"] == "9edb78125e19"
+            assert payload["recovery"]["certificate"]["candidate_id"] == "restore-trusted-value"
         with urlopen(f"{base_url}/app.css", timeout=2) as response:
             assert response.headers["Cache-Control"] == "public, max-age=3600"
             assert response.headers["Content-Type"].startswith("text/css")

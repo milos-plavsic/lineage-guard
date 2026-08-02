@@ -23,6 +23,32 @@ def test_cli_writes_artifacts_and_applies_demo_writeback(tmp_path) -> None:
     assert (artifacts / "manifest.json").is_file()
 
 
+def test_cli_runs_counterfactual_recovery_lab(tmp_path) -> None:
+    output = tmp_path / "report.json"
+    artifacts = tmp_path / "artifacts"
+
+    assert (
+        main(
+            [
+                "--output",
+                str(output),
+                "--artifacts-dir",
+                str(artifacts),
+                "--recovery-lab",
+            ]
+        )
+        == 0
+    )
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["recovery"]["certificate"]["candidate_id"] == "restore-trusted-value"
+    assert (artifacts / "recovery" / "evaluations.json").is_file()
+
+
+def test_recovery_lab_rejects_live_mcp_mode() -> None:
+    with pytest.raises(SystemExit, match="deterministic demo scenario"):
+        main(["--mode", "mcp", "--recovery-lab"])
+
+
 def test_mcp_mode_requires_connection_configuration(monkeypatch) -> None:
     monkeypatch.delenv("DATAHUB_GMS_TOKEN", raising=False)
 

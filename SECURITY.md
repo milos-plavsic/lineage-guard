@@ -15,8 +15,9 @@ include production tokens or sensitive catalog content.
   official version-pinned MCP child process.
 - Read-only analysis is the default. Metadata mutations require both server capability enablement and
   explicit LineageGuard approval.
-- Generated SQL is an assertion for review; LineageGuard does not execute remediation against source
-  systems.
+- Generated repair SQL executes only against a fresh, bounded in-memory demo shadow; candidate SQL is
+  application-owned and never runs against source systems.
+- Recovery certificates provide integrity linkage, not issuer authentication or release approval.
 - The built-in dashboard binds to loopback and has no authentication. Never expose it directly to an
   untrusted network.
 

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "certificate_id": "0b5495ecf48a7373",
+  "incident_id": "9edb78125e19",
+  "context_sha256": "d05d2a96bac0f179ccc5f2d17015430afdadca740a87b9b99d00ac3109397f63",
+  "candidate_id": "restore-trusted-value",
+  "transition": "quarantine_to_release",
+  "query_sha256": "ec0babbb1c9478b55175317b81d0fd9788b067468b540ef11d39069d9684a3a0",
+  "output_sha256": "2e261c0a147b763b56fb82acd846c4a4238e8f91f2cb9a0c5eaf279413e6e4c0",
+  "checks": [
+    {
+      "name": "source_failure_reproduced",
+      "passed": true,
+      "detail": "observed 1 invalid source row(s)"
+    },
+    {
+      "name": "quality_rule_passed",
+      "passed": true,
+      "detail": "candidate has 0 negative and 0 null amount(s)"
+    },
+    {
+      "name": "row_count_preserved",
+      "passed": true,
+      "detail": "row count 3 -> 3"
+    },
+    {
+      "name": "non_target_data_preserved",
+      "passed": true,
+      "detail": "record identity and region values are unchanged"
+    },
+    {
+      "name": "trusted_replacements_available",
+      "passed": true,
+      "detail": "trusted snapshot covers 1 of 1 invalid record(s)"
+    },
+    {
+      "name": "trusted_total_within_tolerance",
+      "passed": true,
+      "detail": "candidate total 30000; trusted total 30000; tolerance 0 cents"
+    }
+  ],
+  "certificate_sha256": "b4b2e580e72d11e198900ffe34eda0f66e301123f235362ec65e650f9414ac41"
+}

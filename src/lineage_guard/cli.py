@@ -13,6 +13,7 @@ from lineage_guard.demo import assets, edges, field_dependencies, negative_billi
 from lineage_guard.domain import QualitySignal, Severity
 from lineage_guard.enforcement import SignedWebhookConfig, SignedWebhookEnforcer
 from lineage_guard.events import load_quality_event
+from lineage_guard.recovery import CounterfactualRecoveryLab, demo_recovery_scenario
 from lineage_guard.remediation import RemediationGenerator
 from lineage_guard.service import IncidentAnalyzer
 
@@ -39,6 +40,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--artifacts-dir", type=Path, help="Write reviewable remediation artifacts here."
     )
+    parser.add_argument(
+        "--recovery-lab",
+        action="store_true",
+        help="Run the deterministic counterfactual recovery lab (demo mode only).",
+    )
     parser.add_argument("--field", default="billing_amount", help="Failing field name.")
     parser.add_argument(
         "--concern",
@@ -61,11 +67,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
     analyzer = IncidentAnalyzer(graph)
     report = analyzer.analyze(negative_billing_signal())
+    recovery = (
+        CounterfactualRecoveryLab().evaluate(report, demo_recovery_scenario())
+        if args.recovery_lab
+        else None
+    )
     if args.artifacts_dir:
-        RemediationGenerator().write(report, args.artifacts_dir)
+        RemediationGenerator().write(report, args.artifacts_dir, recovery)
     if args.apply:
         analyzer.apply_writeback(report, approved=True)
-    rendered = json.dumps(report.as_dict(), indent=2)
+    payload = report.as_dict()
+    if recovery is not None:
+        payload["recovery"] = recovery.as_dict()
+    rendered = json.dumps(payload, indent=2)
     if args.output:
         args.output.write_text(rendered + "\n", encoding="utf-8")
     print(rendered)
@@ -73,6 +87,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 async def _run_mcp(args: argparse.Namespace) -> int:
+    if getattr(args, "recovery_lab", False):
+        raise SystemExit("--recovery-lab uses the deterministic demo scenario; select --mode demo")
     token = os.environ.get("DATAHUB_GMS_TOKEN")
     signal_file = getattr(args, "signal_file", None)
     event = load_quality_event(signal_file) if signal_file else None

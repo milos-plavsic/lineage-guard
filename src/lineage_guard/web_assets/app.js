@@ -27,6 +27,29 @@ async function loadIncident() {
     branches.append(row);
   });
 
+  const candidates = document.getElementById('recovery-candidates');
+  data.recovery.evaluations.forEach((candidate) => {
+    const card = element('article', `candidate ${candidate.verdict}`);
+    const heading = element('div', 'candidate-heading');
+    heading.append(element('h3', '', candidate.title));
+    heading.append(element('span', `verdict ${candidate.verdict}`, candidate.verdict));
+    card.append(heading);
+    const metrics = element('p', 'candidate-metrics', `Invalid rows ${candidate.before_invalid_rows} → ${candidate.after_invalid_rows} · total ${(candidate.candidate_total_cents / 100).toFixed(2)}`);
+    card.append(metrics);
+    const checks = element('ul', 'checks');
+    candidate.checks.forEach((check) => {
+      const item = element('li', check.passed ? 'passed' : 'failed');
+      item.append(element('span', '', check.passed ? '✓' : '×'));
+      item.append(element('span', '', check.name.replaceAll('_', ' ')));
+      checks.append(item);
+    });
+    card.append(checks);
+    candidates.append(card);
+  });
+  text('certificate-id', data.recovery.certificate.certificate_id);
+  text('certificate-transition', data.recovery.certificate.transition.replace('_to_', ' → '));
+  text('certificate-hash', `sha256:${data.recovery.certificate.certificate_sha256}`);
+
   const timeline = document.getElementById('timeline');
   data.timeline.forEach((event) => {
     const item = element('li');

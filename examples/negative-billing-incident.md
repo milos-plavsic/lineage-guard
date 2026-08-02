@@ -8,7 +8,8 @@ Expected decision:
 
 - quarantine `mart_billing`;
 - allow `mart_demographics` to continue;
+- reject a clamp-to-zero repair that silently corrupts the trusted billing total;
+- certify trusted-value restoration only after all six recovery invariants pass;
 - append an incident summary to the source asset;
 - propose a `LineageGuard:Quarantined` tag for the billing mart;
 - perform no mutation until explicitly approved.
-

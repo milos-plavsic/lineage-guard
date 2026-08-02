@@ -6,6 +6,12 @@ import pytest
 
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
 from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
+from lineage_guard.recovery import (
+    CounterfactualRecoveryLab,
+    RecoveryRow,
+    RecoveryScenario,
+    demo_recovery_scenario,
+)
 from lineage_guard.remediation import RemediationGenerator
 from lineage_guard.service import IncidentAnalyzer
 
@@ -40,6 +46,45 @@ def test_generation_is_reproducible() -> None:
     generator = RemediationGenerator()
 
     assert generator.generate(report()) == generator.generate(report())
+
+
+def test_generates_proof_carrying_recovery_artifacts(tmp_path) -> None:
+    incident = report()
+    recovery = CounterfactualRecoveryLab().evaluate(incident, demo_recovery_scenario())
+
+    artifacts = RemediationGenerator().write(incident, tmp_path, recovery)
+
+    evaluations = json.loads((tmp_path / "recovery" / "evaluations.json").read_text())
+    certificate = json.loads(next((tmp_path / "recovery" / "certificates").iterdir()).read_text())
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    assert [item["verdict"] for item in evaluations["evaluations"]] == [
+        "rejected",
+        "verified",
+    ]
+    assert certificate["candidate_id"] == "restore-trusted-value"
+    assert (tmp_path / "recovery" / "candidates" / "clamp-to-zero.sql").is_file()
+    verified_sql = next(
+        artifact
+        for artifact in artifacts
+        if artifact.relative_path == "recovery/candidates/restore-trusted-value.sql"
+    )
+    assert certificate["query_sha256"] == verified_sql.sha256
+    assert len(artifacts) == 7
+    assert len(manifest["artifacts"]) == 7
+
+
+def test_rejected_recovery_writes_evidence_without_a_certificate(tmp_path) -> None:
+    incident = report()
+    scenario = RecoveryScenario(
+        current=(RecoveryRow("one", 100, "north"),),
+        trusted=(RecoveryRow("one", 100, "north"),),
+    )
+    recovery = CounterfactualRecoveryLab().evaluate(incident, scenario)
+
+    artifacts = RemediationGenerator().write(incident, tmp_path, recovery)
+
+    assert len(artifacts) == 6
+    assert not (tmp_path / "recovery" / "certificates").exists()
 
 
 def test_generated_assertion_executes_and_returns_only_violations() -> None:

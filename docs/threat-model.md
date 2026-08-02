@@ -17,6 +17,9 @@ and the integrity of DataHub write-back.
 - forged, replayed, conflicting, or oversized quality events;
 - leaked subprocess environment variables or enforcement credentials;
 - partial action across the orchestrator and DataHub.
+- a repair that passes the target assertion while damaging rows, unrelated fields, or business totals;
+- arbitrary SQL escaping the counterfactual evaluation boundary;
+- a recovery certificate reused with different incident context or output.
 
 ## Controls
 
@@ -38,6 +41,9 @@ and the integrity of DataHub write-back.
 | Concurrent/crashed worker | Immediate transaction, processing lease, stale recovery | Journal tests |
 | Unsafe orchestrator action | Separate HMAC secret, HTTPS, default hold, exact acknowledgement | Enforcement tests |
 | Partial MCP retry | Completed queue entries retained; failed entries remain retryable | MCP mutation tests |
+| Superficial repair | Six independent recovery invariants; all must pass | Recovery tests and sample evaluations |
+| Counterfactual SQL escape | Only application-owned queries; bounded rows; fresh in-memory SQLite database | Recovery ADR and tests |
+| Certificate/context substitution | Canonical incident, input, SQL, output, and check digests | Certificate tamper test |
 
 ## Residual risks
 
@@ -47,3 +53,7 @@ LineageGuard applies the fail-safe orchestrator hold first, then records DataHub
 network failure can still require reconciliation. SQLite is suitable for a single-node agent; a
 multi-node deployment needs a transactional shared journal. The built-in HTTP server must remain on
 loopback behind a production TLS proxy with rate limiting and network policy.
+
+The recovery lab's trusted snapshot is a trust anchor, not independently proven truth. A production
+deployment must govern snapshot provenance, retention, access, and freshness. SHA-256 detects
+alteration but does not authenticate the issuer; signed approval remains necessary before release.

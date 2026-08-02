@@ -50,6 +50,22 @@ continuation window.
 - **Artifact integrity mismatch:** regenerate from the committed incident input; do not merge altered
   output without review.
 - **Dashboard HTTP 500:** inspect the `request_failed` event; the client receives no internal details.
+- **No recovery certificate:** at least one invariant failed. Inspect `recovery/evaluations.json`;
+  never reinterpret a rejected candidate as releasable.
+- **Certificate mismatch:** discard the bundle and regenerate from the exact incident, current rows,
+  trusted snapshot, and tolerance. A hash mismatch is not repairable by editing the certificate.
+
+## Counterfactual recovery lab
+
+```bash
+lineage-guard --recovery-lab --artifacts-dir recovery-evidence --output recovery-report.json
+```
+
+This command uses the committed deterministic healthcare scenario and application-owned SQL. It does
+not read production rows, alter source data, or release quarantined branches. The trusted snapshot is
+part of the proof context. In production, retrieve it through a governed point-in-time store, enforce
+dataset-specific invariants, authenticate the certificate issuer, and route the proposed transition
+through the same approval and signed enforcement boundary used for containment.
 
 ## Backup and rollback
 
