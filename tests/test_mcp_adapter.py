@@ -7,7 +7,6 @@ from lineage_guard.adapters.mcp import (
     DataHubMcpGraph,
     McpIntegrationError,
     _bounded_lineage_results,
-    _schema_field_urn,
     _tool_payload,
 )
 from lineage_guard.demo import BILLING, DEMOGRAPHICS, RAW, STAGING
@@ -31,7 +30,7 @@ class FakeSession:
     async def call_tool(self, name, arguments):
         self.calls.append((name, arguments))
         if name == "get_lineage":
-            if arguments["urn"].startswith("urn:li:schemaField:"):
+            if arguments.get("column") == "billing_amount":
                 return result(
                     {
                         "downstreams": {
@@ -92,7 +91,7 @@ async def test_loads_field_lineage_as_positive_dependency_evidence() -> None:
     assert dependencies[BILLING] == ("billing_amount",)
     assert dependencies[DEMOGRAPHICS] == ()
     assert any(
-        arguments["urn"] == _schema_field_urn(RAW, "billing_amount")
+        arguments["urn"] == RAW and arguments.get("column") == "billing_amount"
         for name, arguments in session.calls
         if name == "get_lineage"
     )
@@ -187,7 +186,7 @@ async def test_mutation_failure_is_reported() -> None:
     assert sum(name == "update_description" for name, _ in session.calls) == 1
 
 
-def test_lineage_bounds_and_schema_field_urn_fail_closed() -> None:
+def test_lineage_bounds_fail_closed() -> None:
     with pytest.raises(McpIntegrationError, match="truncated"):
         _bounded_lineage_results({"downstreams": {"searchResults": [], "total": 1}}, 100)
     with pytest.raises(McpIntegrationError, match="may be truncated"):
@@ -197,10 +196,6 @@ def test_lineage_bounds_and_schema_field_urn_fail_closed() -> None:
         )
     with pytest.raises(McpIntegrationError, match="malformed lineage"):
         _bounded_lineage_results({"downstreams": {"searchResults": ["bad"]}}, 100)
-    with pytest.raises(McpIntegrationError, match="schema-field URN"):
-        _schema_field_urn(RAW, "bad,field")
-    with pytest.raises(McpIntegrationError, match="schema-field URN"):
-        _schema_field_urn(RAW, "")
     assert _bounded_lineage_results(None, 100) == []
 
 

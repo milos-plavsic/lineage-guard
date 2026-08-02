@@ -140,7 +140,8 @@ class DataHubMcpGraph:
             field_result = await session.call_tool(
                 "get_lineage",
                 {
-                    "urn": _schema_field_urn(source_urn, source_field),
+                    "urn": source_urn,
+                    "column": source_field,
                     "upstream": False,
                     "max_hops": max_hops,
                     "max_results": max_results,
@@ -237,14 +238,6 @@ def _bounded_lineage_results(payload: Any, max_results: int) -> list[Mapping[str
     if not all(isinstance(item, Mapping) for item in search_results):
         raise McpIntegrationError("DataHub returned malformed lineage entries")
     return search_results
-
-
-def _schema_field_urn(dataset_urn: str, field: str) -> str:
-    if not field or any(character in field for character in "(),"):
-        raise McpIntegrationError(
-            "Field cannot be represented safely as a DataHub schema-field URN"
-        )
-    return f"urn:li:schemaField:({dataset_urn},{field})"
 
 
 def _tool_payload(result: Any) -> Any:
