@@ -28,6 +28,7 @@ source .venv/bin/activate
 python -m pip install -e ".[dev]"
 lineage-guard --output incident-report.json
 lineage-guard --artifacts-dir remediation
+lineage-guard-web
 pytest
 ruff check .
 ```
@@ -39,6 +40,9 @@ On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1
 For a real DataHub instance, install the `mcp` extra and follow the
 [live integration guide](docs/live-datahub.md). The adapter starts the official, version-pinned
 DataHub MCP Server and uses its lineage, entity, description, and tag tools.
+
+The lightweight [operator dashboard](docs/operator-demo.md) runs at `http://127.0.0.1:8765` and
+visualizes the downstream blast radius, evidence timeline, decisions, and artifact integrity hashes.
 
 ## Architecture
 
@@ -52,8 +56,8 @@ DataHub MCP Server and uses its lineage, entity, description, and tag tools.
 The domain does not depend on an LLM or DataHub transport. The production adapter will use the
 official DataHub MCP Server for search, lineage, entity metadata, and approved mutation tools.
 
-See [ADR 0001](docs/adr/0001-safe-selective-containment.md) for the containment rationale and
-[ADR 0002](docs/adr/0002-reviewable-remediation-artifacts.md) for the artifact trust boundary.
+Architectural decisions are recorded under [`docs/adr`](docs/adr), including selective containment,
+reviewable remediation artifacts, and the lightweight operator interface.
 
 ## Safety model
 
@@ -66,8 +70,7 @@ See [ADR 0001](docs/adr/0001-safe-selective-containment.md) for the containment 
 ## Roadmap
 
 1. Ingest the provided healthcare dataset and assertions.
-2. Add an operator-facing web demonstration and incident timeline.
-3. Package the public demo, three-minute video, and Devpost submission.
+2. Package the public demo, three-minute video, and Devpost submission.
 
 ## License
 

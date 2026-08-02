@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081413">
+  <title>LineageGuard Incident Console</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to incident details</a>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="LineageGuard home">
+      <span class="brand-mark" aria-hidden="true">LG</span>
+      <span>LineageGuard</span>
+    </a>
+    <div class="live-state"><span aria-hidden="true"></span> Demo environment</div>
+  </header>
+  <main id="main" tabindex="-1">
+    <section class="hero" aria-labelledby="incident-title">
+      <div>
+        <p class="eyebrow">Active incident · <span id="incident-id">Loading</span></p>
+        <h1 id="incident-title">Selective containment in progress</h1>
+        <p class="lede">Lineage-aware decisions keep healthy data products running while isolating the branch that carries financial risk.</p>
+      </div>
+      <div class="status-pill" id="overall-status">Analyzing</div>
+    </section>
+
+    <div id="error" class="error" role="alert" hidden></div>
+    <section class="metrics" aria-label="Incident summary">
+      <article><span>Affected branches</span><strong id="affected-count">—</strong></article>
+      <article><span>Safe branches</span><strong id="safe-count">—</strong></article>
+      <article><span>Maximum risk</span><strong><span id="risk-score">—</span><small>/100</small></strong></article>
+    </section>
+
+    <section class="panel" aria-labelledby="blast-title">
+      <div class="panel-heading">
+        <div><p class="eyebrow">DataHub context graph</p><h2 id="blast-title">Downstream blast radius</h2></div>
+        <div class="legend" aria-label="Decision legend"><span class="dot quarantine"></span>Quarantine <span class="dot continue"></span>Continue</div>
+      </div>
+      <div id="branches" class="branches" aria-live="polite"></div>
+    </section>
+
+    <div class="two-column">
+      <section class="panel" aria-labelledby="timeline-title">
+        <div class="panel-heading"><div><p class="eyebrow">Evidence trail</p><h2 id="timeline-title">Incident timeline</h2></div></div>
+        <ol id="timeline" class="timeline"></ol>
+      </section>
+      <section class="panel" aria-labelledby="artifacts-title">
+        <div class="panel-heading"><div><p class="eyebrow">PR-ready output</p><h2 id="artifacts-title">Remediation artifacts</h2></div></div>
+        <ul id="artifacts" class="artifacts"></ul>
+      </section>
+    </div>
+  </main>
+  <footer>Deterministic decisions · Explicit approval · DataHub-backed context</footer>
+</body>
+</html>
