@@ -14,6 +14,9 @@ class McpIntegrationError(RuntimeError):
     """Raised when the MCP server cannot provide a safe, usable response."""
 
 
+MAX_TOOL_PAYLOAD_BYTES = 2_000_000
+
+
 class ToolSession(Protocol):
     async def list_tools(self) -> Any: ...
 
@@ -106,6 +109,8 @@ class DataHubMcpGraph:
         )
         lineage = _tool_payload(lineage_result)
         search_results = lineage.get("downstreams", {}).get("searchResults", [])
+        if not isinstance(search_results, list) or len(search_results) > max_results:
+            raise McpIntegrationError("DataHub returned an invalid lineage result count")
         targets = tuple(_lineage_target(item) for item in search_results)
         urns = [source_urn, *(target.urn for target in targets)]
         entities_result = await session.call_tool("get_entities", {"urns": urns})
@@ -164,12 +169,17 @@ def _tool_payload(result: Any) -> Any:
         raise McpIntegrationError("DataHub MCP tool returned an error")
     structured = getattr(result, "structuredContent", None)
     if structured is not None:
+        if len(json.dumps(structured).encode()) > MAX_TOOL_PAYLOAD_BYTES:
+            raise McpIntegrationError("DataHub MCP structured payload exceeds the safety limit")
         return structured.get("result", structured) if isinstance(structured, dict) else structured
     text_parts = [item.text for item in getattr(result, "content", []) if hasattr(item, "text")]
     if not text_parts:
         raise McpIntegrationError("DataHub MCP tool returned no structured or textual payload")
+    rendered = "".join(text_parts)
+    if len(rendered.encode()) > MAX_TOOL_PAYLOAD_BYTES:
+        raise McpIntegrationError("DataHub MCP textual payload exceeds the safety limit")
     try:
-        return json.loads("".join(text_parts))
+        return json.loads(rendered)
     except json.JSONDecodeError as error:
         raise McpIntegrationError("DataHub MCP tool returned invalid JSON") from error
 

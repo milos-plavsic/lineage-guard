@@ -63,6 +63,10 @@ official DataHub MCP Server for search, lineage, entity metadata, and approved m
 Architectural decisions are recorded under [`docs/adr`](docs/adr), including selective containment,
 reviewable remediation artifacts, and the lightweight operator interface.
 
+Operational boundaries are documented in the [security policy](SECURITY.md),
+[threat model](docs/threat-model.md), and [failure-recovery guide](docs/operations.md). CI verifies
+the supported minimum and current Python versions, formatting, linting, tests, and package builds.
+
 ## Safety model
 
 - Read operations and proposed actions are separate from writes.

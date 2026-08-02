@@ -1,7 +1,8 @@
 import json
 import threading
 from http.server import ThreadingHTTPServer
-from urllib.request import urlopen
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 from lineage_guard.web import SECURITY_HEADERS, LineageGuardHandler, build_view_model
 
@@ -44,6 +45,13 @@ def test_http_server_exposes_health_page_and_incident_api() -> None:
         with urlopen(f"{base_url}/api/incidents/current", timeout=2) as response:
             payload = json.load(response)
             assert payload["report"]["incident_id"] == "9edb78125e19"
+        try:
+            urlopen(Request(base_url, method="POST"), timeout=2)
+        except HTTPError as error:
+            assert error.code == 405
+            assert json.load(error) == {"error": "method_not_allowed"}
+        else:
+            raise AssertionError("POST request unexpectedly succeeded")
     finally:
         server.shutdown()
         server.server_close()

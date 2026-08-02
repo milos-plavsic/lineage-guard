@@ -2,7 +2,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from lineage_guard.adapters.mcp import DataHubMcpGraph, McpIntegrationError
+from lineage_guard.adapters.mcp import (
+    MAX_TOOL_PAYLOAD_BYTES,
+    DataHubMcpGraph,
+    McpIntegrationError,
+    _tool_payload,
+)
 from lineage_guard.demo import BILLING, DEMOGRAPHICS, RAW, STAGING
 
 
@@ -94,3 +99,10 @@ async def test_flush_fails_closed_when_mutations_are_disabled() -> None:
 
     with pytest.raises(McpIntegrationError, match="Mutation tools are unavailable"):
         await graph.flush()
+
+
+def test_rejects_oversized_tool_payload() -> None:
+    oversized = {"value": "x" * MAX_TOOL_PAYLOAD_BYTES}
+
+    with pytest.raises(McpIntegrationError, match="exceeds the safety limit"):
+        _tool_payload(result(oversized))

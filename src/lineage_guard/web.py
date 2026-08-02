@@ -80,6 +80,13 @@ class LineageGuardHandler(BaseHTTPRequestHandler):
     sys_version = ""
 
     def do_GET(self) -> None:
+        try:
+            self._handle_get()
+        except (OSError, RuntimeError, ValueError):
+            LOGGER.exception(json.dumps({"event": "request_failed", "path": self.path}))
+            self._send_json({"error": "internal_error"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    def _handle_get(self) -> None:
         routes = {
             "/": ("index.html", "text/html; charset=utf-8"),
             "/app.css": ("app.css", "text/css; charset=utf-8"),
@@ -97,6 +104,9 @@ class LineageGuardHandler(BaseHTTPRequestHandler):
             self._send(body, content_type, cache=True)
             return
         self._send_json({"error": "not_found"}, status=HTTPStatus.NOT_FOUND)
+
+    def do_POST(self) -> None:
+        self._send_json({"error": "method_not_allowed"}, status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     def log_message(self, format: str, *args: object) -> None:
         LOGGER.info(
@@ -144,10 +154,17 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+class LineageGuardServer(ThreadingHTTPServer):
+    daemon_threads = True
+    request_queue_size = 16
+
+
 def main() -> int:
     args = build_parser().parse_args()
+    if not 1 <= args.port <= 65535:
+        raise SystemExit("--port must be between 1 and 65535")
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    server = ThreadingHTTPServer((args.host, args.port), LineageGuardHandler)
+    server = LineageGuardServer((args.host, args.port), LineageGuardHandler)
     LOGGER.info(json.dumps({"event": "server_started", "url": f"http://{args.host}:{args.port}"}))
     try:
         server.serve_forever()
