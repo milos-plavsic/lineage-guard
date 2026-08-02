@@ -43,3 +43,25 @@ def test_approved_writeback_is_auditable() -> None:
     assert graph.tags == [(BILLING, "urn:li:tag:LineageGuard_Quarantined")]
     assert graph.descriptions[0][0] == report.source.urn
     assert report.incident_id in graph.descriptions[0][1]
+
+
+def test_analysis_rejects_invalid_hop_limit() -> None:
+    analyzer = IncidentAnalyzer(InMemoryMetadataGraph(assets(), edges()))
+
+    try:
+        analyzer.analyze(negative_billing_signal(), max_hops=0)
+    except ValueError as error:
+        assert "at least 1" in str(error)
+    else:
+        raise AssertionError("invalid hop limit was accepted")
+
+
+def test_memory_graph_reports_unknown_asset() -> None:
+    graph = InMemoryMetadataGraph(assets(), edges())
+
+    try:
+        graph.get_asset("urn:missing")
+    except LookupError as error:
+        assert "Asset not found" in str(error)
+    else:
+        raise AssertionError("unknown asset unexpectedly resolved")

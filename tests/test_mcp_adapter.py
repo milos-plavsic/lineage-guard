@@ -106,3 +106,69 @@ def test_rejects_oversized_tool_payload() -> None:
 
     with pytest.raises(McpIntegrationError, match="exceeds the safety limit"):
         _tool_payload(result(oversized))
+
+
+@pytest.mark.asyncio
+async def test_load_rejects_missing_read_tools() -> None:
+    session = FakeSession()
+    session.tools.tools = []
+
+    with pytest.raises(McpIntegrationError, match="missing tools"):
+        await DataHubMcpGraph.load(session, RAW)
+
+
+@pytest.mark.asyncio
+async def test_load_rejects_incomplete_entity_context() -> None:
+    session = FakeSession()
+    original = session.call_tool
+
+    async def incomplete(name, arguments):
+        if name == "get_entities":
+            return result([entity(RAW)])
+        return await original(name, arguments)
+
+    session.call_tool = incomplete
+    with pytest.raises(McpIntegrationError, match="incomplete entity context"):
+        await DataHubMcpGraph.load(session, RAW)
+
+
+@pytest.mark.asyncio
+async def test_mutation_failure_is_reported() -> None:
+    session = FakeSession()
+    graph = await DataHubMcpGraph.load(session, RAW)
+    graph.append_incident_summary(RAW, "summary")
+    original = session.call_tool
+
+    async def failing(name, arguments):
+        if name == "update_description":
+            return result({}, is_error=True)
+        return await original(name, arguments)
+
+    session.call_tool = failing
+    with pytest.raises(McpIntegrationError, match="mutation failed"):
+        await graph.flush()
+
+
+def test_text_payload_requires_valid_bounded_json() -> None:
+    text_result = SimpleNamespace(
+        structuredContent=None,
+        content=[SimpleNamespace(text='{"result":{"ok":true}}')],
+        isError=False,
+    )
+    assert _tool_payload(text_result) == {"result": {"ok": True}}
+
+    text_result.content = [SimpleNamespace(text="not-json")]
+    with pytest.raises(McpIntegrationError, match="invalid JSON"):
+        _tool_payload(text_result)
+
+    text_result.content = []
+    with pytest.raises(McpIntegrationError, match="no structured"):
+        _tool_payload(text_result)
+
+
+def test_tag_and_snapshot_lookups_validate_inputs() -> None:
+    graph = DataHubMcpGraph(FakeSession(), {}, ())
+    with pytest.raises(ValueError, match="tag URNs"):
+        graph.add_tag(RAW, "quarantined")
+    with pytest.raises(LookupError, match="not present"):
+        graph.get_asset(RAW)

@@ -1,10 +1,11 @@
 import json
+import sys
 import threading
 from http.server import ThreadingHTTPServer
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from lineage_guard.web import SECURITY_HEADERS, LineageGuardHandler, build_view_model
+from lineage_guard.web import SECURITY_HEADERS, LineageGuardHandler, build_view_model, main
 
 
 def test_dashboard_model_exposes_decisions_timeline_and_artifacts() -> None:
@@ -45,6 +46,16 @@ def test_http_server_exposes_health_page_and_incident_api() -> None:
         with urlopen(f"{base_url}/api/incidents/current", timeout=2) as response:
             payload = json.load(response)
             assert payload["report"]["incident_id"] == "9edb78125e19"
+        with urlopen(f"{base_url}/app.css", timeout=2) as response:
+            assert response.headers["Cache-Control"] == "public, max-age=3600"
+            assert response.headers["Content-Type"].startswith("text/css")
+        try:
+            urlopen(f"{base_url}/missing", timeout=2)
+        except HTTPError as error:
+            assert error.code == 404
+            assert json.load(error) == {"error": "not_found"}
+        else:
+            raise AssertionError("unknown route unexpectedly succeeded")
         try:
             urlopen(Request(base_url, method="POST"), timeout=2)
         except HTTPError as error:
@@ -56,3 +67,14 @@ def test_http_server_exposes_health_page_and_incident_api() -> None:
         server.shutdown()
         server.server_close()
         thread.join(timeout=2)
+
+
+def test_web_rejects_invalid_port(monkeypatch) -> None:
+    monkeypatch.setattr(sys, "argv", ["lineage-guard-web", "--port", "0"])
+
+    try:
+        main()
+    except SystemExit as error:
+        assert "between 1 and 65535" in str(error)
+    else:
+        raise AssertionError("invalid port was accepted")

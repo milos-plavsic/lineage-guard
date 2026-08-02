@@ -70,6 +70,7 @@ reviewable remediation artifacts, and the lightweight operator interface.
 Operational boundaries are documented in the [security policy](SECURITY.md),
 [threat model](docs/threat-model.md), and [failure-recovery guide](docs/operations.md). CI verifies
 the supported minimum and current Python versions, formatting, linting, tests, and package builds.
+The complete test matrix is documented in [the validation strategy](docs/testing.md).
 
 ## Safety model
 
