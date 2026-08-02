@@ -61,7 +61,7 @@ Docker or executes downloaded scripts automatically.
 - `remediation.py`: deterministic SQL, policy, report, and integrity-manifest generation.
 - `examples/`: judge-readable sample incidents and generated artifacts.
 
-The domain does not depend on an LLM or DataHub transport. The production adapter will use the
+The domain does not depend on an LLM or DataHub transport. The production adapter uses the
 official DataHub MCP Server for search, lineage, entity metadata, and approved mutation tools.
 
 Architectural decisions are recorded under [`docs/adr`](docs/adr), including selective containment,
