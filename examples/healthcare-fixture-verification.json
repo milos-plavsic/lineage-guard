@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "a6479c691dd2a40dd89563396d9c8b2b28bee83c",
+  "databaseBytes": 31084544,
+  "entities": {
+    "raw_patients": 55500,
+    "staging_patients": 55500,
+    "mart_billing": 55500,
+    "mart_demographics": 55500
+  },
+  "plantedIssues": {
+    "negativeBillingAmounts": 1215,
+    "invalidAges": 832,
+    "missingNames": 555,
+    "dischargeBeforeAdmission": 277
+  },
+  "verificationMode": "read-only SQLite queries"
+}

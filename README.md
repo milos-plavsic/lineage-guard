@@ -44,6 +44,10 @@ DataHub MCP Server and uses its lineage, entity, description, and tag tools.
 The lightweight [operator dashboard](docs/operator-demo.md) runs at `http://127.0.0.1:8765` and
 visualizes the downstream blast radius, evidence timeline, decisions, and artifact integrity hashes.
 
+The [healthcare fixture workflow](docs/healthcare-fixture.md) fetches DataHub's official synthetic
+scenario from a pinned commit using streamed downloads and integrity validation. It never starts
+Docker or executes downloaded scripts automatically.
+
 ## Architecture
 
 - `domain.py`: immutable incident evidence and decisions.
@@ -69,7 +73,7 @@ reviewable remediation artifacts, and the lightweight operator interface.
 
 ## Roadmap
 
-1. Ingest the provided healthcare dataset and assertions.
+1. Validate the pinned healthcare fixture against a reachable DataHub instance.
 2. Package the public demo, three-minute video, and Devpost submission.
 
 ## License
