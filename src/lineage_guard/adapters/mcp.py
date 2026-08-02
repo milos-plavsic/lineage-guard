@@ -250,6 +250,9 @@ class DataHubMcpGraph:
                 "Mutation tools are unavailable. Set TOOLS_IS_MUTATION_ENABLED=true "
                 f"for the MCP server. Missing: {sorted(missing)}"
             )
+        # Tag addition is idempotent; description append is not. Execute the
+        # append last so a failed tag prerequisite cannot create duplicates on retry.
+        self._pending.sort(key=lambda operation: operation[0] == "update_description")
         while self._pending:
             name, arguments = self._pending[0]
             result = await self._session.call_tool(name, arguments)

@@ -217,6 +217,35 @@ async def test_flush_uses_official_mutation_contracts() -> None:
             "entity_urns": [BILLING],
         },
     ) in session.calls
+    mutation_names = [
+        name for name, _ in session.calls if name in {"add_tags", "update_description"}
+    ]
+    assert mutation_names == ["add_tags", "update_description"]
+
+
+@pytest.mark.asyncio
+async def test_tag_failure_cannot_partially_append_the_description() -> None:
+    session = FakeSession()
+    graph = await DataHubMcpGraph.load(session, RAW)
+    graph.add_tag(BILLING, "urn:li:tag:missing")
+    graph.append_incident_summary(RAW, "summary")
+    original = session.call_tool
+
+    async def failing(name, arguments):
+        if name == "add_tags":
+            return result({}, is_error=True)
+        return await original(name, arguments)
+
+    session.call_tool = failing
+    with pytest.raises(McpIntegrationError, match="mutation failed: add_tags"):
+        await graph.flush()
+
+    assert not any(name == "update_description" for name, _ in session.calls)
+    session.call_tool = original
+    await graph.flush()
+    assert [name for name, _ in session.calls if name in {"add_tags", "update_description"}][
+        -2:
+    ] == ["add_tags", "update_description"]
 
 
 @pytest.mark.asyncio

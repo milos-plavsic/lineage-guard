@@ -61,11 +61,13 @@ class IncidentAnalyzer:
         if not approved:
             raise PermissionError("DataHub mutations require explicit approval")
         description = report.proposed_writeback["append_description"]
+        # Queue idempotent mutations before the append-only description. If a tag
+        # prerequisite fails, retrying cannot duplicate the incident narrative.
+        for mutation in report.proposed_writeback["add_tag"]:
+            self._graph.add_tag(mutation["urn"], mutation["tag"])
         incident_marker = f"### LineageGuard incident {report.incident_id}"
         if incident_marker not in report.source.description:
             self._graph.append_incident_summary(description["urn"], description["markdown"])
-        for mutation in report.proposed_writeback["add_tag"]:
-            self._graph.add_tag(mutation["urn"], mutation["tag"])
 
     @staticmethod
     def _decision(asset: Asset, target: LineageTarget, signal: QualitySignal) -> BranchDecision:
