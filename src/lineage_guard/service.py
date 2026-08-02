@@ -72,7 +72,7 @@ class IncidentAnalyzer:
             concern for concern in signal.affected_concerns if concern.lower() in normalized
         )
         normalized_fields = {field.casefold() for field in target.dependent_fields}
-        if target.field_lineage_complete and signal.field.casefold() in normalized_fields:
+        if signal.field.casefold() in normalized_fields:
             evidence_strength = EvidenceStrength.CONFIRMED_DEPENDENCY
             evidence = (f"column lineage depends on {signal.field}",)
         elif target.field_lineage_complete:

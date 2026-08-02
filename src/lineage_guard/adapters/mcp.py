@@ -96,6 +96,8 @@ async def open_stdio_session(config: StdioMcpConfig) -> AsyncIterator[ToolSessio
 class DataHubMcpGraph:
     REQUIRED_READ_TOOLS = frozenset({"get_lineage", "get_entities"})
     REQUIRED_WRITE_TOOLS = frozenset({"update_description", "add_tags"})
+    FIELD_PATH_TOOL = "get_lineage_paths_between"
+    MAX_FIELD_PATH_CHECKS = 20
 
     def __init__(
         self,
@@ -152,6 +154,14 @@ class DataHubMcpGraph:
                 _lineage_target(item).urn
                 for item in _bounded_lineage_results(field_payload, max_results)
             }
+            if (
+                not affected
+                and cls.FIELD_PATH_TOOL in available
+                and len(targets) <= cls.MAX_FIELD_PATH_CHECKS
+            ):
+                affected = await cls._exact_field_path_targets(
+                    session, source_urn, source_field, targets
+                )
             targets = tuple(
                 LineageTarget(
                     target.urn,
@@ -172,6 +182,34 @@ class DataHubMcpGraph:
                 f"DataHub returned incomplete entity context: {sorted(missing_entities)}"
             )
         return cls(session, assets, targets)
+
+    @classmethod
+    async def _exact_field_path_targets(
+        cls,
+        session: ToolSession,
+        source_urn: str,
+        source_field: str,
+        targets: tuple[LineageTarget, ...],
+    ) -> set[str]:
+        affected = set()
+        for target in targets:
+            result = await session.call_tool(
+                cls.FIELD_PATH_TOOL,
+                {
+                    "source_urn": source_urn,
+                    "target_urn": target.urn,
+                    "source_column": source_field,
+                    "target_column": source_field,
+                    "direction": "downstream",
+                },
+            )
+            try:
+                payload = _tool_payload(result)
+            except McpIntegrationError:
+                continue
+            if _confirms_exact_field_path(payload, source_urn, target.urn, source_field):
+                affected.add(target.urn)
+        return affected
 
     def get_asset(self, urn: str) -> Asset:
         try:
@@ -238,6 +276,45 @@ def _bounded_lineage_results(payload: Any, max_results: int) -> list[Mapping[str
     if not all(isinstance(item, Mapping) for item in search_results):
         raise McpIntegrationError("DataHub returned malformed lineage entries")
     return search_results
+
+
+def _confirms_exact_field_path(payload: Any, source_urn: str, target_urn: str, field: str) -> bool:
+    if not isinstance(payload, Mapping):
+        return False
+    source = payload.get("source")
+    target = payload.get("target")
+    paths = payload.get("paths")
+    if (
+        not isinstance(source, Mapping)
+        or source.get("urn") != source_urn
+        or source.get("column") != field
+        or not isinstance(target, Mapping)
+        or target.get("urn") != target_urn
+        or target.get("column") != field
+        or not isinstance(paths, list)
+        or not paths
+        or payload.get("pathCount") != len(paths)
+    ):
+        return False
+    for path_object in paths:
+        nodes = path_object.get("path") if isinstance(path_object, Mapping) else None
+        if not isinstance(nodes, list) or len(nodes) < 2:
+            continue
+        first, last = nodes[0], nodes[-1]
+        first_parent = first.get("parent") if isinstance(first, Mapping) else None
+        last_parent = last.get("parent") if isinstance(last, Mapping) else None
+        if (
+            isinstance(first, Mapping)
+            and isinstance(last, Mapping)
+            and isinstance(first_parent, Mapping)
+            and isinstance(last_parent, Mapping)
+            and first.get("fieldPath") == field
+            and last.get("fieldPath") == field
+            and first_parent.get("urn") == source_urn
+            and last_parent.get("urn") == target_urn
+        ):
+            return True
+    return False
 
 
 def _tool_payload(result: Any) -> Any:

@@ -7,6 +7,7 @@ from lineage_guard.adapters.mcp import (
     DataHubMcpGraph,
     McpIntegrationError,
     _bounded_lineage_results,
+    _confirms_exact_field_path,
     _tool_payload,
 )
 from lineage_guard.demo import BILLING, DEMOGRAPHICS, RAW, STAGING
@@ -94,6 +95,105 @@ async def test_loads_field_lineage_as_positive_dependency_evidence() -> None:
         arguments["urn"] == RAW and arguments.get("column") == "billing_amount"
         for name, arguments in session.calls
         if name == "get_lineage"
+    )
+
+
+@pytest.mark.asyncio
+async def test_falls_back_to_exact_field_path_without_inventing_exclusions() -> None:
+    class FallbackSession(FakeSession):
+        def __init__(self):
+            super().__init__()
+            self.tools.tools.append(SimpleNamespace(name="get_lineage_paths_between"))
+
+        async def call_tool(self, name, arguments):
+            if name == "get_lineage" and arguments.get("column"):
+                self.calls.append((name, arguments))
+                return result({"downstreams": {"searchResults": [], "total": 0}})
+            if name == "get_lineage_paths_between":
+                self.calls.append((name, arguments))
+                if arguments["target_urn"] == DEMOGRAPHICS:
+                    return result({}, is_error=True)
+                if arguments["target_urn"] == STAGING:
+                    return result(
+                        {
+                            **exact_path(STAGING),
+                            "source": {"urn": "wrong", "column": "billing_amount"},
+                        }
+                    )
+                return result(exact_path(BILLING))
+            return await super().call_tool(name, arguments)
+
+    graph = await DataHubMcpGraph.load(FallbackSession(), RAW, source_field="billing_amount")
+    dependencies = {
+        target.urn: target.dependent_fields
+        for target in graph.get_downstream_lineage(RAW, 5, field="billing_amount")
+    }
+    assert dependencies[BILLING] == ("billing_amount",)
+    assert dependencies[DEMOGRAPHICS] == ()
+
+
+def exact_path(target_urn):
+    return {
+        "source": {"urn": RAW, "column": "billing_amount"},
+        "target": {"urn": target_urn, "column": "billing_amount"},
+        "pathCount": 1,
+        "paths": [
+            {
+                "path": [
+                    {
+                        "fieldPath": "billing_amount",
+                        "parent": {"urn": RAW},
+                    },
+                    {
+                        "fieldPath": "billing_amount",
+                        "parent": {"urn": target_urn},
+                    },
+                ]
+            }
+        ],
+    }
+
+
+def test_exact_field_path_requires_consistent_bounded_provenance() -> None:
+    assert _confirms_exact_field_path(exact_path(BILLING), RAW, BILLING, "billing_amount")
+    invalid = [
+        None,
+        {},
+        {**exact_path(BILLING), "source": []},
+        {**exact_path(BILLING), "source": {"urn": "wrong", "column": "billing_amount"}},
+        {**exact_path(BILLING), "source": {"urn": RAW, "column": "wrong"}},
+        {**exact_path(BILLING), "target": []},
+        {**exact_path(BILLING), "target": {"urn": "wrong", "column": "billing_amount"}},
+        {**exact_path(BILLING), "target": {"urn": BILLING, "column": "wrong"}},
+        {**exact_path(BILLING), "paths": "bad"},
+        {**exact_path(BILLING), "paths": []},
+        {**exact_path(BILLING), "pathCount": 2},
+        {**exact_path(BILLING), "paths": ["bad"]},
+        {**exact_path(BILLING), "paths": [{"path": "bad"}]},
+        {**exact_path(BILLING), "paths": [{"path": [{}]}]},
+        {**exact_path(BILLING), "paths": [{"path": ["bad", {}]}]},
+        {**exact_path(BILLING), "paths": [{"path": [{}, "bad"]}]},
+        {
+            **exact_path(BILLING),
+            "paths": [{"path": [{"fieldPath": "billing_amount"}, {}]}],
+        },
+        {
+            **exact_path(BILLING),
+            "paths": [
+                {
+                    "path": [
+                        {"fieldPath": "wrong", "parent": {"urn": RAW}},
+                        {
+                            "fieldPath": "billing_amount",
+                            "parent": {"urn": BILLING},
+                        },
+                    ]
+                }
+            ],
+        },
+    ]
+    assert all(
+        not _confirms_exact_field_path(item, RAW, BILLING, "billing_amount") for item in invalid
     )
 
 
