@@ -549,6 +549,7 @@ async def test_structured_mutation_failure_is_reported() -> None:
     with pytest.raises(McpIntegrationError, match="mutation failed"):
         await graph.flush()
 
+    session.call_tool = original
     graph.append_incident_summary(RAW, "summary")
     await graph.flush()
     assert sum(name == "update_description" for name, _ in session.calls) == 1
