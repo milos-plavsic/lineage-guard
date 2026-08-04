@@ -2,8 +2,8 @@
 
 Capture from the actual running dashboard at 1440 × 900 or larger. Do not use generated mockups.
 
-1. **Hero image:** full dashboard showing the incident title, contained state, metrics, and all three
-   downstream decisions. Use as the primary Devpost image.
+1. **Hero image:** full dashboard showing provenance, the observation-only read receipt, incident
+   title, contained state, and all three downstream decisions. Use as the primary Devpost image.
 2. **Recovery twin:** capture the rejected clamp, verified restoration, six checks, and certificate.
 3. **Chronos trinity:** capture the Incident Genome, blocked/safe/expired change cards, coverage map,
    and in-toto passport.

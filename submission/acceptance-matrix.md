@@ -25,7 +25,7 @@ published media, or organizer action; **optional** is not required for eligibili
 | Free judge access through August 31, 2026 | Active commitment | Public Pages demo and repository require no credentials; keep both active through judging. |
 | Team representative and entrant eligibility | Pending entrant | Confirm in Devpost account; cannot be proven from the repository. |
 | Submission finalized before August 10, 2026 17:00 EDT | Pending entrant | Submit before 23:00 Europe/Budapest and retain confirmation. |
-| Meaningful upstream DataHub contribution | Optional | Bonus criterion; no contribution is claimed yet. |
+| Meaningful upstream DataHub contribution | Proved externally; review pending | [`datahub#18878`](https://github.com/datahub-project/datahub/pull/18878) fixes Agent Context lineage pagination and passes the relevant upstream build; do not claim merge until maintainer review completes. [`rfcs#13`](https://github.com/datahub-project/rfcs/issues/13) proposes structured evidence provenance. |
 | Most Valuable Feedback survey | Optional | Complete once if desired; separate individual bonus. |
 
 ## Judging readiness

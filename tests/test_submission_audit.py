@@ -3,6 +3,7 @@ from pathlib import Path
 from scripts.audit_submission import (
     _created_in_submission_period,
     _public_url,
+    _script_under_three_minutes,
     _valid_duration,
     audit,
 )
@@ -20,6 +21,16 @@ def test_video_duration_is_strictly_under_three_minutes() -> None:
     assert _valid_duration(179)
     assert not _valid_duration(180)
     assert not _valid_duration(None)
+
+
+def test_video_script_duration_is_parsed_instead_of_hard_coded(tmp_path) -> None:
+    script = tmp_path / "video.md"
+    script.write_text("Target duration: **2 minutes 40 seconds**", encoding="utf-8")
+    assert _script_under_three_minutes(script)
+    script.write_text("Target duration: **3 minutes 0 seconds**", encoding="utf-8")
+    assert not _script_under_three_minutes(script)
+    script.write_text("no duration", encoding="utf-8")
+    assert not _script_under_three_minutes(script)
 
 
 def test_empty_repository_has_no_valid_creation_date(tmp_path) -> None:

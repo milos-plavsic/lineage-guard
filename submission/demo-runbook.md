@@ -17,19 +17,19 @@
 
 1. Start `uv run lineage-guard-web`.
 2. Open `http://127.0.0.1:8765`.
-3. Establish the forked healthcare lineage and negative billing signal.
-4. Show staging at `monitor`: dependency is confirmed, but material branch impact needs review.
-5. Show billing at risk 100 with `quarantine` and confirmed field dependency.
-6. Show demographics with `continue` and confirmed field exclusion—not a missing keyword.
-7. Show the recovery twin: clamp-to-zero passes the target check but fails total conservation.
-8. Show trusted restoration passing all six invariants and receiving a recovery certificate.
-9. Show Chronos blocking guard removal and passporting guard preservation.
-10. Show a new lineage edge expiring the otherwise-safe proof.
-11. Select a ProofGraph decision and show its minimal Causal Cut.
-12. Remove each decisive input in the Trust Lens and show the fail-closed alternative.
-13. Show Evidence Gap Radar ranking the next DataHub context improvement.
-14. Walk through the twelve-stage evidence timeline.
-15. Open the Proof Bundle, graph, causal cuts, gaps, Genome, fixture, passport, and manifest.
+3. Show the provenance banner and observation-only lineage receipt; state that the fixture does not
+   claim a live DataHub connection or current-state completeness.
+4. Establish the forked healthcare lineage and negative billing signal.
+5. Show staging at `monitor`: dependency is confirmed, but material branch impact needs review.
+6. Show billing at risk 100 with `quarantine` and confirmed field dependency.
+7. Show demographics with `continue` and confirmed field exclusion—not a missing keyword.
+8. Show the recovery twin: clamp-to-zero passes the target check but fails total conservation.
+9. Show trusted restoration passing all six invariants and receiving a recovery certificate.
+10. Show Chronos blocking guard removal and passporting guard preservation.
+11. Show a new lineage edge expiring the otherwise-safe proof.
+12. Select one decision, show its minimal Causal Cut, remove one decisive input, and show the
+    fail-closed alternative plus the highest-ranked evidence gap.
+13. Show generated artifacts and the approval boundary. Do not enumerate every internal component.
 
 ## Authenticated agent path
 

@@ -6,6 +6,8 @@ flowchart LR
     W --> J[(SQLite event journal)]
     W --> A[Incident agent]
     D[(DataHub context graph)] <-->|Official MCP tools| M[MCP adapter]
+    M --> RC[Capability-based read receipt]
+    RC --> A
     M --> A
     A --> P[Evidence-bound decisions]
     P --> R[Remediation generator]
@@ -64,6 +66,8 @@ premise set, typed counterfactuals show fail-closed alternatives, Radar converts
 into a ranked DataHub improvement backlog, and an unsigned in-toto bundle binds the complete chain.
 
 The agent is a durable state machine rather than a chatbot. It authenticates and deduplicates an
-event, calls DataHub tools for context, decides, generates evidence, optionally sends an atomic
-fail-closed control plan, writes approved context to DataHub, and stores the exact result for the next
-delivery or operator. Separate event, enforcement, and DataHub credentials preserve least privilege.
+event, calls DataHub tools for context, attaches a fail-closed read receipt, decides, generates
+evidence, optionally requests a default-hold control plan and verifies the acknowledgement, writes
+approved context to DataHub, and stores the exact result for the next delivery or operator. The
+external orchestrator remains responsible for transactional execution. Separate event, enforcement,
+and DataHub credentials preserve least privilege.

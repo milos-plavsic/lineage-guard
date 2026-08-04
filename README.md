@@ -3,14 +3,26 @@
 [![CI](https://github.com/milos-plavsic/lineage-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/milos-plavsic/lineage-guard/actions/workflows/ci.yml)
 [![Demo](https://img.shields.io/badge/demo-GitHub%20Pages-5ee0b3)](https://milos-plavsic.github.io/lineage-guard/)
 
-LineageGuard is a deterministic immune system for data platforms: contain what is exposed, release
-what is proven, and prevent what is remembered. It
-receives authenticated quality events, retrieves dataset and field lineage through DataHub MCP,
-separates confirmed dependencies from proven exclusions and uncertain exposure, produces reviewable
-controls, and records approved decisions back into DataHub. An optional signed webhook applies an
-atomic hold/allow plan through an external orchestrator.
+LineageGuard turns one data-quality incident into three governed outcomes: contain only the branches
+DataHub proves exposed, release only a repair that passes independent checks, and prevent the same
+failure from returning. It consumes authenticated events, reads dataset and field lineage through
+DataHub MCP, produces reviewable controls, and records approved decisions back into DataHub. An
+optional signed webhook requests a default-hold plan from an external orchestrator and verifies its
+exact acknowledgement; transactional execution remains the orchestrator's responsibility.
 
 This repository is being built for **Build with DataHub: The Agent Hackathon**.
+
+## One-minute judge path
+
+1. Open the [public incident console](https://milos-plavsic.github.io/lineage-guard/).
+2. Read the lineage receipt: the fixture is observation-only and cannot claim live freshness.
+3. Compare billing (`quarantine`), staging (`monitor`), and proven-independent demographics
+   (`continue`).
+4. See the superficial repair rejected and governed restoration certified.
+5. See guard removal blocked, context drift expire old proof, and the Trust Lens explain why.
+
+That is one agent loop: **observe → contain → prove recovery → prevent recurrence → explain**. The
+named components below are stages of this loop, not separate products.
 
 ## Current vertical slice
 
@@ -109,6 +121,7 @@ Docker or executes downloaded scripts automatically.
 - `enforcement.py`: signed orchestrator containment protocol.
 - `ports.py`: narrow interface for DataHub context and write-back.
 - `adapters/`: replaceable metadata graph implementations.
+- `consistency.py`: capability-based, content-addressed lineage read receipts.
 - `remediation.py`: deterministic SQL, policy, report, and integrity-manifest generation.
 - `recovery.py`: bounded counterfactual SQL evaluation and hash-bound recovery certification.
 - `chronos.py`: Incident Genome compilation, historical replay, proof passports, drift expiry, and

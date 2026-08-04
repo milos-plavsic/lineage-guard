@@ -42,7 +42,7 @@ class SignedWebhookConfig:
 
 
 class SignedWebhookEnforcer:
-    """Send an atomic, fail-closed control plan to an operator-configured orchestrator."""
+    """Request a default-hold plan and verify the orchestrator's exact acknowledgement."""
 
     def __init__(self, config: SignedWebhookConfig) -> None:
         self._config = config

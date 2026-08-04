@@ -14,6 +14,13 @@ async function loadIncident() {
   text('metadata-origin', data.provenance.metadata_source.replaceAll('_', ' '));
   text('mutation-state', data.provenance.mutations_applied ? 'applied' : 'not applied');
   text('proof-state', data.provenance.proof_authenticated ? 'authenticated' : 'integrity-valid · unsigned');
+  const receipt = data.lineage_read.receipt;
+  text('read-capability', receipt.capabilities.join(' · ').replaceAll('_', ' ').toLowerCase());
+  text('read-source', receipt.readConsistency.source.toLowerCase().replaceAll('_', ' '));
+  text('read-completeness', receipt.readConsistency.completeness.toLowerCase());
+  text('read-cache', receipt.readConsistency.responseCache.toLowerCase().replaceAll('_', ' '));
+  text('read-digest', `${receipt.receiptDigest.slice(0, 20)}…`);
+  text('read-limitations', receipt.limitations.join(' · ').replaceAll('_', ' ').toLowerCase());
   text('incident-id', data.report.incident_id);
   text('overall-status', data.summary.status);
   text('affected-count', data.summary.affectedBranches);

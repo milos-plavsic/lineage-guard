@@ -26,6 +26,20 @@
         <div><dt>Proof</dt><dd id="proof-state">Loading</dd></div>
       </dl>
     </section>
+    <section class="panel" aria-labelledby="read-safety-title">
+      <div class="panel-heading">
+        <div><p class="eyebrow">Lineage read receipt</p><h2 id="read-safety-title">What may this read safely prove?</h2></div>
+        <div id="read-capability" class="status-pill review">Loading</div>
+      </div>
+      <p class="section-intro">The hosted fixture demonstrates the same fail-closed envelope emitted with live MCP reports. Unknown freshness never becomes proof of current presence or absence.</p>
+      <div class="proofgraph-metrics" aria-label="Lineage read consistency">
+        <article><span>Source</span><strong id="read-source">—</strong></article>
+        <article><span>Completeness</span><strong id="read-completeness">—</strong></article>
+        <article><span>Cache state</span><strong id="read-cache">—</strong></article>
+        <article><span>Receipt</span><strong id="read-digest">—</strong></article>
+      </div>
+      <p><strong>Why stronger claims are blocked:</strong> <span id="read-limitations">Loading</span></p>
+    </section>
     <section class="hero" aria-labelledby="incident-title">
       <div>
         <p class="eyebrow">Active incident · <span id="incident-id">Loading</span></p>

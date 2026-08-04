@@ -11,6 +11,9 @@ from lineage_guard.web import SECURITY_HEADERS, LineageGuardHandler, build_view_
 def test_dashboard_model_exposes_decisions_timeline_and_artifacts() -> None:
     model = build_view_model()
 
+    assert model["lineage_read"]["receipt"]["capabilities"] == ["USE_AS_OBSERVATION"]
+    assert model["lineage_read"]["receipt"]["readConsistency"]["source"] == "UNKNOWN"
+
     assert model["provenance"] == {
         "execution_mode": "deterministic_fixture",
         "metadata_source": "application_owned_datahub_shaped_fixture",

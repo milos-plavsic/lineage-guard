@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -32,7 +33,7 @@ def audit(root: Path) -> tuple[Check, ...]:
         ),
         Check(
             "Video script",
-            "2 minutes 45 seconds" in (root / "submission/video-script.md").read_text(),
+            _script_under_three_minutes(root / "submission/video-script.md"),
             "submission/video-script.md",
         ),
         Check(
@@ -95,6 +96,14 @@ def _public_url(value: object, *, hosts: set[str] | None = None) -> bool:
 
 def _valid_duration(value: object) -> bool:
     return isinstance(value, int) and 0 < value < 180
+
+
+def _script_under_three_minutes(path: Path) -> bool:
+    match = re.search(
+        r"Target duration:\s*\*\*(\d+) minutes? (\d+) seconds?\*\*",
+        path.read_text(encoding="utf-8"),
+    )
+    return bool(match and int(match[1]) * 60 + int(match[2]) < 180)
 
 
 def _clean_worktree(root: Path) -> bool:

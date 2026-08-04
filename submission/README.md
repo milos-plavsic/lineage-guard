@@ -1,7 +1,7 @@
 # Submission package
 
 - `devpost.md` — copy for the Devpost project page.
-- `video-script.md` — time-coded 2:45 demonstration script.
+- `video-script.md` — time-coded 2:40 demonstration script.
 - `demo-runbook.md` — deterministic and live recording paths.
 - `architecture.md` — system diagram and boundaries.
 - `disclosures.md` — pre-existing work, tools, licensing, and data disclosure.

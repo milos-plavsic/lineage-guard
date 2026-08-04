@@ -14,6 +14,8 @@ containment.
 
 ## What it does
 
+One incident follows one loop: **observe → contain → prove recovery → prevent recurrence → explain**.
+
 LineageGuard receives an HMAC-authenticated, versioned data-quality event, durably deduplicates it,
 and retrieves dataset plus field lineage and entity context through DataHub's official MCP Server.
 It distinguishes confirmed dependency, complete field exclusion, descriptive indication, and
@@ -35,8 +37,9 @@ SQLite shadow: a superficial clamp clears the quality check but is rejected for 
 trusted billing total, while snapshot restoration passes six independent invariants and receives a
 hash-bound recovery certificate. The certificate proposes release; it cannot bypass approval.
 
-With explicit approval, LineageGuard first sends an HMAC-signed, idempotent default-hold plan
-to an orchestrator endpoint and requires an exact receipt. It then writes incident context and a
+With explicit approval, LineageGuard first requests an HMAC-signed, idempotent default-hold plan
+from an orchestrator endpoint and requires an exact acknowledgement. Transactional execution is the
+orchestrator's responsibility. LineageGuard then writes incident context and a
 quarantine tag to DataHub, leaving durable knowledge for the next person or agent. Dry-run is the
 default; mutation capability, approval, and enforcement credentials are independent gates.
 
@@ -58,6 +61,11 @@ The same chain is available in live MCP mode: DataHub supplies the incident grap
 context, while operators provide versioned recovery rows and typed future changes that cannot be
 safely inferred. Output provenance distinguishes live metadata, supplied evidence, proposed
 mutations, integrity validity, and unsigned authentication state.
+
+Every enriched lineage read also carries a capability-based receipt. Instead of a confidence score,
+it states which conclusions are allowed and why stronger claims are blocked. Because today's MCP
+surface exposes no index watermark or cache disposition, those facts remain `UNKNOWN`; an empty read
+is never silently promoted into proof of absence.
 
 ## How we built it
 
@@ -93,7 +101,9 @@ tools. Generated source-system remediation remains reviewable output rather than
 - Counterfactual repair execution that rejects a green-but-wrong fix and certifies a safe candidate.
 - Temporal causal immunity: Incident Genomes, historical replay, proof passports, and drift expiry.
 - Proof-carrying metadata with exact Causal Cuts, interactive counterfactuals, and Evidence Gap Radar.
-- A five-tool read-only ProofGraph MCP server and a complete DataHub Evidence aspect RFC.
+- A five-tool read-only ProofGraph MCP server and a published DataHub Evidence aspect proposal.
+- A capability-based lineage read receipt that makes unknown freshness machine-actionable.
+- A mergeable DataHub Agent Context pagination fix with its relevant upstream build passing.
 - Reproducible, executable remediation artifacts with integrity hashes.
 - Fail-closed handling for malformed, incomplete, or oversized MCP context.
 - A judge-readable demo that runs without credentials while retaining the real MCP boundary.
@@ -109,9 +119,10 @@ unconstrained generative autonomy.
 
 ## What's next
 
-Next steps include proposing the Evidence aspect RFC upstream, native DataHub incident entities,
-packaged Airflow/Dagster/dbt receivers for the signed enforcement protocol, owner approval
-integration, multi-node journal backends, and calibration against larger cross-platform graphs.
+The Evidence aspect proposal and Agent Context pagination fix are now upstream for review. Product
+next steps are native structured DataHub incident/evidence aspects, packaged Airflow/Dagster/dbt
+receivers for the signed enforcement protocol, owner approval integration, multi-node journal
+backends, and calibration against larger cross-platform graphs.
 
 ## Built with
 

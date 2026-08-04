@@ -11,6 +11,7 @@ from typing import Any
 
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
 from lineage_guard.chronos import build_demo_chronos
+from lineage_guard.consistency import LineageRead, lineage_receipt
 from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
 from lineage_guard.domain import Action
 from lineage_guard.proofgraph import build_demo_proofgraph
@@ -32,7 +33,19 @@ SECURITY_HEADERS = {
 
 def build_view_model() -> dict[str, Any]:
     graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
-    report = IncidentAnalyzer(graph).analyze(negative_billing_signal())
+    signal = negative_billing_signal()
+    targets = graph.get_downstream_lineage(signal.asset_urn, 5, field=signal.field)
+    lineage_read = LineageRead(
+        targets,
+        lineage_receipt(
+            source_urn=signal.asset_urn,
+            max_hops=5,
+            max_results=100,
+            source_field=signal.field,
+            targets=targets,
+        ),
+    )
+    report = IncidentAnalyzer(graph).analyze(signal)
     recovery = CounterfactualRecoveryLab().evaluate(report, demo_recovery_scenario())
     chronos = build_demo_chronos(report, recovery)
     proofgraph, proof_bundle = build_demo_proofgraph(report, recovery, chronos)
@@ -52,6 +65,7 @@ def build_view_model() -> dict[str, Any]:
             "approval_state": "not_requested",
         },
         "report": report.as_dict(),
+        "lineage_read": lineage_read.as_dict(),
         "summary": {
             "status": "Contained",
             "affectedBranches": quarantined,
@@ -67,7 +81,10 @@ def build_view_model() -> dict[str, Any]:
             },
             {
                 "stage": "Context resolved",
-                "detail": f"DataHub lineage identified {len(report.decisions)} downstream assets.",
+                "detail": (
+                    f"The DataHub-shaped fixture identified {len(report.decisions)} downstream "
+                    "assets; its receipt permits observation, not a live-state assertion."
+                ),
                 "state": "context",
             },
             {

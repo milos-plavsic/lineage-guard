@@ -1,79 +1,68 @@
 # Demonstration video script
 
-Target duration: **2 minutes 45 seconds**. Hard ceiling: **2 minutes 55 seconds**. Record in English
+Target duration: **2 minutes 40 seconds**. Hard ceiling: **2 minutes 50 seconds**. Record in English
 at 1080p. Use only original narration and screen recording; do not add copyrighted music.
+
+The entire video follows one sentence: **observe, contain, prove recovery, prevent recurrence, and
+explain**. Component names appear on screen but do not become separate stories.
 
 ## 0:00–0:15 — Problem
 
 Show the dashboard title and healthcare lineage.
 
 > A bad upstream field should not force an entire data platform offline. LineageGuard uses DataHub
-> context to hold uncertain work, contain confirmed impact, and continue only branches proven safe.
+> context to contain only proven impact, hold uncertainty, and continue only work proven safe.
 
-## 0:15–0:38 — Trigger and DataHub context
+## 0:15–0:38 — Observe through DataHub
 
-Show the negative `billing_amount` signal, then DataHub lineage from `raw_patients` through staging to
-the billing and demographics marts.
+Briefly show the committed live DataHub evidence, then the dashboard provenance and read receipt.
 
-> Our synthetic healthcare pipeline emits a signed negative-billing event. LineageGuard durably
-> deduplicates it, then calls DataHub's official MCP Server for dataset lineage, field lineage, and
-> batched entity context.
+> A signed quality event starts one durable agent loop. LineageGuard calls DataHub's official MCP
+> Server for dataset lineage, field lineage, and entity context. Every read carries a capability
+> receipt: unknown freshness stays unknown, so an empty response never becomes proof of absence.
+> This hosted view is the disclosed deterministic fixture; the repository also contains the
+> versioned live DataHub run.
 
-## 0:38–1:10 — Selective decision
+## 0:38–1:08 — Contain selectively
 
-Return to the blast-radius panel. Focus on the billing quarantine and demographics continue states.
+Show the billing, staging, and demographics decisions.
 
-> Connection is not the same as field impact. Column lineage confirms billing depends on the failed
-> field, and business metadata makes it material, so it is quarantined. Complete field evidence
-> excludes demographics, so it can continue. Staging remains under review. Missing evidence never
-> becomes a claim of safety.
+> Connection is not the same as impact. Billing depends on the failed field and is quarantined.
+> Staging remains under review. Demographics continues only because complete fixture evidence proves
+> field exclusion. Missing evidence always fails closed. Approved actions require a separate
+> mutation gate and are written back to DataHub for the next person or agent.
 
-## 1:10–1:36 — Proof-carrying recovery
+## 1:08–1:38 — Prove recovery
 
-Scroll to the before/after recovery twin and both candidate cards.
+Show both repair candidates and the certificate.
 
-> Fixing the check is not enough. In an isolated shadow pipeline, clamping negatives to zero makes
-> the assertion green but destroys the trusted billing total, so LineageGuard rejects it. Restoring
-> the governed snapshot passes six invariants. The recovery certificate binds the incident, DataHub
-> context, SQL, output, and checks—but still cannot release anything without approval.
+> Making one check green is not a cure. Clamping negatives to zero passes the target assertion but
+> destroys the trusted total, so it is rejected. Snapshot restoration passes six independent
+> invariants. Its hash-bound certificate proposes release at a defined evidence point; it cannot
+> authorize deployment by itself.
 
-## 1:36–1:58 — Chronos causal immunity
+## 1:38–2:03 — Prevent recurrence
 
-Show the three change cards, Incident Genome, coverage map, and passport.
+Show guard removal, guard preservation, then lineage drift.
 
-> Chronos now converts the incident and cure into preventive memory. Removing the billing guard
-> replays the historical failure and is blocked. Preserving it earns an in-toto-shaped passport.
-> Then a new DataHub lineage edge appears: yesterday's proof expires automatically, even though the
-> guard still passes. Every incident makes the platform harder to break twice.
+> The incident and verified repair become executable preventive memory. Removing the billing guard
+> replays the historical failure and is blocked. Preserving it becomes eligible for approval. A new
+> DataHub lineage edge then expires the old proof and requires revalidation. Yesterday's evidence is
+> never treated as eternally current.
 
-## 1:58–2:25 — ProofGraph and Evidence Gap Radar
+## 2:03–2:26 — Explain and challenge the decision
 
-Select the billing decision, show its Causal Cut, simulate removed evidence, then show the Radar.
+Show one Causal Cut, remove one decisive premise in the Trust Lens, and show the top evidence gap.
 
-> ProofGraph makes the automation prove why. The decision and explanation share one deterministic
-> derivation graph. Its Causal Cut is the smallest decisive evidence set. Remove any premise and the
-> Trust Lens shows the fail-closed alternative. Evidence Gap Radar then identifies the DataHub context
-> improvement with the highest decision value. Five read-only MCP tools make this proof reusable by
-> other agents.
+> The decision and explanation come from the same deterministic derivation graph. This is the
+> smallest evidence set that forces the billing decision. Remove one premise and the result becomes
+> more conservative. The ranked gap shows which additional DataHub context would unlock the most
+> useful safe automation.
 
-## 2:25–2:37 — Artifacts and action
+## 2:26–2:40 — Evidence and close
 
-Show candidate SQL, evaluation JSON, certificate, manifest, then the approval boundary.
+Show generated artifacts, a green CI run, and return to the complete dashboard.
 
-> One unsigned in-toto bundle binds containment, recovery, immunity, graph, and every causal cut.
-> Integrity is not approval: mutations still require explicit authorization and an exact signed
-> orchestrator receipt.
-
-## 2:37–2:48 — Technical proof
-
-Show a terminal with tests and the MCP adapter filenames, then the health endpoint.
-
-> The safety authority is deterministic and fail-closed. Full statement and branch coverage verifies
-> authenticated events, lineage, recovery, drift, causal proofs, tampering, MCP tools, and permissions.
-
-## 2:48–2:55 — Close
-
-Return to the full dashboard.
-
-> LineageGuard makes DataHub proof-carrying: contain what is exposed, release what is proven, prevent
-> what is remembered—and show exactly why.
+> The repository includes generated SQL, policies, certificates, prevention controls, proof bundles,
+> live integration evidence, and full statement and branch coverage. LineageGuard makes one incident
+> useful three times: contain what is exposed, release what is proven, and prevent what is remembered.
