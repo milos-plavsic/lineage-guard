@@ -436,7 +436,10 @@ class DataHubMcpGraph:
         while self._pending:
             name, arguments = self._pending[0]
             result = await self._session.call_tool(name, arguments)
-            if getattr(result, "isError", False):
+            payload = None if getattr(result, "isError", False) else _tool_payload(result)
+            if getattr(result, "isError", False) or (
+                isinstance(payload, Mapping) and payload.get("success") is False
+            ):
                 raise McpIntegrationError(
                     f"DataHub MCP mutation failed: {name}; "
                     f"{len(self._pending)} operation(s) remain retryable"

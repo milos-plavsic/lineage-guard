@@ -532,6 +532,23 @@ async def test_mutation_failure_is_reported() -> None:
     await graph.flush()
     assert sum(name == "update_description" for name, _ in session.calls) == 1
 
+
+@pytest.mark.asyncio
+async def test_structured_mutation_failure_is_reported() -> None:
+    session = FakeSession()
+    graph = await DataHubMcpGraph.load(session, RAW)
+    graph.append_incident_summary(RAW, "summary")
+    original = session.call_tool
+
+    async def failing(name, arguments):
+        if name == "update_description":
+            return result({"success": False, "message": "rejected"})
+        return await original(name, arguments)
+
+    session.call_tool = failing
+    with pytest.raises(McpIntegrationError, match="mutation failed"):
+        await graph.flush()
+
     graph.append_incident_summary(RAW, "summary")
     await graph.flush()
     assert sum(name == "update_description" for name, _ in session.calls) == 1
