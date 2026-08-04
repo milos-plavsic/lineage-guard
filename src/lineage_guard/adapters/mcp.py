@@ -10,7 +10,12 @@ from typing import Any, Protocol
 
 from lineage_guard.consistency import LineageRead, ReadConsistency, lineage_receipt
 from lineage_guard.domain import Asset, LineageTarget
-from lineage_guard.immune_memory import ImmuneMemoryRecord, encode_memory, parse_memories
+from lineage_guard.immune_memory import (
+    MAX_DESCRIPTION_BYTES,
+    ImmuneMemoryRecord,
+    encode_memory,
+    parse_memories,
+)
 
 
 class McpIntegrationError(RuntimeError):
@@ -207,7 +212,11 @@ class DataHubMcpGraph:
         native_memory = cls.NATIVE_MEMORY_WRITE_TOOL in available
         memory_documents: tuple[str, ...] = ()
         if cls.NATIVE_MEMORY_READ_TOOL in available:
-            memory_documents = await cls._load_memory_documents(session, source_urn)
+            memory_documents = await cls._load_memory_documents(
+                session,
+                source_urn,
+                use_grep="grep_documents" in available,
+            )
         return cls(
             session,
             assets,
@@ -221,7 +230,9 @@ class DataHubMcpGraph:
         )
 
     @staticmethod
-    async def _load_memory_documents(session: ToolSession, source_urn: str) -> tuple[str, ...]:
+    async def _load_memory_documents(
+        session: ToolSession, source_urn: str, *, use_grep: bool = False
+    ) -> tuple[str, ...]:
         subject_key = sha256(source_urn.encode()).hexdigest()[:20]
         result = await session.call_tool(
             "search_documents",
@@ -244,7 +255,18 @@ class DataHubMcpGraph:
         values = entities if isinstance(entities, list) else [entities]
         if len(values) != len(urns):
             raise McpIntegrationError("DataHub returned incomplete immune-memory documents")
-        return tuple(_document_text(value) for value in values)
+        documents: dict[str, str] = {}
+        for value in values:
+            urn = value.get("urn") if isinstance(value, Mapping) else None
+            text = _optional_document_text(value)
+            if isinstance(urn, str) and text is not None:
+                documents[urn] = text
+        missing = [urn for urn in urns if urn not in documents]
+        if missing and use_grep:
+            documents.update(await _grep_document_text(session, missing, subject_key))
+        if set(documents) != set(urns):
+            raise McpIntegrationError("DataHub immune-memory document has no textual content")
+        return tuple(documents[urn] for urn in urns)
 
     @classmethod
     async def _exact_field_path_targets(
@@ -389,14 +411,60 @@ class DataHubMcpGraph:
 
 
 def _document_text(entity: Any) -> str:
+    text = _optional_document_text(entity)
+    if text is None:
+        if not isinstance(entity, Mapping):
+            raise McpIntegrationError("DataHub returned malformed immune-memory document content")
+        raise McpIntegrationError("DataHub immune-memory document has no textual content")
+    return text
+
+
+def _optional_document_text(entity: Any) -> str | None:
     if not isinstance(entity, Mapping):
-        raise McpIntegrationError("DataHub returned malformed immune-memory document content")
+        return None
     info = entity.get("documentInfo") or entity.get("info") or {}
     contents = info.get("contents") if isinstance(info, Mapping) else None
     text = contents.get("text") if isinstance(contents, Mapping) else None
-    if not isinstance(text, str):
-        raise McpIntegrationError("DataHub immune-memory document has no textual content")
-    return text
+    return text if isinstance(text, str) else None
+
+
+async def _grep_document_text(
+    session: ToolSession, urns: list[str], subject_key: str
+) -> dict[str, str]:
+    payload = _tool_payload(
+        await session.call_tool(
+            "grep_documents",
+            {
+                "urns": urns,
+                "pattern": f"lineage-guard-memory-{subject_key}",
+                "context_chars": MAX_DESCRIPTION_BYTES,
+                "max_matches_per_doc": 1,
+            },
+        )
+    )
+    results = payload.get("results", []) if isinstance(payload, Mapping) else []
+    if not isinstance(results, list) or len(results) > len(urns):
+        raise McpIntegrationError("DataHub returned invalid immune-memory document excerpts")
+    documents: dict[str, str] = {}
+    for result in results:
+        urn = result.get("urn") if isinstance(result, Mapping) else None
+        matches = result.get("matches") if isinstance(result, Mapping) else None
+        content_length = result.get("content_length") if isinstance(result, Mapping) else None
+        excerpt = (
+            matches[0].get("excerpt")
+            if isinstance(matches, list) and len(matches) == 1 and isinstance(matches[0], Mapping)
+            else None
+        )
+        if (
+            urn not in urns
+            or not isinstance(excerpt, str)
+            or not isinstance(content_length, int)
+            or content_length != len(excerpt)
+            or len(excerpt.encode()) > MAX_DESCRIPTION_BYTES
+        ):
+            raise McpIntegrationError("DataHub returned truncated immune-memory document content")
+        documents[urn] = excerpt
+    return documents
 
 
 def _bounded_lineage_results(payload: Any, max_results: int) -> list[Mapping[str, Any]]:

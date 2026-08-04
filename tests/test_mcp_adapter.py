@@ -186,6 +186,60 @@ async def test_native_memory_search_handles_no_documents() -> None:
     assert await DataHubMcpGraph._load_memory_documents(Session(), RAW) == ()
 
 
+@pytest.mark.asyncio
+async def test_native_memory_uses_dedicated_content_reader_for_oss_documents() -> None:
+    record = ImmuneMemoryRecord.create(MemoryRecordType.INCIDENT, RAW, "incident", {})
+    content = f"lineage-guard-memory-key\n\n{encode_memory(record)}"
+
+    class Session:
+        async def call_tool(self, name, arguments):
+            if name == "search_documents":
+                return result({"searchResults": [{"entity": {"urn": "urn:li:document:one"}}]})
+            if name == "get_entities":
+                return result([{"urn": "urn:li:document:one", "info": {}}])
+            assert name == "grep_documents"
+            assert arguments["max_matches_per_doc"] == 1
+            return result(
+                {
+                    "results": [
+                        {
+                            "urn": "urn:li:document:one",
+                            "matches": [{"excerpt": content}],
+                            "content_length": len(content),
+                        }
+                    ]
+                }
+            )
+
+    documents = await DataHubMcpGraph._load_memory_documents(Session(), RAW, use_grep=True)
+    assert documents == (content,)
+
+
+@pytest.mark.asyncio
+async def test_native_memory_rejects_truncated_dedicated_content() -> None:
+    class Session:
+        async def call_tool(self, name, arguments):
+            del arguments
+            if name == "search_documents":
+                return result({"searchResults": [{"entity": {"urn": "urn:li:document:one"}}]})
+            if name == "get_entities":
+                return result([{"urn": "urn:li:document:one"}])
+            return result(
+                {
+                    "results": [
+                        {
+                            "urn": "urn:li:document:one",
+                            "matches": [{"excerpt": "partial"}],
+                            "content_length": 100,
+                        }
+                    ]
+                }
+            )
+
+    with pytest.raises(McpIntegrationError, match="truncated"):
+        await DataHubMcpGraph._load_memory_documents(Session(), RAW, use_grep=True)
+
+
 def test_native_document_text_requires_supported_shape() -> None:
     assert _document_text({"info": {"contents": {"text": "memory"}}}) == "memory"
     with pytest.raises(McpIntegrationError, match="malformed"):
