@@ -205,7 +205,6 @@ async def test_native_memory_uses_dedicated_content_reader_for_oss_documents() -
                         {
                             "urn": "urn:li:document:one",
                             "matches": [{"excerpt": content}],
-                            "content_length": len(content),
                         }
                     ]
                 }
@@ -229,7 +228,7 @@ async def test_native_memory_rejects_truncated_dedicated_content() -> None:
                     "results": [
                         {
                             "urn": "urn:li:document:one",
-                            "matches": [{"excerpt": "partial"}],
+                            "matches": [{"excerpt": "partial..."}],
                             "content_length": 100,
                         }
                     ]

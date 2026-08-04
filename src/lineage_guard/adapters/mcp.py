@@ -458,8 +458,8 @@ async def _grep_document_text(
         if (
             urn not in urns
             or not isinstance(excerpt, str)
-            or not isinstance(content_length, int)
-            or content_length != len(excerpt)
+            or (content_length is not None and content_length != len(excerpt))
+            or excerpt.endswith("...")
             or len(excerpt.encode()) > MAX_DESCRIPTION_BYTES
         ):
             raise McpIntegrationError("DataHub returned truncated immune-memory document content")
