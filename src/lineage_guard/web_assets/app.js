@@ -15,6 +15,9 @@ async function loadIncident() {
   text('mutation-state', data.provenance.mutations_applied ? 'applied' : 'not applied');
   text('proof-state', data.provenance.proof_authenticated ? 'authenticated' : 'integrity-valid · unsigned');
   const receipt = data.lineage_read.receipt;
+  text('memory-incident', `${data.immune_memory.incident.record_digest.slice(0, 18)}…`);
+  text('memory-decision', data.immune_memory.decision.replaceAll('_', ' '));
+  text('memory-outcome', `${data.immune_memory.prevention.record_digest.slice(0, 18)}…`);
   text('read-capability', receipt.capabilities.join(' · ').replaceAll('_', ' ').toLowerCase());
   text('read-source', receipt.readConsistency.source.toLowerCase().replaceAll('_', ' '));
   text('read-completeness', receipt.readConsistency.completeness.toLowerCase());

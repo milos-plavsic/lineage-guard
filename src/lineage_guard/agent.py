@@ -15,6 +15,7 @@ from lineage_guard.adapters.mcp import (
 from lineage_guard.domain import Action, IncidentReport
 from lineage_guard.enforcement import EnforcementReceipt
 from lineage_guard.events import QualityEvent
+from lineage_guard.immune_memory import build_incident_memory
 from lineage_guard.journal import ClaimDisposition, EventJournal, JournalError
 from lineage_guard.remediation import RemediationGenerator
 from lineage_guard.service import IncidentAnalyzer
@@ -74,6 +75,9 @@ class IncidentAgent:
                     source_field=event.signal.field,
                 )
                 analyzer = IncidentAnalyzer(graph)
+                lineage_read = graph.read_downstream_lineage(
+                    event.signal.asset_urn, 5, field=event.signal.field
+                )
                 report = analyzer.analyze(event.signal)
                 self._journal.record_transition(
                     event.event_id,
@@ -95,6 +99,17 @@ class IncidentAgent:
                         event.event_id, "artifacts_generated", {"count": 3}
                     )
                 receipt = None
+                memory = build_incident_memory(
+                    report,
+                    lineage_read,
+                    event_id=event.event_id,
+                    occurred_at=event.occurred_at,
+                )
+                self._journal.record_transition(
+                    event.event_id,
+                    "immune_memory_proposed",
+                    {"record_digest": memory.record_digest},
+                )
                 if self._mcp_config.enable_mutations:
                     if self._enforcer is not None:
                         receipt = await asyncio.to_thread(self._enforcer.enforce, report)
@@ -104,8 +119,14 @@ class IncidentAgent:
                             {"receipt_id": receipt.receipt_id},
                         )
                     analyzer.apply_writeback(report, approved=True)
+                    graph.append_immune_memory(event.signal.asset_urn, memory)
                     await graph.flush()
                     self._journal.record_transition(event.event_id, "datahub_updated")
+                    self._journal.record_transition(
+                        event.event_id,
+                        "immune_memory_written",
+                        {"record_digest": memory.record_digest},
+                    )
             result = {
                 "schema_version": 1,
                 "event_id": event.event_id,
@@ -113,6 +134,8 @@ class IncidentAgent:
                 "status": ("applied" if self._mcp_config.enable_mutations else "proposed"),
                 "duplicate": False,
                 "enforcement_receipt_id": receipt.receipt_id if receipt else None,
+                "lineage_read_receipt": lineage_read.receipt.as_dict(),
+                "immune_memory": memory.as_dict(),
                 "report": report.as_dict(),
             }
             self._journal.complete(event.event_id, report.incident_id, result)

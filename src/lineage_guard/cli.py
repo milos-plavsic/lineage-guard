@@ -15,6 +15,7 @@ from lineage_guard.demo import assets, edges, field_dependencies, negative_billi
 from lineage_guard.domain import QualitySignal, Severity
 from lineage_guard.enforcement import SignedWebhookConfig, SignedWebhookEnforcer
 from lineage_guard.events import load_quality_event
+from lineage_guard.immune_memory import build_incident_memory
 from lineage_guard.proofgraph import build_demo_proofgraph, load_radar_weights
 from lineage_guard.recovery import (
     CounterfactualRecoveryLab,
@@ -231,6 +232,17 @@ async def _run_mcp(args: argparse.Namespace) -> int:
                 proofgraph,
                 proof_bundle,
             )
+        evidence_gaps = (
+            tuple(asdict(item) for item in proofgraph.evidence_gaps) if proofgraph else ()
+        )
+        memory = build_incident_memory(
+            report,
+            lineage_read,
+            event_id=event.event_id if event else None,
+            occurred_at=event.occurred_at if event else None,
+            genome=chronos.genome if chronos else None,
+            evidence_gaps=evidence_gaps,
+        )
         if args.apply:
             if webhook:
                 enforcer = SignedWebhookEnforcer(
@@ -238,9 +250,11 @@ async def _run_mcp(args: argparse.Namespace) -> int:
                 )
                 await asyncio.to_thread(enforcer.enforce, report)
             analyzer.apply_writeback(report, approved=True)
+            graph.append_immune_memory(source_urn, memory)
             await graph.flush()
     payload = report.as_dict()
     payload["lineage_read_receipt"] = lineage_read.receipt.as_dict()
+    payload["immune_memory"] = memory.as_dict()
     payload["execution_context"] = {
         "mode": "live_mcp",
         "metadata_source": "datahub_mcp",

@@ -76,6 +76,7 @@ async def test_agent_dry_run_is_durable_and_deduplicated(tmp_path, monkeypatch) 
         "context_resolved",
         "decision_recorded",
         "artifacts_generated",
+        "immune_memory_proposed",
         "completed",
     ]
 
@@ -108,7 +109,14 @@ async def test_approved_agent_enforces_then_updates_datahub(tmp_path, monkeypatc
     assert result["enforcement_receipt_id"] == "orchestrator-receipt"
     assert graph.tags and graph.flushed
     stages = [item["stage"] for item in journal.history(event().event_id)]
-    assert stages[-3:] == ["containment_enforced", "datahub_updated", "completed"]
+    assert stages[-4:] == [
+        "containment_enforced",
+        "datahub_updated",
+        "immune_memory_written",
+        "completed",
+    ]
+    assert result["lineage_read_receipt"]["receiptDigest"].startswith("sha256:")
+    assert result["immune_memory"]["record_digest"].startswith("sha256:")
 
     without_enforcer = IncidentAgent(
         journal,

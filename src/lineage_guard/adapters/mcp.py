@@ -9,6 +9,7 @@ from typing import Any, Protocol
 
 from lineage_guard.consistency import LineageRead, ReadConsistency, lineage_receipt
 from lineage_guard.domain import Asset, LineageTarget
+from lineage_guard.immune_memory import ImmuneMemoryRecord, encode_memory, parse_memories
 
 
 class McpIntegrationError(RuntimeError):
@@ -269,6 +270,20 @@ class DataHubMcpGraph:
         self._queue(
             "update_description",
             {"entity_urn": urn, "operation": "append", "description": summary},
+        )
+
+    def get_immune_memories(self, urn: str) -> tuple[ImmuneMemoryRecord, ...]:
+        return parse_memories(self.get_asset(urn).description)
+
+    def append_immune_memory(self, urn: str, record: ImmuneMemoryRecord) -> None:
+        if record.subject_urn != urn:
+            raise ValueError("immune memory subject does not match the target asset")
+        existing = self.get_immune_memories(urn)
+        if record.record_digest in {item.record_digest for item in existing}:
+            return
+        self._queue(
+            "update_description",
+            {"entity_urn": urn, "operation": "append", "description": encode_memory(record)},
         )
 
     def add_tag(self, urn: str, tag: str) -> None:

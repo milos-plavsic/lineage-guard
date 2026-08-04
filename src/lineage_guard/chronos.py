@@ -218,6 +218,18 @@ class CausalImmunityEngine:
             genome_sha256,
         )
 
+    @staticmethod
+    def verify_genome(genome: IncidentGenome) -> bool:
+        body = asdict(genome)
+        genome_id = body.pop("genome_id")
+        genome_sha256 = body.pop("genome_sha256")
+        expected = canonical_sha256(body)
+        return (
+            genome.schema_version == 1
+            and genome_id == f"lg-genome-{expected[:16]}"
+            and genome_sha256 == expected
+        )
+
     def evaluate_change(
         self,
         genome: IncidentGenome,

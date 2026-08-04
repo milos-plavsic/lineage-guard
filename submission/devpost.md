@@ -14,7 +14,7 @@ containment.
 
 ## What it does
 
-One incident follows one loop: **observe → contain → prove recovery → prevent recurrence → explain**.
+One incident follows one loop: **observe → contain → remember in DataHub → inherit → prevent → explain**.
 
 LineageGuard receives an HMAC-authenticated, versioned data-quality event, durably deduplicates it,
 and retrieves dataset plus field lineage and entity context through DataHub's official MCP Server.
@@ -49,6 +49,15 @@ billing guard replays the learned failure and is blocked. Preserving it receives
 change passport. Adding a new lineage edge invalidates that same proof and requires revalidation.
 Every incident can therefore become preventive memory without pretending yesterday's evidence is
 eternally valid.
+
+The DataHub immune system makes that prevention memory survive the process that created it. Agent A
+writes one canonical, bounded, hash-verified incident envelope—including its lineage receipt,
+Incident Genome, decisions, and evidence gaps—to the source asset through DataHub MCP. Agent B starts
+from a fresh DataHub read, verifies and reconstructs the genome, blocks an unsafe future change, and
+writes a parent-linked prevention outcome back to DataHub. The deployable description carrier and
+proposed native Evidence aspect use identical canonical bytes, so a future migration preserves every
+record identity. Digests prove integrity rather than authorship; DataHub remains the authorization
+and audit boundary.
 
 ProofGraph makes the entire trinity accountable. Every decision and explanation comes from the same
 deterministic derivation DAG. Its Causal Cut reveals the smallest evidence set that forces an outcome;
@@ -103,6 +112,7 @@ tools. Generated source-system remediation remains reviewable output rather than
 - Proof-carrying metadata with exact Causal Cuts, interactive counterfactuals, and Evidence Gap Radar.
 - A five-tool read-only ProofGraph MCP server and a published DataHub Evidence aspect proposal.
 - A capability-based lineage read receipt that makes unknown freshness machine-actionable.
+- A tested two-agent DataHub immune-memory handoff with linked prevention write-back.
 - A mergeable DataHub Agent Context pagination fix with its relevant upstream build passing.
 - Reproducible, executable remediation artifacts with integrity hashes.
 - Fail-closed handling for malformed, incomplete, or oversized MCP context.

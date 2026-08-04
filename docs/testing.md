@@ -38,6 +38,13 @@ typed changes, custom Radar weights, Forge, Chronos, ProofGuard, and the complet
 Policy tests cover nested `ALL`/`ANY`, redundant supersets, policy reevaluation, and combinatorial
 bounds. Radar sensitivity tests prove that disclosed weight changes alter ranking predictably.
 
+Immune-memory tests cover canonical encoding, digest and envelope tampering, malformed JSON/base64,
+record and description bounds, duplicate records, invalid genomes, evidence-gap inheritance, and
+approval-gated outcome writes. A stateful MCP contract test uses three fresh graph snapshots: the
+first writes an incident record, the second retrieves it and blocks an unsafe change, and the third
+reconstructs both the incident and its parent-linked prevention outcome. No in-process object is
+used for that handoff.
+
 Proof construction is linear in the number of derived nodes and edges and rejects either collection
 above 10,000 items. A 1,000-iteration local check on the constrained Windows development machine,
 with allocation tracing enabled, measured 20.54 ms mean compilation and 1.16 MiB peak traced memory

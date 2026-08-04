@@ -5,8 +5,10 @@
 
 LineageGuard turns one data-quality incident into three governed outcomes: contain only the branches
 DataHub proves exposed, release only a repair that passes independent checks, and prevent the same
-failure from returning. It consumes authenticated events, reads dataset and field lineage through
-DataHub MCP, produces reviewable controls, and records approved decisions back into DataHub. An
+failure from returning. Its DataHub immune memory lets a later agent inherit the verified incident
+genome, evaluate a future change, and write the linked prevention outcome back to the catalog. It
+consumes authenticated events, reads dataset and field lineage through DataHub MCP, produces
+reviewable controls, and records approved decisions back into DataHub. An
 optional signed webhook requests a default-hold plan from an external orchestrator and verifies its
 exact acknowledgement; transactional execution remains the orchestrator's responsibility.
 
@@ -21,8 +23,12 @@ This repository is being built for **Build with DataHub: The Agent Hackathon**.
 4. See the superficial repair rejected and governed restoration certified.
 5. See guard removal blocked, context drift expire old proof, and the Trust Lens explain why.
 
-That is one agent loop: **observe → contain → prove recovery → prevent recurrence → explain**. The
+That is one agent loop: **observe → contain → remember in DataHub → inherit → prevent → explain**. The
 named components below are stages of this loop, not separate products.
+
+The [DataHub immune-system design](docs/datahub-immune-system.md) specifies the canonical envelope,
+deployable MCP carrier, proposed native Evidence-aspect mapping, security limits, and executable
+two-agent acceptance path.
 
 ## Current vertical slice
 

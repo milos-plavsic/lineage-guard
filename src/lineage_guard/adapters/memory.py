@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
+from dataclasses import replace
 
+from lineage_guard.consistency import LineageRead, ReadConsistency, lineage_receipt
 from lineage_guard.domain import Asset, LineageEdge, LineageTarget
+from lineage_guard.immune_memory import ImmuneMemoryRecord, encode_memory, parse_memories
 
 
 class InMemoryMetadataGraph:
@@ -56,5 +59,39 @@ class InMemoryMetadataGraph:
     def append_incident_summary(self, urn: str, summary: str) -> None:
         self.descriptions.append((urn, summary))
 
+    def read_downstream_lineage(
+        self, urn: str, max_hops: int, *, field: str | None = None
+    ) -> LineageRead:
+        targets = self.get_downstream_lineage(urn, max_hops, field=field)
+        return LineageRead(
+            targets,
+            lineage_receipt(
+                source_urn=urn,
+                max_hops=max_hops,
+                max_results=len(targets),
+                source_field=field,
+                targets=targets,
+                consistency=ReadConsistency(),
+            ),
+        )
+
+    def get_immune_memories(self, urn: str) -> tuple[ImmuneMemoryRecord, ...]:
+        return parse_memories(self.get_asset(urn).description)
+
+    def append_immune_memory(self, urn: str, record: ImmuneMemoryRecord) -> None:
+        if record.subject_urn != urn:
+            raise ValueError("immune memory subject does not match the target asset")
+        asset = self.get_asset(urn)
+        existing = {item.record_digest for item in parse_memories(asset.description)}
+        if record.record_digest in existing:
+            return
+        block = encode_memory(record)
+        description = f"{asset.description.rstrip()}\n\n{block}".lstrip()
+        self._assets[urn] = replace(asset, description=description)
+        self.descriptions.append((urn, block))
+
     def add_tag(self, urn: str, tag: str) -> None:
         self.tags.append((urn, tag))
+
+    async def flush(self) -> None:
+        """Match the live graph contract; in-memory writes are immediately visible."""
