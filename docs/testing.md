@@ -27,6 +27,18 @@ failure replay, context-fingerprint expiry, prevention artifacts, executable reg
 immunity coverage, in-toto Statement structure, passport tampering, and invalid context/change
 contracts. Packaged-wheel smoke tests execute the full Chronos path.
 
+ProofGraph tests cover cross-pillar input binding, exact causal cuts, all decisive counterfactuals,
+adaptive gap classification and deterministic scoring, graph size bounds, graph/bundle tampering,
+all five shared query operations, FastMCP tool registration/execution, CLI and artifact generation,
+and unsigned authentication disclosure. Browser static tests assert the Trust Lens and Radar surface.
+The packaged-wheel smoke test executes the complete `--proofgraph` path.
+
+Proof construction is linear in the number of derived nodes and edges and rejects either collection
+above 10,000 items. A 1,000-iteration local check on the constrained Windows development machine,
+with allocation tracing enabled, measured 20.54 ms mean compilation and 1.16 MiB peak traced memory
+for the complete demonstration graph. This is engineering evidence, not a cross-platform SLA;
+production deployments should benchmark representative graph sizes and storage adapters.
+
 Run the same gate locally:
 
 ```bash

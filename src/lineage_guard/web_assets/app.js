@@ -74,6 +74,63 @@ async function loadIncident() {
   const passport = data.chronos.evaluations.find((item) => item.passport);
   text('passport-hash', `sha256:${passport.passport.statement_sha256}`);
 
+  text('proof-node-count', data.proofgraph.nodes.length);
+  text('proof-edge-count', data.proofgraph.edges.length);
+  text('causal-cut-count', data.proofgraph.causal_cuts.length);
+  text('bundle-valid', data.proof_bundle.authenticated ? 'signed' : 'verified*');
+  const decisionSelect = document.getElementById('decision-select');
+  const cuts = new Map(data.proofgraph.causal_cuts.map((cut) => [cut.decision_node_id, cut]));
+  const nodes = new Map(data.proofgraph.nodes.map((node) => [node.node_id, node]));
+  const counterfactuals = new Map(data.proofgraph.counterfactuals.map((item) => [item.evidence_node_id, item]));
+  data.proofgraph.nodes.filter((node) => node.kind === 'decision').forEach((node) => {
+    const option = element('option', '', node.claim);
+    option.value = node.node_id;
+    decisionSelect.append(option);
+  });
+  const renderCut = () => {
+    const cut = cuts.get(decisionSelect.value);
+    const container = document.getElementById('causal-cut');
+    container.replaceChildren();
+    cut.evidence_node_ids.forEach((nodeId) => {
+      const evidence = nodes.get(nodeId);
+      const item = element('article', 'evidence-chip');
+      item.append(element('span', '', evidence.kind));
+      item.append(element('strong', '', evidence.claim));
+      container.append(item);
+    });
+    const evidenceSelect = document.getElementById('evidence-select');
+    evidenceSelect.replaceChildren();
+    cut.evidence_node_ids.map((id) => counterfactuals.get(id)).filter(Boolean).forEach((simulation) => {
+      const option = element('option', '', nodes.get(simulation.evidence_node_id).claim);
+      option.value = simulation.evidence_node_id;
+      evidenceSelect.append(option);
+    });
+    const renderSimulation = () => {
+      const simulation = counterfactuals.get(evidenceSelect.value);
+      text('counterfactual-explanation', simulation.explanation);
+      document.getElementById('simulate-change').dataset.evidenceId = simulation.evidence_node_id;
+      text('counterfactual-result', 'Evidence unchanged');
+    };
+    evidenceSelect.onchange = renderSimulation;
+    renderSimulation();
+  };
+  decisionSelect.addEventListener('change', renderCut);
+  document.getElementById('simulate-change').addEventListener('click', (event) => {
+    const simulation = counterfactuals.get(event.currentTarget.dataset.evidenceId);
+    text('counterfactual-result', `${simulation.original_action.replaceAll('_', ' ')} → ${simulation.resulting_action.replaceAll('_', ' ')}`);
+  });
+  renderCut();
+  const gaps = document.getElementById('evidence-gaps');
+  data.proofgraph.evidence_gaps.forEach((gap) => {
+    const item = element('article', 'gap-card');
+    item.append(element('strong', 'gap-score', `${gap.priority_score}/100`));
+    const detail = element('div');
+    detail.append(element('h4', '', gap.title));
+    detail.append(element('p', '', gap.recommended_action));
+    item.append(detail);
+    gaps.append(item);
+  });
+
   const timeline = document.getElementById('timeline');
   data.timeline.forEach((event) => {
     const item = element('li');

@@ -18,9 +18,10 @@ def test_dashboard_model_exposes_decisions_timeline_and_artifacts() -> None:
         "reviewBranches": 1,
         "maxRisk": 100,
     }
-    assert len(model["timeline"]) == 10
+    assert len(model["timeline"]) == 12
     artifact_paths = {artifact["relative_path"] for artifact in model["artifacts"]}
-    assert len(artifact_paths) == 16
+    assert len(artifact_paths) == 20
+    assert "proofgraph/causal-cuts.json" in artifact_paths
     assert {
         "quality/assert_billing_amount_non_negative.sql",
         "policies/9edb78125e19.json",

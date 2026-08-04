@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "evidence_gaps": [
+    {
+      "gap_id": "gap:governance:db28d5374eee",
+      "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)",
+      "title": "Resolve business impact classification for staging_patients",
+      "recommended_action": "Add an authoritative owner, criticality, and concern classification for staging_patients.",
+      "decisions_unlocked": 1,
+      "uncertainty_reduction": 35,
+      "criticality": 85,
+      "freshness_need": 80,
+      "collection_cost": 35,
+      "privacy_risk": 10,
+      "priority_score": 57
+    }
+  ]
+}

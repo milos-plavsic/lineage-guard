@@ -13,6 +13,7 @@ from lineage_guard.adapters.memory import InMemoryMetadataGraph
 from lineage_guard.chronos import build_demo_chronos
 from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
 from lineage_guard.domain import Action
+from lineage_guard.proofgraph import build_demo_proofgraph
 from lineage_guard.recovery import CounterfactualRecoveryLab, demo_recovery_scenario
 from lineage_guard.remediation import RemediationGenerator
 from lineage_guard.service import IncidentAnalyzer
@@ -34,7 +35,8 @@ def build_view_model() -> dict[str, Any]:
     report = IncidentAnalyzer(graph).analyze(negative_billing_signal())
     recovery = CounterfactualRecoveryLab().evaluate(report, demo_recovery_scenario())
     chronos = build_demo_chronos(report, recovery)
-    artifacts = RemediationGenerator().generate(report, recovery, chronos)
+    proofgraph, proof_bundle = build_demo_proofgraph(report, recovery, chronos)
+    artifacts = RemediationGenerator().generate(report, recovery, chronos, proofgraph, proof_bundle)
     quarantined = sum(item.action == Action.QUARANTINE for item in report.decisions)
     review = sum(
         item.action in {Action.MONITOR, Action.REQUIRE_REVIEW} for item in report.decisions
@@ -111,6 +113,22 @@ def build_view_model() -> dict[str, Any]:
                 "state": "expired",
             },
             {
+                "stage": "Causal proof derived",
+                "detail": (
+                    f"ProofGraph bound {len(proofgraph.nodes)} evidence and authority nodes into "
+                    f"{len(proofgraph.causal_cuts)} exact Causal Cuts."
+                ),
+                "state": "explained",
+            },
+            {
+                "stage": "Evidence gap ranked",
+                "detail": (
+                    f"Radar prioritized {len(proofgraph.evidence_gaps)} context improvement(s) "
+                    "without granting new authority."
+                ),
+                "state": "prioritized",
+            },
+            {
                 "stage": "Approval required",
                 "detail": (
                     "DataHub write-back remains dry-run until an operator explicitly approves it."
@@ -121,6 +139,8 @@ def build_view_model() -> dict[str, Any]:
         "artifacts": [asdict(artifact) for artifact in artifacts],
         "recovery": recovery.as_dict(),
         "chronos": chronos.as_dict(),
+        "proofgraph": proofgraph.as_dict(),
+        "proof_bundle": asdict(proof_bundle),
     }
 
 

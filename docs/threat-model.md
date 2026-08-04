@@ -23,6 +23,10 @@ and the integrity of DataHub write-back.
 - stale prevention proof reused after schema, lineage, or governance drift;
 - a historical fixture detached from the Incident Genome that learned from it;
 - an unsigned passport mistaken for authenticated deployment authorization.
+- an explanation that diverges from the decision authority or omits decisive evidence;
+- a detached or tampered ProofGraph, causal cut, or cross-pillar Proof Bundle;
+- evidence-ranking manipulation that encourages excessive collection or unsafe automation;
+- counterfactual input used as an arbitrary code-execution or mutation surface.
 
 ## Controls
 
@@ -50,6 +54,10 @@ and the integrity of DataHub write-back.
 | Stale change proof | Exact schema/lineage/governance fingerprint; drift forces revalidation | Chronos drift test |
 | Detached historical fixture | Fixture digest embedded in the Incident Genome and checked at generation | Prevention Pack tests |
 | Passport overreach | Decision is only `eligible_for_approval`; unsigned status documented and tested | Chronos ADR and passport tests |
+| Explanation drift | Decision and explanation share one immutable derivation DAG | ProofGraph tests |
+| Proof substitution | Canonical hashes bind nodes, cuts, graph, report, certificate, and Genome | Bundle tamper tests |
+| Ranking manipulation | Transparent bounded factors; cost/privacy penalties; deterministic ordering | Radar tests and RFC |
+| Counterfactual abuse | Precomputed typed transitions only; no code or metadata mutation | Query-service and MCP tests |
 
 ## Residual risks
 
@@ -63,3 +71,7 @@ loopback behind a production TLS proxy with rate limiting and network policy.
 The recovery lab's trusted snapshot is a trust anchor, not independently proven truth. A production
 deployment must govern snapshot provenance, retention, access, and freshness. SHA-256 detects
 alteration but does not authenticate the issuer; signed approval remains necessary before release.
+The demonstration's evidence sources and scoring weights are application-owned policy inputs. A
+production deployment must govern their provenance, calibrate weights against observed outcomes,
+and independently sign bundles. A causal cut proves sufficiency under the encoded policy and trusted
+premises; it does not prove that the premises describe reality.

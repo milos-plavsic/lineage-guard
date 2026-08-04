@@ -66,6 +66,20 @@ Chronos creates an Incident Genome, replays the historical failure against unsaf
 issues an in-toto-shaped passport only for the safe change, and invalidates that proof after simulated
 DataHub context drift. A passport is eligibility for approval—not deployment authorization.
 
+Build the complete proof-carrying metadata layer:
+
+```bash
+lineage-guard --proofgraph --output proof-report.json --artifacts-dir proof-pack
+lineage-guard-proof-mcp
+```
+
+ProofGuard is the fail-closed facade over ProofGraph and Evidence Gap Radar. ProofGraph derives each
+decision and its explanation from the same immutable DAG, computes the
+smallest decisive Causal Cut, precomputes fail-closed counterfactuals for every decisive input, and
+ranks missing context with Evidence Gap Radar. Its unsigned in-toto Proof Bundle binds Sentinel,
+Forge, Chronos, and every causal cut. The optional read-only MCP server exposes five bounded tools;
+install `.[mcp]` before running it.
+
 For a real DataHub instance, install the `mcp` extra and follow the
 [live integration guide](docs/live-datahub.md). The adapter starts the official, version-pinned
 DataHub MCP Server and uses its lineage, entity, description, and tag tools.
@@ -94,6 +108,9 @@ Docker or executes downloaded scripts automatically.
 - `recovery.py`: bounded counterfactual SQL evaluation and hash-bound recovery certification.
 - `chronos.py`: Incident Genome compilation, historical replay, proof passports, drift expiry, and
   immunity coverage.
+- `proofgraph.py`: proof derivation DAGs, minimal causal cuts, ranked evidence gaps, counterfactuals,
+  and cross-pillar Proof Bundles.
+- `proof_service.py` / `proof_mcp.py`: shared read-only query service and five-tool MCP interface.
 - `examples/`: judge-readable sample incidents and generated artifacts.
 
 The safety-critical authority does not depend on an LLM. That is deliberate: probabilistic output

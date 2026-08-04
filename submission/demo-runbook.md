@@ -6,7 +6,7 @@
 2. Run `uv sync --locked --extra dev --extra mcp`.
 3. Run `uv run ruff check .`, `uv run ruff format --check .`, and `uv run pytest`.
 4. Regenerate examples with:
-   `uv run lineage-guard --output examples/incident-report.json --artifacts-dir examples/generated`.
+   `uv run lineage-guard --proofgraph --output examples/incident-report.json --artifacts-dir examples/generated`.
 5. Confirm regenerated files produce no Git diff.
 6. If demonstrating live write-back, confirm the scoped DataHub service account, existing quarantine
    tag, and disposable demonstration metadata. Never display the token.
@@ -25,8 +25,11 @@
 8. Show trusted restoration passing all six invariants and receiving a recovery certificate.
 9. Show Chronos blocking guard removal and passporting guard preservation.
 10. Show a new lineage edge expiring the otherwise-safe proof.
-11. Walk through the ten-stage evidence timeline.
-12. Open the Incident Genome, regression fixture, passport, coverage map, and manifest.
+11. Select a ProofGraph decision and show its minimal Causal Cut.
+12. Remove each decisive input in the Trust Lens and show the fail-closed alternative.
+13. Show Evidence Gap Radar ranking the next DataHub context improvement.
+14. Walk through the twelve-stage evidence timeline.
+15. Open the Proof Bundle, graph, causal cuts, gaps, Genome, fixture, passport, and manifest.
 
 ## Authenticated agent path
 

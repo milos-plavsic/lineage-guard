@@ -22,6 +22,13 @@ flowchart LR
     V -->|unsafe| B[Block change]
     V -->|safe + same context| K[in-toto change passport]
     V -->|context drift| Z[Revalidation required]
+    P --> PG[ProofGraph derivation DAG]
+    N --> PG
+    T --> PG
+    PG --> CC[Minimal Causal Cuts]
+    PG --> ER[Evidence Gap Radar]
+    PG --> PB[Cross-pillar Proof Bundle]
+    CC --> TL[Interactive Trust Lens]
     T --> D
     N --> G
     P --> G{Explicit approval + capability}
@@ -50,6 +57,11 @@ DataHub schema/lineage/governance fingerprint into an Incident Genome. Typed fut
 the learned failure: unsafe recurrence is blocked, an unchanged safe context receives an unsigned
 in-toto-shaped passport, and context drift expires proof. The passport means eligibility for
 approval, never deployment authority.
+
+ProofGraph is the common epistemic layer. Sentinel, Forge, and Chronos feed one immutable derivation
+DAG, so decisions and explanations cannot diverge. Exact Causal Cuts expose the smallest decisive
+premise set, typed counterfactuals show fail-closed alternatives, Radar converts unresolved context
+into a ranked DataHub improvement backlog, and an unsigned in-toto bundle binds the complete chain.
 
 The agent is a durable state machine rather than a chatbot. It authenticates and deduplicates an
 event, calls DataHub tools for context, decides, generates evidence, optionally sends an atomic

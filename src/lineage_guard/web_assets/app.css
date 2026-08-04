@@ -68,6 +68,29 @@ h2 { margin: 0; font-size: 1.45rem; letter-spacing: -.03em; }
 .artifacts li { border: 1px solid var(--line); padding: .8rem; border-radius: 10px; overflow: hidden; }
 .artifacts strong { font-size: .8rem; display: block; }.artifacts code { display: block; color: var(--muted); font-size: .68rem; margin-top: .35rem; overflow: hidden; text-overflow: ellipsis; }
 .error { border: 1px solid var(--red); color: #ffd4cf; background: #3b1816; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+.proofgraph-panel { border-color: rgb(112 224 255 / 28%); }
+.proofgraph-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; margin: 1.25rem 0; }
+.proofgraph-metrics article { background: var(--surface-2); border: 1px solid var(--line); border-radius: .75rem; padding: 1rem; }
+.proofgraph-metrics span { display: block; color: var(--muted); font-size: .8rem; }
+.proofgraph-metrics strong { display: block; margin-top: .35rem; font-size: 1.35rem; }
+.trust-lens { display: grid; grid-template-columns: 1.35fr 1fr; gap: 1rem; }
+.trust-lens label { display: block; color: var(--muted); font-size: .85rem; margin-bottom: .4rem; }
+.trust-lens select, .counterfactual-panel select { width: 100%; color: var(--text); background: var(--surface-2); border: 1px solid var(--line); border-radius: .6rem; padding: .7rem; }
+.counterfactual-panel label { display: block; color: var(--muted); font-size: .8rem; margin: .7rem 0 .35rem; }
+.causal-cut { display: grid; gap: .5rem; margin-top: .75rem; }
+.evidence-chip { border-left: 3px solid #70e0ff; background: var(--surface-2); padding: .65rem .8rem; }
+.evidence-chip span { color: var(--muted); font-size: .7rem; text-transform: uppercase; display: block; }
+.evidence-chip strong { font-size: .88rem; }
+.counterfactual-panel, .radar { background: var(--surface-2); border: 1px solid var(--line); border-radius: .8rem; padding: 1rem; }
+.counterfactual-panel button { background: #70e0ff; border: 0; border-radius: .5rem; color: #041316; cursor: pointer; font-weight: 700; padding: .65rem .85rem; }
+.counterfactual-panel output { display: block; color: #70e0ff; font-weight: 700; margin-top: .8rem; }
+.radar { margin-top: 1rem; }
+.gap-list { display: grid; gap: .6rem; margin-top: .75rem; }
+.gap-card { display: flex; gap: .8rem; align-items: start; }
+.gap-card h4, .gap-card p { margin: 0; }
+.gap-card p { color: var(--muted); font-size: .82rem; margin-top: .2rem; }
+.gap-score { color: #70e0ff; min-width: 3.5rem; }
+.proof-disclosure { color: var(--muted); font-size: .78rem; }
 footer { color: var(--muted); text-align: center; padding: 2rem; border-top: 1px solid var(--line); font-size: .75rem; }
-@media (max-width: 760px) { .hero { align-items: start; flex-direction: column; }.metrics, .two-column, .candidate-grid, .certificate, .genome-strip, .change-grid, .immunity-lower { grid-template-columns: 1fr; }.reality-twin { grid-template-columns: 1fr; }.reality-twin > div { transform: rotate(90deg); justify-self: center; }.branch { grid-template-columns: 1fr; }.legend { display: none; } main { padding-top: 2.5rem; } }
+@media (max-width: 760px) { .hero { align-items: start; flex-direction: column; }.metrics, .two-column, .candidate-grid, .certificate, .genome-strip, .change-grid, .immunity-lower, .trust-lens { grid-template-columns: 1fr; }.proofgraph-metrics { grid-template-columns: repeat(2, 1fr); }.reality-twin { grid-template-columns: 1fr; }.reality-twin > div { transform: rotate(90deg); justify-self: center; }.branch { grid-template-columns: 1fr; }.legend { display: none; } main { padding-top: 2.5rem; } }
 @media (prefers-reduced-motion: no-preference) { .panel, .metrics { animation: reveal .45s ease both; } @keyframes reveal { from { opacity: 0; transform: translateY(8px); } } }

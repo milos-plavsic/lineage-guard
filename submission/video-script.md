@@ -37,7 +37,7 @@ Scroll to the before/after recovery twin and both candidate cards.
 > the governed snapshot passes six invariants. The recovery certificate binds the incident, DataHub
 > context, SQL, output, and checks—but still cannot release anything without approval.
 
-## 1:36–2:05 — Chronos causal immunity
+## 1:36–1:58 — Chronos causal immunity
 
 Show the three change cards, Incident Genome, coverage map, and passport.
 
@@ -46,26 +46,34 @@ Show the three change cards, Incident Genome, coverage map, and passport.
 > Then a new DataHub lineage edge appears: yesterday's proof expires automatically, even though the
 > guard still passes. Every incident makes the platform harder to break twice.
 
-## 2:05–2:23 — Artifacts and action
+## 1:58–2:25 — ProofGraph and Evidence Gap Radar
+
+Select the billing decision, show its Causal Cut, simulate removed evidence, then show the Radar.
+
+> ProofGraph makes the automation prove why. The decision and explanation share one deterministic
+> derivation graph. Its Causal Cut is the smallest decisive evidence set. Remove any premise and the
+> Trust Lens shows the fail-closed alternative. Evidence Gap Radar then identifies the DataHub context
+> improvement with the highest decision value. Five read-only MCP tools make this proof reusable by
+> other agents.
+
+## 2:25–2:37 — Artifacts and action
 
 Show candidate SQL, evaluation JSON, certificate, manifest, then the approval boundary.
 
-> Every artifact has an integrity hash and is ready for review. Approved mode sends an idempotent,
-> signed default-hold plan to an orchestrator and requires its exact receipt. DataHub then preserves
-> the incident and quarantine decision for the next person or agent.
+> One unsigned in-toto bundle binds containment, recovery, immunity, graph, and every causal cut.
+> Integrity is not approval: mutations still require explicit authorization and an exact signed
+> orchestrator receipt.
 
-## 2:23–2:39 — Technical proof
+## 2:37–2:48 — Technical proof
 
 Show a terminal with tests and the MCP adapter filenames, then the health endpoint.
 
-> The safety authority is deterministic, the MCP boundary fails closed, and the event journal handles
-> duplicates, conflicts, retries, and crashes. Full line and branch coverage includes authenticated
-> HTTP, field evidence, counterfactual SQL, certificate tampering, enforcement, write authorization,
-> passport tampering, context drift, enforcement, and oversized responses.
+> The safety authority is deterministic and fail-closed. Full statement and branch coverage verifies
+> authenticated events, lineage, recovery, drift, causal proofs, tampering, MCP tools, and permissions.
 
-## 2:39–2:50 — Close
+## 2:48–2:55 — Close
 
 Return to the full dashboard.
 
-> LineageGuard turns DataHub's graph into a data-platform immune system: contain what is exposed,
-> release what is proven, and prevent what is remembered.
+> LineageGuard makes DataHub proof-carrying: contain what is exposed, release what is proven, prevent
+> what is remembered—and show exactly why.

@@ -34,6 +34,6 @@ published media, or organizer action; **optional** is not required for eligibili
 |---|---|
 | Use of DataHub | MCP lineage and entity reads; description and tag write-back; DataHub retains incident knowledge. |
 | Technical execution | Field-aware authority, authenticated listener, durable retries, fail-closed boundaries, isolated counterfactual SQL, tamper-detecting certificates, 100% line/branch coverage, CI, package build. |
-| Originality | A contain-recover-immunize trinity: green-but-wrong repair rejection, Incident Genomes, historical replay, and temporal proof expiry. |
-| Real-world usefulness | Contains exposure, proves recovery, blocks learned recurrence, and expires stale proof after DataHub context drift. |
+| Originality | A contain-recover-immunize trinity unified by proof-carrying metadata, exact Causal Cuts, Trust Lens, and Evidence Gap Radar. |
+| Real-world usefulness | Contains exposure, proves recovery, blocks recurrence, expires stale proof, and ranks the context needed for safer automation. |
 | Submission quality | Responsive semantic dashboard with remote WCAG 2 AA browser gate, concise runbook, examples, architecture, disclosures, and 2:45 script. |

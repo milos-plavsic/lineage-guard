@@ -78,6 +78,21 @@ the proposed guard. `revalidation_required` means the DataHub context fingerprin
 the guard itself still passes. Only `eligible_for_approval` produces a passport, and that passport is
 an unsigned in-toto Statement until a deployment signer wraps it in an authenticated envelope.
 
+## ProofGraph and Evidence Gap Radar
+
+Generate the complete proof layer with `lineage-guard --proofgraph --artifacts-dir proof-pack`.
+This includes the deterministic recovery and Chronos scenarios, then writes the derivation graph,
+causal cuts, counterfactuals, ranked gaps, and unsigned cross-pillar Proof Bundle.
+
+Install `.[mcp]` and run `lineage-guard-proof-mcp` to expose five read-only stdio tools. The server has
+no mutation tool, network listener, credential requirement, or arbitrary query execution. Configure
+it as a local MCP subprocess for an authorized client. Invalid identifiers fail explicitly.
+
+Production hardening requires authenticated evidence producers, tenant-aware authorization before
+graph traversal, an external signing envelope, retention controls, calibrated Radar weights, and a
+shared durable store for multiple replicas. `authenticated: false` means the demo proves integrity
+only; it is not a warning that an operator may waive.
+
 The deterministic demonstration never reads a Git repository or runs change-supplied code. A future
 PR integration must use an isolated, resource-limited runner, immutable checkout, least-privilege
 token, reviewed parser, and authenticated attestation service.

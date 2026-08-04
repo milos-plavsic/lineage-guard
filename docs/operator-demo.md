@@ -29,6 +29,12 @@ The Chronos panel shows three intentionally different outcomes: a recurring fail
 unchanged safe proposal receives a passport, and a safe guard under changed lineage requires
 revalidation. The passport uses the in-toto Statement v1 shape but is unsigned in the demonstration.
 
+The ProofGraph panel is interactive. Select any branch decision to reveal its minimal Causal Cut,
+choose any decisive observation, context claim, impact claim, or policy input, and simulate its
+removal. The displayed alternative is a precomputed fail-closed policy transition, not browser-side
+authority. Evidence Gap Radar shows the highest-value DataHub context improvement with its bounded
+priority. The integrity disclosure remains visible beside the Proof Bundle.
+
 The interface supports keyboard navigation, narrow screens, reduced-motion preferences, semantic
 headings and landmarks, a skip link, textual status labels, and color-independent decisions.
 Browser responses include a restrictive Content Security Policy, clickjacking protection, MIME

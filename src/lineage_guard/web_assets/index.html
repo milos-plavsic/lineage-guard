@@ -80,6 +80,41 @@
       </div>
     </section>
 
+    <section class="panel proofgraph-panel" aria-labelledby="proofgraph-title">
+      <div class="panel-heading">
+        <div><p class="eyebrow">ProofGuard · ProofGraph + Evidence Gap Radar</p><h2 id="proofgraph-title">Ask why. Change the evidence. Watch the decision move.</h2></div>
+        <div class="status-pill proof">Proof Bundle verified</div>
+      </div>
+      <p class="section-intro">The explanation and decision come from one deterministic derivation graph. The Causal Cut is the smallest decisive evidence set; the Radar ranks the metadata that would unlock safer automation.</p>
+      <div class="proofgraph-metrics" aria-label="ProofGraph summary">
+        <article><span>Evidence nodes</span><strong id="proof-node-count">—</strong></article>
+        <article><span>Derivations</span><strong id="proof-edge-count">—</strong></article>
+        <article><span>Causal cuts</span><strong id="causal-cut-count">—</strong></article>
+        <article><span>Bundle integrity</span><strong id="bundle-valid">—</strong></article>
+      </div>
+      <div class="trust-lens">
+        <div>
+          <label for="decision-select">Decision under examination</label>
+          <select id="decision-select"></select>
+          <div id="causal-cut" class="causal-cut" aria-live="polite"></div>
+        </div>
+        <div class="counterfactual-panel">
+          <p class="eyebrow">Counterfactual Trust Lens</p>
+          <h3>Remove decisive evidence</h3>
+          <label for="evidence-select">Evidence to remove</label>
+          <select id="evidence-select"></select>
+          <p id="counterfactual-explanation">Select a decision to inspect its fail-closed alternative.</p>
+          <button id="simulate-change" type="button">Simulate missing evidence</button>
+          <output id="counterfactual-result" aria-live="polite">Evidence unchanged</output>
+        </div>
+      </div>
+      <div class="radar">
+        <div><p class="eyebrow">Evidence Gap Radar</p><h3>Highest-value context acquisition</h3></div>
+        <div id="evidence-gaps" class="gap-list" aria-live="polite"></div>
+      </div>
+      <p class="proof-disclosure">The demo bundle is content-verifiable but unsigned. Integrity is not identity, authorization, or deployment approval.</p>
+    </section>
+
     <div class="two-column">
       <section class="panel" aria-labelledby="timeline-title">
         <div class="panel-heading"><div><p class="eyebrow">Evidence trail</p><h2 id="timeline-title">Incident timeline</h2></div></div>

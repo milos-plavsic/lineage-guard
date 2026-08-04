@@ -65,6 +65,22 @@
     {
       "path": "immunity/passports/pr-safe-guard-preserved.intoto.json",
       "sha256": "dfe833ec1e39b2ff42cc06b03170b33069a640937c93830fdcd96104a84b3209"
+    },
+    {
+      "path": "proofgraph/graphs/9edb78125e19.json",
+      "sha256": "6a6281705adc0b4a72cb321938c1c53e2109f312995d2260452e512576345454"
+    },
+    {
+      "path": "proofgraph/bundles/9edb78125e19.intoto.json",
+      "sha256": "3aab4ded0ba596b7796f014a6e52f15a5a1bc4d3cf1efe29b940961d4e1d861e"
+    },
+    {
+      "path": "proofgraph/evidence-gaps.json",
+      "sha256": "e15be5045e2ae2496e9964da335ec94d9979a4853626dd1dc5235d8d83e62a1b"
+    },
+    {
+      "path": "proofgraph/causal-cuts.json",
+      "sha256": "92060176fbfcacccb66688a981dd3da7cf9b3763300050ed399c5e50e35748fb"
     }
   ]
 }

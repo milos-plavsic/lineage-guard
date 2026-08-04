@@ -10,6 +10,9 @@
 - Chronos change passports follow the in-toto Statement v1 data shape for interoperability. No
   in-toto implementation is vendored or added as a runtime dependency, and demo passports are
   explicitly unsigned: they prove content integrity, not signer identity or deployment approval.
+- ProofGraph maps its derivation model to W3C PROV concepts and packages the cross-pillar result in an
+  in-toto-shaped statement. These are compatibility mappings; no W3C, CloudEvents, OpenTelemetry, or
+  in-toto implementation is vendored into the safety-critical runtime.
 - The optional synthetic healthcare fixture comes from DataHub's Apache-2.0 `static-assets`
   repository at the exact revision documented in `scripts/fetch_healthcare.py`.
 - No proprietary data, third-party music, or unlicensed media is included.
@@ -24,3 +27,5 @@
 - Chronos evaluates bounded, application-owned change proposals in the deterministic demo. It does
   not execute arbitrary pull-request code, and its DataHub immunity write-back is an approval-gated
   proposal rather than a claimed live mutation.
+- Evidence Gap Radar uses disclosed application-owned weights and deterministic demo context. It is
+  advisory, does not claim universal calibration, and never grants continuation or mutation authority.

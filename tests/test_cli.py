@@ -76,6 +76,21 @@ def test_chronos_rejects_live_mcp_mode() -> None:
         main(["--mode", "mcp", "--chronos"])
 
 
+def test_cli_builds_complete_proofgraph_pack(tmp_path) -> None:
+    output = tmp_path / "report.json"
+    artifacts = tmp_path / "artifacts"
+    assert main(["--proofgraph", "--output", str(output), "--artifacts-dir", str(artifacts)]) == 0
+    payload = json.loads(output.read_text())
+    assert payload["proofgraph"]["causal_cuts"]
+    assert payload["proof_bundle"]["authenticated"] is False
+    assert (artifacts / "proofgraph" / "evidence-gaps.json").is_file()
+
+
+def test_proofgraph_rejects_live_mcp_mode() -> None:
+    with pytest.raises(SystemExit, match="deterministic demo scenarios"):
+        main(["--mode", "mcp", "--proofgraph"])
+
+
 def test_mcp_mode_requires_connection_configuration(monkeypatch) -> None:
     monkeypatch.delenv("DATAHUB_GMS_TOKEN", raising=False)
 

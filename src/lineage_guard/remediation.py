@@ -8,6 +8,7 @@ from pathlib import Path
 
 from lineage_guard.chronos import ChronosBundle
 from lineage_guard.domain import Action, IncidentReport
+from lineage_guard.proofgraph import ProofBundle, ProofGraph, verify_proof_bundle
 from lineage_guard.recovery import DEFAULT_CANDIDATES, RecoveryBundle, canonical_sha256
 
 _SQL_IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -34,6 +35,8 @@ class RemediationGenerator:
         report: IncidentReport,
         recovery: RecoveryBundle | None = None,
         chronos: ChronosBundle | None = None,
+        proofgraph: ProofGraph | None = None,
+        proof_bundle: ProofBundle | None = None,
     ) -> tuple[GeneratedArtifact, ...]:
         table = self._identifier(report.source.name, "source asset name")
         field = self._identifier(report.signal.field, "quality signal field")
@@ -74,6 +77,7 @@ class RemediationGenerator:
             artifacts
             + self._recovery_artifacts(recovery)
             + self._chronos_artifacts(report, chronos)
+            + self._proofgraph_artifacts(report, proofgraph, proof_bundle)
         )
 
     def write(
@@ -82,8 +86,10 @@ class RemediationGenerator:
         destination: Path,
         recovery: RecoveryBundle | None = None,
         chronos: ChronosBundle | None = None,
+        proofgraph: ProofGraph | None = None,
+        proof_bundle: ProofBundle | None = None,
     ) -> tuple[GeneratedArtifact, ...]:
-        artifacts = self.generate(report, recovery, chronos)
+        artifacts = self.generate(report, recovery, chronos, proofgraph, proof_bundle)
         root = destination.resolve()
         for artifact in artifacts:
             target = (root / artifact.relative_path).resolve()
@@ -103,6 +109,53 @@ class RemediationGenerator:
             json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
         )
         return artifacts
+
+    @staticmethod
+    def _proofgraph_artifacts(
+        report: IncidentReport,
+        proofgraph: ProofGraph | None,
+        proof_bundle: ProofBundle | None,
+    ) -> tuple[GeneratedArtifact, ...]:
+        if proofgraph is None and proof_bundle is None:
+            return ()
+        if (
+            proofgraph is None
+            or proof_bundle is None
+            or proofgraph.incident_id != report.incident_id
+            or not verify_proof_bundle(proof_bundle, proofgraph)
+        ):
+            raise ValueError("ProofGraph artifacts require a valid matching Proof Bundle")
+        return (
+            GeneratedArtifact.create(
+                f"proofgraph/graphs/{report.incident_id}.json",
+                json.dumps(proofgraph.as_dict(), indent=2),
+            ),
+            GeneratedArtifact.create(
+                f"proofgraph/bundles/{report.incident_id}.intoto.json",
+                json.dumps(asdict(proof_bundle), indent=2),
+            ),
+            GeneratedArtifact.create(
+                "proofgraph/evidence-gaps.json",
+                json.dumps(
+                    {
+                        "schema_version": proofgraph.schema_version,
+                        "evidence_gaps": [asdict(item) for item in proofgraph.evidence_gaps],
+                    },
+                    indent=2,
+                ),
+            ),
+            GeneratedArtifact.create(
+                "proofgraph/causal-cuts.json",
+                json.dumps(
+                    {
+                        "schema_version": proofgraph.schema_version,
+                        "causal_cuts": [asdict(item) for item in proofgraph.causal_cuts],
+                        "counterfactuals": [asdict(item) for item in proofgraph.counterfactuals],
+                    },
+                    indent=2,
+                ),
+            ),
+        )
 
     @staticmethod
     def _recovery_artifacts(recovery: RecoveryBundle | None) -> tuple[GeneratedArtifact, ...]:

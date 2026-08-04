@@ -7,6 +7,7 @@ import pytest
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
 from lineage_guard.chronos import build_demo_chronos
 from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
+from lineage_guard.proofgraph import build_demo_proofgraph
 from lineage_guard.recovery import (
     CounterfactualRecoveryLab,
     RecoveryRow,
@@ -172,3 +173,15 @@ def test_rejects_untrusted_sql_identifier() -> None:
 
     with pytest.raises(ValueError, match="Unsafe quality signal field"):
         RemediationGenerator().generate(replace(original, signal=unsafe_signal))
+
+
+def test_generates_and_validates_proofgraph_artifacts(tmp_path) -> None:
+    incident = report()
+    recovery = CounterfactualRecoveryLab().evaluate(incident, demo_recovery_scenario())
+    chronos = build_demo_chronos(incident, recovery)
+    graph, bundle = build_demo_proofgraph(incident, recovery, chronos)
+    artifacts = RemediationGenerator().write(incident, tmp_path, recovery, chronos, graph, bundle)
+    assert len(artifacts) == 20
+    assert (tmp_path / "proofgraph" / "causal-cuts.json").is_file()
+    with pytest.raises(ValueError, match="valid matching"):
+        RemediationGenerator().generate(incident, recovery, chronos, graph, None)

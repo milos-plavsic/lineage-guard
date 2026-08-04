@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "incident_id": "9edb78125e19",
+  "nodes": [
+    {
+      "node_id": "observation:signal:9edb78125e19",
+      "kind": "observation",
+      "claim": "billing_amount: 37 negative values in the latest batch",
+      "source": "datahub-assertion-event",
+      "sha256": "aac47519d68925e03ed33ac4c704583e6281553ee1fceac884619e9f53e91573",
+      "decisive": true
+    },
+    {
+      "node_id": "context:lineage:db28d5374eee",
+      "kind": "context",
+      "claim": "column lineage depends on billing_amount",
+      "source": "datahub-column-lineage",
+      "sha256": "378cad40e16c1b069e069daf2e5198ef24b5538f3e62c93bddb6f9495f17f753",
+      "decisive": true
+    },
+    {
+      "node_id": "context:impact:db28d5374eee",
+      "kind": "context",
+      "claim": "risk=85; concerns=none",
+      "source": "datahub-governance-and-usage",
+      "sha256": "951803b054a4e30854c530bf8dc18b855411d2c4371c397ceaa113a255f0254c",
+      "decisive": false
+    },
+    {
+      "node_id": "rule:containment:db28d5374eee",
+      "kind": "rule",
+      "claim": "selective-containment-policy-v1",
+      "source": "lineageguard-sentinel",
+      "sha256": "8f513525c19c8e54962d6484a601f58df3244239dcfc0ebcea46b684b1269c0b",
+      "decisive": true
+    },
+    {
+      "node_id": "decision:monitor:db28d5374eee",
+      "kind": "decision",
+      "claim": "staging_patients -> monitor",
+      "source": "lineageguard-sentinel",
+      "sha256": "dc6257d14c93137c8c6175e818facb1e4517789f0f0836596bd5e1e195cddcfb",
+      "decisive": false
+    },
+    {
+      "node_id": "context:lineage:67a7cb887174",
+      "kind": "context",
+      "claim": "column lineage depends on billing_amount",
+      "source": "datahub-column-lineage",
+      "sha256": "5336b07829478a2357bf198f63eea37a16c0ac87a88d852f715f378d665a7601",
+      "decisive": true
+    },
+    {
+      "node_id": "context:impact:67a7cb887174",
+      "kind": "context",
+      "claim": "risk=100; concerns=billing,financial",
+      "source": "datahub-governance-and-usage",
+      "sha256": "b7b14d47e99279f6580a6e0f74ac1b1ef804b0546e54fc139209cdad336ba7a8",
+      "decisive": true
+    },
+    {
+      "node_id": "rule:containment:67a7cb887174",
+      "kind": "rule",
+      "claim": "selective-containment-policy-v1",
+      "source": "lineageguard-sentinel",
+      "sha256": "0d3f4aceb30b0ffea09dcb5fd1a26fa01ea8b6e0e15d91f6b90266c1e8a27419",
+      "decisive": true
+    },
+    {
+      "node_id": "decision:quarantine:67a7cb887174",
+      "kind": "decision",
+      "claim": "mart_billing -> quarantine",
+      "source": "lineageguard-sentinel",
+      "sha256": "54e7bedf44b0a371804e06d67f8fb6ba9e27bd7d8249faa7b8d5ee9df07d07a6",
+      "decisive": false
+    },
+    {
+      "node_id": "context:lineage:fc5a35f41f1c",
+      "kind": "context",
+      "claim": "complete column lineage excludes billing_amount",
+      "source": "datahub-column-lineage",
+      "sha256": "0d60dc6cf3fc49b630a8b68467cbbcbd86531ee7711f5b986d907bd64889dc58",
+      "decisive": true
+    },
+    {
+      "node_id": "context:impact:fc5a35f41f1c",
+      "kind": "context",
+      "claim": "risk=63; concerns=none",
+      "source": "datahub-governance-and-usage",
+      "sha256": "b2ad3cb96ecebab7bc7b109b31dc5d17d9cc45518da50210efe8cb7aa4d8f8a2",
+      "decisive": false
+    },
+    {
+      "node_id": "rule:containment:fc5a35f41f1c",
+      "kind": "rule",
+      "claim": "selective-containment-policy-v1",
+      "source": "lineageguard-sentinel",
+      "sha256": "bf2f7b08d23fd69e9ce0baedb4aca05475dfa6cb095ab8d61b11d570b6250605",
+      "decisive": true
+    },
+    {
+      "node_id": "decision:continue:fc5a35f41f1c",
+      "kind": "decision",
+      "claim": "mart_demographics -> continue",
+      "source": "lineageguard-sentinel",
+      "sha256": "eb6627bb6144661b9e63521f9049c1f48a891711504ce82ef00cae1f0876b159",
+      "decisive": false
+    },
+    {
+      "node_id": "proof:recovery:0b5495ecf48a7373",
+      "kind": "proof",
+      "claim": "all recovery invariants passed",
+      "source": "lineageguard-forge",
+      "sha256": "adf664978225447183cb8f43963574d3d6d47b69a1e32cbf8b38334d9a51c3ed",
+      "decisive": true
+    },
+    {
+      "node_id": "proof:genome:lg-genome-26c677d5a45f7e6c",
+      "kind": "proof",
+      "claim": "incident compiled into context-bound preventive memory",
+      "source": "lineageguard-chronos",
+      "sha256": "0fd12ffb5f6c301d5ce398dce5be7224b60d61d9805b3ac75674071ac93a3904",
+      "decisive": true
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "observation:signal:9edb78125e19",
+      "target_id": "rule:containment:db28d5374eee",
+      "relation": "used"
+    },
+    {
+      "source_id": "context:lineage:db28d5374eee",
+      "target_id": "rule:containment:db28d5374eee",
+      "relation": "used"
+    },
+    {
+      "source_id": "rule:containment:db28d5374eee",
+      "target_id": "decision:monitor:db28d5374eee",
+      "relation": "generated"
+    },
+    {
+      "source_id": "observation:signal:9edb78125e19",
+      "target_id": "rule:containment:67a7cb887174",
+      "relation": "used"
+    },
+    {
+      "source_id": "context:lineage:67a7cb887174",
+      "target_id": "rule:containment:67a7cb887174",
+      "relation": "used"
+    },
+    {
+      "source_id": "rule:containment:67a7cb887174",
+      "target_id": "decision:quarantine:67a7cb887174",
+      "relation": "generated"
+    },
+    {
+      "source_id": "context:impact:67a7cb887174",
+      "target_id": "rule:containment:67a7cb887174",
+      "relation": "used"
+    },
+    {
+      "source_id": "observation:signal:9edb78125e19",
+      "target_id": "rule:containment:fc5a35f41f1c",
+      "relation": "used"
+    },
+    {
+      "source_id": "context:lineage:fc5a35f41f1c",
+      "target_id": "rule:containment:fc5a35f41f1c",
+      "relation": "used"
+    },
+    {
+      "source_id": "rule:containment:fc5a35f41f1c",
+      "target_id": "decision:continue:fc5a35f41f1c",
+      "relation": "generated"
+    },
+    {
+      "source_id": "proof:recovery:0b5495ecf48a7373",
+      "target_id": "proof:genome:lg-genome-26c677d5a45f7e6c",
+      "relation": "used"
+    }
+  ],
+  "causal_cuts": [
+    {
+      "decision_node_id": "decision:monitor:db28d5374eee",
+      "evidence_node_ids": [
+        "context:lineage:db28d5374eee",
+        "observation:signal:9edb78125e19",
+        "rule:containment:db28d5374eee"
+      ],
+      "size": 3,
+      "sha256": "010fd87024bd2066a0f418f684febe734dbdc0d06094e788b07192274c057e6f"
+    },
+    {
+      "decision_node_id": "decision:quarantine:67a7cb887174",
+      "evidence_node_ids": [
+        "context:impact:67a7cb887174",
+        "context:lineage:67a7cb887174",
+        "observation:signal:9edb78125e19",
+        "rule:containment:67a7cb887174"
+      ],
+      "size": 4,
+      "sha256": "5edc011946098ba26e081e6a74959ed5b2deec2b85bfdf80add9185b79b0da85"
+    },
+    {
+      "decision_node_id": "decision:continue:fc5a35f41f1c",
+      "evidence_node_ids": [
+        "context:lineage:fc5a35f41f1c",
+        "observation:signal:9edb78125e19",
+        "rule:containment:fc5a35f41f1c"
+      ],
+      "size": 3,
+      "sha256": "72967b9c3536a785d37c93bdff2e249f2652ac29308dd4cb6b69fa36be97ea29"
+    }
+  ],
+  "counterfactuals": [
+    {
+      "evidence_node_id": "observation:signal:9edb78125e19",
+      "original_action": "monitor",
+      "resulting_action": "continue",
+      "explanation": "Without an active failure observation, containment is not activated."
+    },
+    {
+      "evidence_node_id": "context:lineage:db28d5374eee",
+      "original_action": "monitor",
+      "resulting_action": "require_review",
+      "explanation": "Without this lineage claim, fail closed from monitor to require_review."
+    },
+    {
+      "evidence_node_id": "rule:containment:db28d5374eee",
+      "original_action": "monitor",
+      "resulting_action": "require_review",
+      "explanation": "Without the governing policy, automation has no authority and requires review."
+    },
+    {
+      "evidence_node_id": "observation:signal:9edb78125e19",
+      "original_action": "quarantine",
+      "resulting_action": "continue",
+      "explanation": "Without an active failure observation, containment is not activated."
+    },
+    {
+      "evidence_node_id": "context:lineage:67a7cb887174",
+      "original_action": "quarantine",
+      "resulting_action": "monitor",
+      "explanation": "Without this lineage claim, fail closed from quarantine to monitor."
+    },
+    {
+      "evidence_node_id": "rule:containment:67a7cb887174",
+      "original_action": "quarantine",
+      "resulting_action": "require_review",
+      "explanation": "Without the governing policy, automation has no authority and requires review."
+    },
+    {
+      "evidence_node_id": "context:impact:67a7cb887174",
+      "original_action": "quarantine",
+      "resulting_action": "monitor",
+      "explanation": "Without decisive impact context, confirmed exposure remains monitored."
+    },
+    {
+      "evidence_node_id": "observation:signal:9edb78125e19",
+      "original_action": "continue",
+      "resulting_action": "continue",
+      "explanation": "Without an active failure observation, containment is not activated."
+    },
+    {
+      "evidence_node_id": "context:lineage:fc5a35f41f1c",
+      "original_action": "continue",
+      "resulting_action": "require_review",
+      "explanation": "Without this lineage claim, fail closed from continue to require_review."
+    },
+    {
+      "evidence_node_id": "rule:containment:fc5a35f41f1c",
+      "original_action": "continue",
+      "resulting_action": "require_review",
+      "explanation": "Without the governing policy, automation has no authority and requires review."
+    }
+  ],
+  "evidence_gaps": [
+    {
+      "gap_id": "gap:governance:db28d5374eee",
+      "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)",
+      "title": "Resolve business impact classification for staging_patients",
+      "recommended_action": "Add an authoritative owner, criticality, and concern classification for staging_patients.",
+      "decisions_unlocked": 1,
+      "uncertainty_reduction": 35,
+      "criticality": 85,
+      "freshness_need": 80,
+      "collection_cost": 35,
+      "privacy_risk": 10,
+      "priority_score": 57
+    }
+  ],
+  "graph_sha256": "55bdb53776b3e1ab0600ddf97344e8d1abdfa6227f1d8fe96dc7aae49870e6da"
+}

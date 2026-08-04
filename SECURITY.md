@@ -22,6 +22,12 @@ include production tokens or sensitive catalog content.
   pull-request code.
 - Change passports use the in-toto Statement v1 shape but remain unsigned until a deployment supplies
   an authenticated signing envelope. A passport is never automatic deployment authority.
+- ProofGraph explanations are derived from the authority DAG rather than generated text. Every node,
+  cut, graph, and cross-pillar bundle is canonically hashed; demo bundles remain explicitly unsigned.
+- Counterfactuals are bounded, application-owned transitions. The dashboard and MCP server never
+  execute user-supplied code or mutate DataHub, policies, evidence, or source systems.
+- Evidence Gap Radar uses an explicit integer-bounded scoring model. Privacy and collection cost are
+  penalties, recommendations are advisory, and missing evidence never authorizes continuation.
 - The built-in dashboard binds to loopback and has no authentication. Never expose it directly to an
   untrusted network.
 

@@ -47,6 +47,13 @@ change passport. Adding a new lineage edge invalidates that same proof and requi
 Every incident can therefore become preventive memory without pretending yesterday's evidence is
 eternally valid.
 
+ProofGraph makes the entire trinity accountable. Every decision and explanation comes from the same
+deterministic derivation DAG. Its Causal Cut reveals the smallest evidence set that forces an outcome;
+the interactive Trust Lens removes any decisive premise and shows the fail-closed alternative.
+Evidence Gap Radar ranks exactly which DataHub context improvement would unlock safer automation.
+Five read-only MCP tools expose these proofs to other agents, while one portable unsigned in-toto
+Proof Bundle binds containment, recovery, prevention, and every cut.
+
 ## How we built it
 
 The Python domain core is deterministic and transport-independent. A durable agent state machine
@@ -80,6 +87,8 @@ tools. Generated source-system remediation remains reviewable output rather than
 - A real signed orchestrator action protocol with default-hold semantics and exact receipts.
 - Counterfactual repair execution that rejects a green-but-wrong fix and certifies a safe candidate.
 - Temporal causal immunity: Incident Genomes, historical replay, proof passports, and drift expiry.
+- Proof-carrying metadata with exact Causal Cuts, interactive counterfactuals, and Evidence Gap Radar.
+- A five-tool read-only ProofGraph MCP server and a complete DataHub Evidence aspect RFC.
 - Reproducible, executable remediation artifacts with integrity hashes.
 - Fail-closed handling for malformed, incomplete, or oversized MCP context.
 - A judge-readable demo that runs without credentials while retaining the real MCP boundary.
@@ -95,9 +104,9 @@ unconstrained generative autonomy.
 
 ## What's next
 
-Next steps include native DataHub incident entities, packaged Airflow/Dagster/dbt receivers for the
-signed enforcement protocol, owner approval integration, multi-node journal backends, and evaluation
-against larger cross-platform graphs.
+Next steps include proposing the Evidence aspect RFC upstream, native DataHub incident entities,
+packaged Airflow/Dagster/dbt receivers for the signed enforcement protocol, owner approval
+integration, multi-node journal backends, and calibration against larger cross-platform graphs.
 
 ## Built with
 
