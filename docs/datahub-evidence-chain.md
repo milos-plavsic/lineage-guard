@@ -17,6 +17,8 @@ without trusting the process that wrote it.
    record-limit overflow fail closed.
 8. Agent B derives current lineage and governance context from a fresh DataHub read. Request payloads
    cannot substitute catalog state.
+   Schema fields, lineage edges, and governance labels are canonicalized as sorted sets before
+   hashing, so an MCP traversal-order change cannot create false context drift.
 9. Keys named like credentials are rejected recursively before persistence. Record scans are bounded
    to 2 MB and 100 records.
 10. Integrity does not imply identity. DataHub authorization/audit is the default trust boundary;

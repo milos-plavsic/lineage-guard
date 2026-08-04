@@ -55,6 +55,9 @@ class ImmunityContext:
                 for value in values
             ):
                 raise ValueError(f"{label} values must contain 1 to 1024 characters")
+        object.__setattr__(self, "schema_fields", tuple(sorted(self.schema_fields)))
+        object.__setattr__(self, "lineage_edges", tuple(sorted(self.lineage_edges)))
+        object.__setattr__(self, "governance_labels", tuple(sorted(self.governance_labels)))
 
     @property
     def sha256(self) -> str:

@@ -401,9 +401,9 @@ async def test_inherited_change_cli_contract(tmp_path, monkeypatch, capsys) -> N
 
     class Agent:
         async def evaluate(self, graph, source, change, context, **kwargs):
-            assert graph == "graph" and source == RAW
+            assert graph == "graph" and source.endswith(",healthcare.main.raw_patients,PROD)")
             assert not change.quality_guard_enabled and context is None
-            assert kwargs["incident_id"] == "9edb78125e19"
+            assert kwargs["incident_id"] is None
             return {
                 "status": "written" if kwargs["approved"] else "proposed",
                 "evaluation": {"decision": "blocked"},

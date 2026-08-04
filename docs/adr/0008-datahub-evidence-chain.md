@@ -15,6 +15,9 @@ Agent policy consumes only chains that pass complete verification. Current conte
 fresh DataHub read. Lifecycle changes append supersession, expiry, or revocation records instead of
 mutating history. Optional authentication is detached from immutable evidence content.
 
+Immunity context collections are canonical sorted sets. Catalog traversal order is not evidence and
+must not influence a policy fingerprint.
+
 ## Consequences
 
 Retries become idempotent, parentage is visible in DataHub, historical decisions remain auditable,
