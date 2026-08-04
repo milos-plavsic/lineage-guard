@@ -1,6 +1,6 @@
+import json
 from dataclasses import replace
 from datetime import UTC, datetime
-import json
 from pathlib import Path
 
 import pytest
