@@ -25,15 +25,15 @@ published media, or organizer action; **optional** is not required for eligibili
 | Free judge access through August 31, 2026 | Active commitment | Public Pages demo and repository require no credentials; keep both active through judging. |
 | Team representative and entrant eligibility | Pending entrant | Confirm in Devpost account; cannot be proven from the repository. |
 | Submission finalized before August 10, 2026 17:00 EDT | Pending entrant | Submit before 23:00 Europe/Budapest and retain confirmation. |
-| Meaningful upstream DataHub contribution | Proved externally; review pending | [`datahub#18878`](https://github.com/datahub-project/datahub/pull/18878) fixes Agent Context lineage pagination and passes the relevant upstream build; do not claim merge until maintainer review completes. [`rfcs#13`](https://github.com/datahub-project/rfcs/issues/13) proposes structured evidence provenance. |
+| Meaningful upstream DataHub contribution | Proved externally; review pending | [`datahub#18878`](https://github.com/datahub-project/datahub/pull/18878) fixes Agent Context lineage pagination. [`datahub#18887`](https://github.com/datahub-project/datahub/pull/18887) makes Document excerpt completeness machine-readable and passed all 637 Agent Context tests plus prescribed lint. Do not claim merge until maintainer review completes. [`rfcs#13`](https://github.com/datahub-project/rfcs/issues/13) proposes structured evidence provenance. |
 | Most Valuable Feedback survey | Optional | Complete once if desired; separate individual bonus. |
 
 ## Judging readiness
 
 | Criterion | Evidence |
 |---|---|
-| Use of DataHub | MCP lineage/entity reads; native related Documents when available; compatible description/tag write-back; optional native Incident; fresh Agent B retrieval and linked prevention outcome. |
+| Use of DataHub | MCP lineage/entity reads; content-addressed native related Documents; compatible description/tag write-back; optional native Incident; fresh Agent B retrieval; linked prevention outcome; append-only Evidence Chain lifecycle. |
 | Technical execution | Field-aware authority, authenticated listener, durable retries, fail-closed boundaries, isolated counterfactual SQL, tamper-detecting certificates, 100% line/branch coverage, CI, package build. |
-| Originality | A DataHub-native immune loop unifies contain-recover-immunize with cross-agent memory, proof-carrying metadata, exact Causal Cuts, Trust Lens, and Evidence Gap Radar. |
+| Originality | A DataHub-native immune loop unifies contain-recover-immunize with cross-agent memory, a portable Evidence Chain protocol, proof-carrying metadata, exact Causal Cuts, Trust Lens, and Evidence Gap Radar. |
 | Real-world usefulness | Contains exposure, proves recovery, blocks recurrence, expires stale proof, and ranks the context needed for safer automation. |
 | Submission quality | Responsive semantic dashboard with remote WCAG 2 AA browser gate, concise runbook, examples, architecture, disclosures, and 2:45 script. |

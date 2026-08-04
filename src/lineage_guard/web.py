@@ -14,6 +14,7 @@ from lineage_guard.chronos import CausalImmunityEngine, build_demo_chronos, demo
 from lineage_guard.consistency import LineageRead, lineage_receipt
 from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
 from lineage_guard.domain import Action
+from lineage_guard.evidence_chain import verify_evidence_chain
 from lineage_guard.immune_memory import build_incident_memory, build_prevention_memory
 from lineage_guard.proofgraph import build_demo_proofgraph
 from lineage_guard.recovery import CounterfactualRecoveryLab, demo_recovery_scenario
@@ -54,6 +55,7 @@ def build_view_model() -> dict[str, Any]:
         chronos.genome, chronos.evaluations[0].change, demo_immunity_context(report)
     )
     prevention_memory = build_prevention_memory(immune_memory, inherited_evaluation)
+    evidence_chain = verify_evidence_chain((immune_memory, prevention_memory))
     proofgraph, proof_bundle = build_demo_proofgraph(report, recovery, chronos)
     artifacts = RemediationGenerator().generate(report, recovery, chronos, proofgraph, proof_bundle)
     quarantined = sum(item.action == Action.QUARANTINE for item in report.decisions)
@@ -183,6 +185,7 @@ def build_view_model() -> dict[str, Any]:
             "incident": immune_memory.as_dict(),
             "prevention": prevention_memory.as_dict(),
             "decision": inherited_evaluation.decision,
+            "chain_verification": evidence_chain.as_dict(),
         },
         "proofgraph": proofgraph.as_dict(),
         "proof_bundle": asdict(proof_bundle),

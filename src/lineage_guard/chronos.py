@@ -21,6 +21,7 @@ MAX_CONTEXT_ITEMS = 1_000
 MAX_CONTEXT_TEXT = 1_024
 IN_TOTO_STATEMENT_V1 = "https://in-toto.io/Statement/v1"
 PASSPORT_PREDICATE_V1 = "https://lineageguard.dev/attestations/change-passport/v1"
+OPERATIONAL_GOVERNANCE_TAGS = frozenset({"urn:li:tag:LineageGuard_Quarantined"})
 
 
 class ChangeDecision(StrEnum):
@@ -379,7 +380,12 @@ def demo_immunity_context(report: IncidentReport) -> ImmunityContext:
             sorted(
                 {
                     *(f"owner:{owner}" for item in report.decisions for owner in item.asset.owners),
-                    *(f"tag:{tag}" for item in report.decisions for tag in item.asset.tags),
+                    *(
+                        f"tag:{tag}"
+                        for item in report.decisions
+                        for tag in item.asset.tags
+                        if tag not in OPERATIONAL_GOVERNANCE_TAGS
+                    ),
                 }
             )
         ),

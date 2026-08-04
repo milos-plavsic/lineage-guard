@@ -8,12 +8,14 @@ from dataclasses import dataclass
 from hashlib import sha256
 from typing import Any, Protocol
 
+from lineage_guard.chronos import OPERATIONAL_GOVERNANCE_TAGS, ImmunityContext
 from lineage_guard.consistency import LineageRead, ReadConsistency, lineage_receipt
 from lineage_guard.domain import Asset, LineageTarget
 from lineage_guard.immune_memory import (
     MAX_DESCRIPTION_BYTES,
     ImmuneMemoryRecord,
     encode_memory,
+    memory_document_urn,
     parse_memories,
 )
 
@@ -351,6 +353,28 @@ class DataHubMcpGraph:
                     seen.add(record.record_digest)
         return tuple(records)
 
+    def get_immunity_context(self, urn: str, field: str) -> ImmunityContext:
+        if urn != self._source_urn:
+            raise LookupError(f"MCP snapshot was loaded for a different source: {urn}")
+        assets = tuple(self.get_asset(target.urn) for target in self._targets)
+        return ImmunityContext(
+            (field,),
+            tuple(f"{urn}->{target.urn}" for target in self._targets),
+            tuple(
+                sorted(
+                    {
+                        *(f"owner:{owner}" for asset in assets for owner in asset.owners),
+                        *(
+                            f"tag:{tag}"
+                            for asset in assets
+                            for tag in asset.tags
+                            if tag not in OPERATIONAL_GOVERNANCE_TAGS
+                        ),
+                    }
+                )
+            ),
+        )
+
     def append_immune_memory(self, urn: str, record: ImmuneMemoryRecord) -> None:
         if record.subject_urn != urn:
             raise ValueError("immune memory subject does not match the target asset")
@@ -360,13 +384,20 @@ class DataHubMcpGraph:
         block = encode_memory(record)
         if self._native_memory:
             subject_key = sha256(urn.encode()).hexdigest()[:20]
+            document_urn = memory_document_urn(record)
             self._queue(
                 "save_document",
                 {
                     "document_type": "Decision",
                     "title": f"LineageGuard {record.record_type.value}: {record.incident_id}",
                     "content": f"lineage-guard-memory-{subject_key}\n\n{block}",
+                    "urn": document_urn,
                     "topics": ["lineage-guard", "immune-memory", record.record_type.value],
+                    "related_documents": (
+                        [f"urn:li:document:lineage-guard-{record.parent_digest[7:]}"]
+                        if record.parent_digest
+                        else []
+                    ),
                     "related_assets": [urn],
                 },
             )

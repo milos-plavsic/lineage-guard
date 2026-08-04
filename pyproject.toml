@@ -35,6 +35,7 @@ lineage-guard = "lineage_guard.cli:main"
 lineage-guard-web = "lineage_guard.web:main"
 lineage-guard-agent = "lineage_guard.agent_web:main"
 lineage-guard-proof-mcp = "lineage_guard.proof_mcp:main"
+lineage-guard-evidence-mcp = "lineage_guard.evidence_mcp:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lineage_guard"]

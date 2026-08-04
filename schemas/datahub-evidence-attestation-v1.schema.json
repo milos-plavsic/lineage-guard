@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lineageguard.dev/schemas/datahub-evidence-attestation-v1.schema.json",
+  "title": "LineageGuard Detached Evidence Attestation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "record_digest", "key_id", "algorithm", "signature"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "record_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "key_id": {"type": "string", "minLength": 1, "maxLength": 256},
+    "algorithm": {"const": "hmac-sha256"},
+    "signature": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

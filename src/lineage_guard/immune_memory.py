@@ -15,6 +15,9 @@ from lineage_guard.recovery import canonical_sha256
 MAX_MEMORY_BYTES = 65_536
 MAX_DESCRIPTION_BYTES = 2_000_000
 MAX_MEMORIES = 100
+SENSITIVE_FIELD_FRAGMENTS = frozenset(
+    {"api_key", "apikey", "access_token", "password", "private_key", "secret"}
+)
 BEGIN = "<!-- LINEAGE_GUARD_IMMUNE_MEMORY_V1_BEGIN "
 END = "<!-- LINEAGE_GUARD_IMMUNE_MEMORY_V1_END -->"
 
@@ -22,6 +25,9 @@ END = "<!-- LINEAGE_GUARD_IMMUNE_MEMORY_V1_END -->"
 class MemoryRecordType(StrEnum):
     INCIDENT = "incident"
     PREVENTION_OUTCOME = "prevention_outcome"
+    SUPERSESSION = "supersession"
+    EXPIRY = "expiry"
+    REVOCATION = "revocation"
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +136,45 @@ def build_prevention_memory(
     )
 
 
+def build_lifecycle_memory(
+    parent: ImmuneMemoryRecord,
+    record_type: MemoryRecordType,
+    *,
+    reason: str,
+    effective_at: str,
+    replacement_digest: str | None = None,
+) -> ImmuneMemoryRecord:
+    if record_type not in {
+        MemoryRecordType.SUPERSESSION,
+        MemoryRecordType.EXPIRY,
+        MemoryRecordType.REVOCATION,
+    }:
+        raise ValueError("lifecycle record type is unsupported")
+    if not isinstance(reason, str) or not reason.strip() or len(reason) > 2_000:
+        raise ValueError("lifecycle reason must be bounded non-empty text")
+    _parse_timestamp(effective_at)
+    if record_type == MemoryRecordType.SUPERSESSION:
+        if not _is_digest(replacement_digest):
+            raise ValueError("supersession requires a replacement digest")
+    elif replacement_digest is not None:
+        raise ValueError("only supersession records may name a replacement")
+    return ImmuneMemoryRecord.create(
+        record_type,
+        parent.subject_urn,
+        parent.incident_id,
+        {
+            "effective_at": effective_at,
+            "reason": reason.strip(),
+            "replacement_digest": replacement_digest,
+        },
+        parent_digest=parent.record_digest,
+    )
+
+
+def memory_document_urn(record: ImmuneMemoryRecord) -> str:
+    return f"urn:li:document:lineage-guard-{record.record_digest.removeprefix('sha256:')}"
+
+
 def encode_memory(record: ImmuneMemoryRecord) -> str:
     raw = _canonical_bytes(record.as_dict())
     if len(raw) > MAX_MEMORY_BYTES:
@@ -200,10 +245,11 @@ def _validated_body(value: Mapping[str, Any]) -> dict[str, Any]:
         if not isinstance(value[key], str) or not value[key] or len(value[key]) > limit:
             raise ValueError(f"{key} must be bounded non-empty text")
     parent = value["parent_digest"]
-    if parent is not None and (not isinstance(parent, str) or not parent.startswith("sha256:")):
+    if parent is not None and not _is_digest(parent):
         raise ValueError("parent_digest must be a sha256 digest")
     if not isinstance(value["payload"], dict):
         raise ValueError("immune-memory payload must be an object")
+    _reject_sensitive_fields(value["payload"])
     body = dict(value)
     body["record_type"] = record_type
     body["payload"] = json.loads(_canonical_bytes(value["payload"]))
@@ -215,6 +261,40 @@ def _validated_body(value: Mapping[str, Any]) -> dict[str, Any]:
 
 def _canonical_bytes(value: Any) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+
+
+def _is_digest(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 71
+        and value.startswith("sha256:")
+        and all(character in "0123456789abcdef" for character in value[7:])
+    )
+
+
+def _parse_timestamp(value: str) -> None:
+    from datetime import datetime
+
+    if not isinstance(value, str) or not value.endswith("Z"):
+        raise ValueError("effective_at must be an RFC 3339 UTC timestamp")
+    try:
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ValueError("effective_at must be an RFC 3339 UTC timestamp") from error
+
+
+def _reject_sensitive_fields(value: Any) -> None:
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            normalized = str(key).lower().replace("-", "_")
+            if normalized in SENSITIVE_FIELD_FRAGMENTS or any(
+                normalized.endswith(f"_{fragment}") for fragment in SENSITIVE_FIELD_FRAGMENTS
+            ):
+                raise ValueError("immune-memory payload contains a sensitive field")
+            _reject_sensitive_fields(nested)
+    elif isinstance(value, list | tuple):
+        for nested in value:
+            _reject_sensitive_fields(nested)
 
 
 def genome_from_memory(record: ImmuneMemoryRecord) -> IncidentGenome:

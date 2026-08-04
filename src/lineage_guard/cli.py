@@ -16,8 +16,13 @@ from lineage_guard.demo import assets, edges, field_dependencies, negative_billi
 from lineage_guard.domain import QualitySignal, Severity
 from lineage_guard.enforcement import SignedWebhookConfig, SignedWebhookEnforcer
 from lineage_guard.events import load_quality_event
+from lineage_guard.evidence_chain import sign_record, verify_evidence_chain
 from lineage_guard.immune_agent import InheritedMemoryAgent, load_inherited_change
-from lineage_guard.immune_memory import build_incident_memory
+from lineage_guard.immune_memory import (
+    MemoryRecordType,
+    build_incident_memory,
+    build_lifecycle_memory,
+)
 from lineage_guard.proofgraph import build_demo_proofgraph, load_radar_weights
 from lineage_guard.recovery import (
     CounterfactualRecoveryLab,
@@ -52,6 +57,16 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Evaluate a typed future change using immune memory retrieved from DataHub.",
     )
+    parser.add_argument(
+        "--evidence-action",
+        choices=("verify", "expire", "revoke", "supersede", "attest"),
+        help="Verify or append a governed DataHub Evidence Chain lifecycle record.",
+    )
+    parser.add_argument("--record-digest", help="Evidence record targeted by a lifecycle action.")
+    parser.add_argument("--replacement-digest", help="Replacement record for supersession.")
+    parser.add_argument("--reason", help="Bounded rationale for a lifecycle action.")
+    parser.add_argument("--effective-at", help="RFC 3339 UTC lifecycle effective time.")
+    parser.add_argument("--attestation-key-id", help="Public identifier for an attestation key.")
     parser.add_argument(
         "--signal-file",
         help="Read a versioned quality event from this JSON file, or '-' for standard input.",
@@ -182,10 +197,13 @@ async def _run_mcp(args: argparse.Namespace) -> int:
     token = os.environ.get("DATAHUB_GMS_TOKEN")
     graphql_url = getattr(args, "datahub_graphql_url", None)
     inherited_file = getattr(args, "evaluate_change_file", None)
+    evidence_action = getattr(args, "evidence_action", None)
     if graphql_url and not args.apply:
         raise SystemExit("--datahub-graphql-url requires --apply approval.")
     if inherited_file:
         return await _run_inherited_change(args, token)
+    if evidence_action:
+        return await _run_evidence_action(args, token)
     signal_file = getattr(args, "signal_file", None)
     event = load_quality_event(signal_file) if signal_file else None
     source_urn = event.signal.asset_urn if event else args.source_urn
@@ -319,7 +337,7 @@ async def _run_inherited_change(args: argparse.Namespace, token: str | None) -> 
             graph,
             request.source_urn,
             request.change,
-            request.context,
+            None,
             approved=args.apply,
             incident_id=request.incident_id,
         )
@@ -329,6 +347,66 @@ async def _run_inherited_change(args: argparse.Namespace, token: str | None) -> 
         "live_datahub_connected": True,
         "mutations_applied": bool(args.apply),
     }
+    rendered = json.dumps(payload, indent=2)
+    if args.output:
+        args.output.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
+    return 0
+
+
+async def _run_evidence_action(args: argparse.Namespace, token: str | None) -> int:
+    if not args.gms_url or not args.source_urn or not token:
+        raise SystemExit("Evidence actions require --gms-url, --source-urn, and DATAHUB_GMS_TOKEN.")
+    mutating = args.evidence_action in {"expire", "revoke", "supersede"}
+    if mutating and not args.apply:
+        raise SystemExit("Evidence lifecycle mutations require --apply approval.")
+    if not mutating and args.apply:
+        raise SystemExit("--apply is not valid for read-only verification or attestation.")
+    config = StdioMcpConfig(args.gms_url, token, enable_mutations=mutating)
+    async with open_stdio_session(config) as session:
+        graph = await DataHubMcpGraph.load(session, args.source_urn)
+        records = graph.get_immune_memories(args.source_urn)
+        verification = verify_evidence_chain(records)
+        payload: dict = {"chain_verification": verification.as_dict(), "status": "verified"}
+        payload["execution_context"] = {
+            "mode": "live_mcp_evidence_action",
+            "metadata_source": "datahub_mcp",
+            "live_datahub_connected": True,
+            "mutations_applied": mutating,
+        }
+        if not verification.valid:
+            raise ValueError("DataHub evidence chain verification failed")
+        if args.evidence_action != "verify":
+            record = next(
+                (item for item in records if item.record_digest == args.record_digest), None
+            )
+            if record is None:
+                raise ValueError("target evidence record was not found")
+            if args.evidence_action == "attest":
+                secret = os.environ.get("LINEAGE_GUARD_ATTESTATION_SECRET", "").encode()
+                payload["attestation"] = sign_record(
+                    record,
+                    key_id=args.attestation_key_id or "",
+                    secret=secret,
+                ).as_dict()
+                payload["status"] = "attested"
+            else:
+                action_type = {
+                    "expire": MemoryRecordType.EXPIRY,
+                    "revoke": MemoryRecordType.REVOCATION,
+                    "supersede": MemoryRecordType.SUPERSESSION,
+                }[args.evidence_action]
+                lifecycle = build_lifecycle_memory(
+                    record,
+                    action_type,
+                    reason=args.reason or "",
+                    effective_at=args.effective_at or "",
+                    replacement_digest=args.replacement_digest,
+                )
+                graph.append_immune_memory(args.source_urn, lifecycle)
+                await graph.flush()
+                payload["lifecycle_record"] = lifecycle.as_dict()
+                payload["status"] = "written"
     rendered = json.dumps(payload, indent=2)
     if args.output:
         args.output.write_text(rendered + "\n", encoding="utf-8")

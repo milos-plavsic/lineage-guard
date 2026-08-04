@@ -18,6 +18,9 @@ async function loadIncident() {
   text('memory-incident', `${data.immune_memory.incident.record_digest.slice(0, 18)}…`);
   text('memory-decision', data.immune_memory.decision.replaceAll('_', ' '));
   text('memory-outcome', `${data.immune_memory.prevention.record_digest.slice(0, 18)}…`);
+  text('memory-chain', data.immune_memory.chain_verification.valid
+    ? `Verified · ${data.immune_memory.chain_verification.record_count} records`
+    : 'Invalid · blocked');
   document.getElementById('evaluate-inherited').addEventListener('click', () => {
     const guardEnabled = document.getElementById('future-guard').value === 'true';
     const evaluation = data.chronos.evaluations.find(
