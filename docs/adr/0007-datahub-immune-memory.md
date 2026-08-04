@@ -5,17 +5,19 @@
 
 ## Decision
 
-Use one immutable, versioned JSON record as the semantic source of truth. Deploy it through a
-bounded base64url envelope appended with DataHub MCP `update_description`; map the identical bytes
-to the proposed native Evidence aspect when available. Incident records are roots. Prevention
-outcomes link to a root with `parent_digest`.
+Use one immutable, versioned JSON record as the semantic source of truth. Prefer an asset-related,
+content-indexed DataHub Document when MCP exposes save and retrieval capabilities. Use a bounded
+base64url `update_description` envelope only as a compatibility fallback. Optionally project
+operational lifecycle into a native DataHub Incident through its authorized API. Map identical
+canonical bytes to the proposed Evidence aspect when available. Incident records are roots;
+prevention outcomes link to a root with `parent_digest`.
 
 ## Why
 
-This works against the repository's pinned and tested MCP surface, preserves DataHub authorization,
-supports fresh-agent retrieval, and avoids a second migration model. Content identity makes replay
-and semantic deduplication deterministic. A compact append-only record also retains history that a
-mutable “latest status” property would erase.
+This composes DataHub's existing Incident and Document entities instead of rebuilding their roles,
+preserves DataHub authorization and search, supports fresh-agent retrieval, and avoids a second
+migration model. Runtime capability negotiation retains compatibility with older MCP servers.
+Content identity makes replay and semantic deduplication deterministic.
 
 ## Consequences
 

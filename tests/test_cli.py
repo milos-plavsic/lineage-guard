@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from lineage_guard import cli
 from lineage_guard.cli import main
 
 
@@ -158,3 +159,43 @@ def test_enforcement_requires_approval_and_secret(monkeypatch) -> None:
         main(base)
     with pytest.raises(SystemExit, match="ENFORCEMENT_SECRET"):
         main([*base, "--apply"])
+
+
+def test_native_incident_projection_requires_approval(monkeypatch) -> None:
+    monkeypatch.setenv("DATAHUB_GMS_TOKEN", "token")
+    with pytest.raises(SystemExit, match="requires --apply"):
+        main(
+            [
+                "--mode",
+                "mcp",
+                "--gms-url",
+                "http://gms",
+                "--source-urn",
+                "urn:li:dataset:source",
+                "--datahub-graphql-url",
+                "https://datahub.example/api/graphql",
+            ]
+        )
+
+
+def test_cli_dispatches_inherited_change_mode(monkeypatch) -> None:
+    monkeypatch.setenv("DATAHUB_GMS_TOKEN", "token")
+
+    async def run(args, token):
+        assert args.evaluate_change_file.name == "inherited-change.json" and token == "token"
+        return 0
+
+    monkeypatch.setattr(cli, "_run_inherited_change", run)
+    assert (
+        main(
+            [
+                "--mode",
+                "mcp",
+                "--gms-url",
+                "http://gms",
+                "--evaluate-change-file",
+                "examples/inherited-change.json",
+            ]
+        )
+        == 0
+    )

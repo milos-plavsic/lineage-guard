@@ -43,12 +43,12 @@ Show both repair candidates and the certificate.
 
 ## 1:38–2:03 — Prevent recurrence
 
-Show guard removal, guard preservation, then lineage drift.
+Show Agent A's memory digest, click **Ask fresh Agent B** for guard removal, then show lineage drift.
 
-> The incident and verified repair become executable preventive memory. Removing the billing guard
-> replays the historical failure and is blocked. Preserving it becomes eligible for approval. A new
-> DataHub lineage edge then expires the old proof and requires revalidation. Yesterday's evidence is
-> never treated as eternally current.
+> Agent A leaves a hash-verified Incident Genome in DataHub. A fresh Agent B inherits that exact
+> record, replays guard removal, blocks it, and links the prevention outcome back to its source.
+> Preserving the guard becomes eligible for approval. A new lineage edge expires the old proof and
+> requires revalidation. Yesterday's evidence is never treated as eternally current.
 
 ## 2:03–2:26 — Explain and challenge the decision
 

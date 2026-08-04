@@ -28,6 +28,7 @@ from lineage_guard.adapters.mcp import (
 )
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
 from lineage_guard.consistency import LineageRead, lineage_receipt
+from lineage_guard.datahub_incidents import DataHubIncidentReceipt
 from lineage_guard.demo import RAW, assets, edges, negative_billing_signal
 from lineage_guard.domain import Asset, LineageEdge, LineageTarget, QualitySignal, Severity
 from lineage_guard.remediation import GeneratedArtifact, RemediationGenerator
@@ -327,6 +328,8 @@ async def test_mcp_cli_complete_flow(tmp_path, monkeypatch, capsys) -> None:
         proofgraph=False,
         recovery_scenario_file=None,
         changes_file=None,
+        datahub_graphql_url=None,
+        evaluate_change_file=None,
     )
     assert await cli._run_mcp(args) == 0
     assert configs[-1].enable_mutations is True
@@ -375,6 +378,67 @@ async def test_mcp_cli_complete_flow(tmp_path, monkeypatch, capsys) -> None:
 
     args.apply = True
     assert await cli._run_mcp(args) == 0
+
+    monkeypatch.setattr(
+        cli.DataHubIncidentClient,
+        "ensure_incident",
+        lambda self, report: DataHubIncidentReceipt("urn:li:incident:native", True),
+    )
+    args.datahub_graphql_url = "https://datahub.example/api/graphql"
+    args.output = tmp_path / "native-incident.json"
+    assert await cli._run_mcp(args) == 0
+    assert json.loads(args.output.read_text())["datahub_incident"]["created"] is True
+
+
+@pytest.mark.asyncio
+async def test_inherited_change_cli_contract(tmp_path, monkeypatch, capsys) -> None:
+    approvals = []
+
+    @asynccontextmanager
+    async def session(config):
+        approvals.append(config.enable_mutations)
+        yield object()
+
+    class Agent:
+        async def evaluate(self, graph, source, change, context, **kwargs):
+            assert graph == "graph" and source == RAW
+            assert not change.quality_guard_enabled and context.schema_fields
+            assert kwargs["incident_id"] == "9edb78125e19"
+            return {
+                "status": "written" if kwargs["approved"] else "proposed",
+                "evaluation": {"decision": "blocked"},
+            }
+
+    async def load(*args, **kwargs):
+        return "graph"
+
+    monkeypatch.setattr(cli, "open_stdio_session", session)
+    monkeypatch.setattr(cli.DataHubMcpGraph, "load", load)
+    monkeypatch.setattr(cli, "InheritedMemoryAgent", Agent)
+    output = tmp_path / "out.json"
+    args = argparse.Namespace(
+        gms_url="http://gms",
+        source_urn=None,
+        apply=True,
+        evaluate_change_file=Path("examples/inherited-change.json"),
+        output=output,
+    )
+    assert await cli._run_inherited_change(args, "token") == 0
+    payload = json.loads(output.read_text())
+    assert payload["execution_context"]["mode"] == "live_mcp_inherited_change"
+    assert approvals == [True]
+    assert "blocked" in capsys.readouterr().out
+
+    with pytest.raises(SystemExit, match="requires --gms-url"):
+        await cli._run_inherited_change(argparse.Namespace(gms_url=None), None)
+    args.gms_url = "http://gms"
+    args.source_urn = "urn:li:dataset:different"
+    with pytest.raises(SystemExit, match="does not match"):
+        await cli._run_inherited_change(args, "token")
+    args.source_urn = None
+    args.output = None
+    args.apply = False
+    assert await cli._run_inherited_change(args, "token") == 0
 
 
 def test_demo_cli_without_optional_outputs(capsys) -> None:

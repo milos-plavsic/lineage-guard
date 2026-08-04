@@ -1,7 +1,8 @@
 # DataHub immune system
 
 LineageGuard makes incident learning durable catalog state. Agent A reads DataHub lineage, contains
-an incident, and writes a bounded, content-addressed incident memory to the source dataset. Agent B
+an incident, and writes a bounded, content-addressed incident memory related to the source dataset.
+Agent B
 starts with a fresh DataHub read, reconstructs and verifies that memory, replays a proposed change
 against the stored Incident Genome, and writes the prevention outcome and inherited evidence gaps
 back to the same asset.
@@ -12,29 +13,36 @@ DataHub lineage → Agent A → incident memory → DataHub → Agent B → bloc
                                   └── prevention outcome ───┘
 ```
 
-## Deployable carrier and native destination
+## Native composition and compatibility carrier
 
 The canonical contract is
 [`datahub-immune-memory-v1.schema.json`](../schemas/datahub-immune-memory-v1.schema.json). The same
 canonical JSON bytes and SHA-256 identity are used in both mappings:
 
-| Contract field | Deployable today through DataHub MCP 0.6 | Proposed native Evidence aspect |
-|---|---|---|
-| `subject_urn` | `update_description.entity_urn` | aspect owner/entity URN |
-| complete record | base64url envelope in appended description | aspect value |
-| `record_digest` | envelope header and verified payload | aspect key/content digest |
-| `parent_digest` | payload link | typed evidence relationship |
-| `record_type` | payload discriminator | evidence type discriminator |
+| Contract field | Preferred DataHub representation | Compatibility fallback | Proposed Evidence aspect |
+|---|---|---|---|
+| `subject_urn` | Document `related_assets` | `update_description.entity_urn` | aspect owner/entity URN |
+| complete record | content-indexed Decision Document | base64url description envelope | aspect value |
+| `record_digest` | verified Document content | envelope header and payload | aspect key/content digest |
+| `parent_digest` | related record encoded in content | payload link | typed evidence relationship |
+| `record_type` | Document subtype/topic and payload | payload discriminator | evidence type discriminator |
 
-The description envelope is a compatibility carrier, not a claim that DataHub currently ships this
-aspect. A native aspect can ingest the decoded record without changing its digest, making migration
-lossless. Structured properties were rejected as the default because they require pre-provisioned
-property definitions; Documents remain a possible discoverability mirror, not the source of truth.
+At runtime, LineageGuard prefers native Documents only when the MCP server advertises the complete
+`save_document` plus `search_documents` path. Documents are content indexed, related to the affected
+asset, owned and audited by DataHub, and retrievable by a fresh agent. Older servers fall back to the
+verified description envelope. The canonical record—not either carrier—is the semantic source of
+truth, so both decode to the same digest.
+
+With a separately supplied `--datahub-graphql-url` and `--apply`, LineageGuard also creates or reuses
+a native `CUSTOM / LINEAGE_GUARD` DataHub Incident. This gives operators native lifecycle, priority
+and authorization while the related Document holds the complete machine-verifiable memory. The
+optional Evidence aspect remains a proposal for tighter typed provenance; it is not claimed to ship
+in DataHub today.
 
 ## Integrity and authority
 
 - Every record is canonicalized, bounded to 64 KiB, and verified before it becomes policy input.
-- Descriptions are scanned only up to 2 MB and at most 100 distinct records are accepted.
+- Each Document/description is scanned only up to 2 MB and at most 100 distinct records are accepted.
 - Repeated digests are semantically deduplicated. A retry can still leave a physical duplicate
   description block because append is not transactional; this is an explicit transport limitation.
 - A digest proves integrity, not authorship. DataHub authentication and authorization control reads
@@ -45,9 +53,9 @@ property definitions; Documents remain a possible discoverability mirror, not th
 ## Two-agent acceptance path
 
 The integration tests instantiate fresh DataHub graph snapshots around a stateful MCP session. They
-prove that one client writes an incident envelope, a second client retrieves it from the changed
-DataHub description, rejects guard removal using the inherited genome, writes the linked prevention
-outcome, and a third fresh read sees both records. No Python object is passed between the agents.
+exercise both native Documents and the compatibility carrier: one client writes an incident record,
+a second retrieves and applies it, and a third sees the linked outcome. No Python object is passed
+between the agents.
 
 In live mode, the first half is enabled by `--apply` only:
 
@@ -58,5 +66,14 @@ lineage-guard --mode mcp --gms-url https://datahub.example/gms \
   --apply --output immune-memory.json
 ```
 
-The Python `InheritedMemoryAgent` is the bounded second-agent interface for CI/change-management
-integrations. Its default is proposal-only; `approved=True` is required to write its outcome.
+Then stop Agent A and invoke the bounded Agent B CLI with a fresh MCP session:
+
+```bash
+lineage-guard --mode mcp --gms-url https://datahub.example/gms \
+  --evaluate-change-file examples/inherited-change.json \
+  --output inherited-evaluation.json
+# Add --apply only after reviewing the proposed prevention outcome.
+```
+
+The Python `InheritedMemoryAgent` remains the embeddable interface for CI/change-management
+integrations. Both interfaces default to proposal-only.

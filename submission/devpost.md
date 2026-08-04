@@ -23,6 +23,12 @@ insufficient evidence. It produces a deterministic risk score and explanation, p
 for confirmed material impact, permits continuation only for a proven exclusion, and routes every
 uncertain branch to review.
 
+LineageGuard is deliberately a bounded operational agent, not an unconstrained chatbot. It observes
+through tools, evaluates evidence, acts through separately authorized capabilities, records durable
+state, and hands verified context to another agent. Containment and release decisions are
+deterministic so operators can reproduce, audit, and challenge them; generative agents can consume
+its MCP proofs without receiving enforcement authority.
+
 For the deterministic healthcare demonstration, negative billing values enter `raw_patients`.
 Both billing and demographics marts share the upstream pipeline, but only the financial branch
 depends on the failing field. LineageGuard quarantines `mart_billing` and permits
@@ -54,10 +60,11 @@ The DataHub immune system makes that prevention memory survive the process that 
 writes one canonical, bounded, hash-verified incident envelope—including its lineage receipt,
 Incident Genome, decisions, and evidence gaps—to the source asset through DataHub MCP. Agent B starts
 from a fresh DataHub read, verifies and reconstructs the genome, blocks an unsafe future change, and
-writes a parent-linked prevention outcome back to DataHub. The deployable description carrier and
-proposed native Evidence aspect use identical canonical bytes, so a future migration preserves every
-record identity. Digests prove integrity rather than authorship; DataHub remains the authorization
-and audit boundary.
+writes a parent-linked prevention outcome back to DataHub. When advertised by MCP, the preferred
+carrier is a content-indexed Decision Document related to the affected asset; older servers use a
+bounded description envelope. An optional native DataHub Incident supplies operational lifecycle.
+All carriers and the proposed Evidence aspect preserve the same canonical record identity. Digests
+prove integrity rather than authorship; DataHub remains the authorization and audit boundary.
 
 ProofGraph makes the entire trinity accountable. Every decision and explanation comes from the same
 deterministic derivation DAG. Its Causal Cut reveals the smallest evidence set that forces an outcome;

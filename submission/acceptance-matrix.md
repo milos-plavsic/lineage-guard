@@ -9,7 +9,7 @@ published media, or organizer action; **optional** is not required for eligibili
 | Working software application | Proved locally | CLI, authenticated agent listener, durable journal, dashboard, enforcement contract, SQL execution test, and package build. |
 | DataHub OSS plus an eligible agent technology | Proved live | Official MCP adapter plus `examples/live-datahub-verification.json`. |
 | Agents That Do Real Work category | Proved | Durable DataHub tool loop, graph write-back, proof-gated recovery, and a fresh-agent incident-memory inheritance test. |
-| Meaningful context-graph use | Proved live | Six downstream assets resolved; approved description and tag write-back verified directly in DataHub. |
+| Meaningful context-graph use | Proved live | Six downstream assets resolved; approved description and tag write-back verified directly in DataHub. Native Document/Incident composition and fresh Agent B handoff have executable contract tests; refreshed external verification is recorded separately when run. |
 | Function matches video and description | Pending external | Record only the committed workflow; verify final video against the runbook. |
 | Public, easily testable project URL | Proved externally | Public HTTPS demo: <https://milos-plavsic.github.io/lineage-guard/>; URL recorded in `submission/submission.json`. |
 | Public source repository | Proved externally | Public repository: <https://github.com/milos-plavsic/lineage-guard>. |
@@ -32,7 +32,7 @@ published media, or organizer action; **optional** is not required for eligibili
 
 | Criterion | Evidence |
 |---|---|
-| Use of DataHub | MCP lineage/entity reads; description/tag write-back; Agent A stores canonical memory and a fresh Agent B inherits it and writes the linked prevention outcome. |
+| Use of DataHub | MCP lineage/entity reads; native related Documents when available; compatible description/tag write-back; optional native Incident; fresh Agent B retrieval and linked prevention outcome. |
 | Technical execution | Field-aware authority, authenticated listener, durable retries, fail-closed boundaries, isolated counterfactual SQL, tamper-detecting certificates, 100% line/branch coverage, CI, package build. |
 | Originality | A DataHub-native immune loop unifies contain-recover-immunize with cross-agent memory, proof-carrying metadata, exact Causal Cuts, Trust Lens, and Evidence Gap Radar. |
 | Real-world usefulness | Contains exposure, proves recovery, blocks recurrence, expires stale proof, and ranks the context needed for safer automation. |

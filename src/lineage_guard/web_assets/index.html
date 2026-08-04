@@ -146,6 +146,15 @@
           <article class="metric"><span>Agent B decision</span><strong id="memory-decision"></strong></article>
           <article class="metric"><span>Linked outcome</span><strong id="memory-outcome"></strong></article>
         </div>
+        <div class="simulation-controls">
+          <label for="future-guard">Future change</label>
+          <select id="future-guard">
+            <option value="false">Remove billing quality guard</option>
+            <option value="true">Preserve billing quality guard</option>
+          </select>
+          <button id="evaluate-inherited" type="button">Ask fresh Agent B</button>
+        </div>
+        <p id="inherited-result" class="simulation-result" role="status" aria-live="polite">Choose a change and run the inherited-memory evaluation.</p>
       </section>
 
       <section class="panel" aria-labelledby="timeline-title">

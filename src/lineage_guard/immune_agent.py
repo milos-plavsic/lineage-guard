@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import asdict
+import json
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any, Protocol
 
 from lineage_guard.chronos import CausalImmunityEngine, ChangeProposal, ImmunityContext
@@ -16,6 +18,60 @@ class ImmuneMemoryGraph(Protocol):
     def get_immune_memories(self, urn: str) -> tuple[ImmuneMemoryRecord, ...]: ...
     def append_immune_memory(self, urn: str, record: ImmuneMemoryRecord) -> None: ...
     async def flush(self) -> None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class InheritedChangeRequest:
+    source_urn: str
+    incident_id: str | None
+    change: ChangeProposal
+    context: ImmunityContext
+
+
+def load_inherited_change(path: Path) -> InheritedChangeRequest:
+    try:
+        if path.stat().st_size > 2_000_000:
+            raise ValueError("inherited-change request exceeds 2 MB")
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("invalid inherited-change request") from error
+    expected = {"schema_version", "source_urn", "incident_id", "change", "context"}
+    if not isinstance(value, dict) or set(value) != expected or value["schema_version"] != 1:
+        raise ValueError("inherited-change request is malformed")
+    change = value["change"]
+    context = value["context"]
+    if not isinstance(change, dict) or set(change) != {
+        "change_id",
+        "title",
+        "quality_guard_enabled",
+    }:
+        raise ValueError("inherited change proposal is malformed")
+    if not isinstance(context, dict) or set(context) != {
+        "schema_fields",
+        "lineage_edges",
+        "governance_labels",
+    }:
+        raise ValueError("inherited change context is malformed")
+    source = value["source_urn"]
+    incident_id = value["incident_id"]
+    if not isinstance(source, str) or not source.startswith("urn:li:"):
+        raise ValueError("inherited-change source_urn must be a DataHub URN")
+    if incident_id is not None and not isinstance(incident_id, str):
+        raise ValueError("inherited-change incident_id must be text or null")
+    try:
+        immunity_context = ImmunityContext(
+            tuple(context["schema_fields"]),
+            tuple(context["lineage_edges"]),
+            tuple(context["governance_labels"]),
+        )
+    except (TypeError, ValueError) as error:
+        raise ValueError("inherited change context is invalid") from error
+    return InheritedChangeRequest(
+        source,
+        incident_id,
+        ChangeProposal(change["change_id"], change["title"], change["quality_guard_enabled"]),
+        immunity_context,
+    )
 
 
 class InheritedMemoryAgent:

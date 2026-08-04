@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "source_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)",
+  "incident_id": "9edb78125e19",
+  "change": {
+    "change_id": "pr-unsafe-guard-removal",
+    "title": "Remove the billing quality guard",
+    "quality_guard_enabled": false
+  },
+  "context": {
+    "schema_fields": ["billing_amount"],
+    "lineage_edges": [
+      "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)->urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)",
+      "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)->urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_billing,PROD)",
+      "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)->urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.mart_demographics,PROD)"
+    ],
+    "governance_labels": [
+      "owner:Clinical Analytics",
+      "owner:Data Platform",
+      "owner:Finance Analytics",
+      "tag:Critical",
+      "tag:billing",
+      "tag:demographics"
+    ]
+  }
+}

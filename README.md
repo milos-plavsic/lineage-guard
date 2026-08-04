@@ -27,8 +27,8 @@ That is one agent loop: **observe → contain → remember in DataHub → inheri
 named components below are stages of this loop, not separate products.
 
 The [DataHub immune-system design](docs/datahub-immune-system.md) specifies the canonical envelope,
-deployable MCP carrier, proposed native Evidence-aspect mapping, security limits, and executable
-two-agent acceptance path.
+native Incident/Document composition, compatibility carrier, proposed Evidence-aspect mapping,
+security limits, and executable two-agent acceptance path.
 
 ## Current vertical slice
 

@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -11,7 +13,7 @@ from lineage_guard.chronos import (
     demo_immunity_context,
 )
 from lineage_guard.demo import RAW, assets, edges, field_dependencies, negative_billing_signal
-from lineage_guard.immune_agent import InheritedMemoryAgent
+from lineage_guard.immune_agent import InheritedMemoryAgent, load_inherited_change
 from lineage_guard.immune_memory import build_incident_memory
 from lineage_guard.recovery import CounterfactualRecoveryLab, demo_recovery_scenario
 from lineage_guard.service import IncidentAnalyzer
@@ -132,3 +134,51 @@ async def test_fresh_mcp_agents_handoff_only_through_datahub() -> None:
 
     with pytest.raises(ValueError, match="target asset"):
         final_reader.append_immune_memory("urn:li:dataset:wrong", records[0])
+
+
+def test_loads_bounded_inherited_change_contract() -> None:
+    request = load_inherited_change(Path("examples/inherited-change.json"))
+    assert request.source_urn == RAW
+    assert not request.change.quality_guard_enabled
+    assert request.context.schema_fields == ("billing_amount",)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        (lambda value: [], "malformed"),
+        (lambda value: {**value, "schema_version": 2}, "malformed"),
+        (lambda value: {**value, "change": []}, "proposal"),
+        (lambda value: {**value, "change": {}}, "proposal"),
+        (lambda value: {**value, "context": []}, "context is malformed"),
+        (lambda value: {**value, "context": {}}, "context is malformed"),
+        (lambda value: {**value, "source_urn": "bad"}, "DataHub URN"),
+        (lambda value: {**value, "incident_id": 7}, "text or null"),
+        (
+            lambda value: {
+                **value,
+                "context": {**value["context"], "schema_fields": None},
+            },
+            "context is invalid",
+        ),
+    ],
+)
+def test_rejects_malformed_inherited_change(tmp_path, mutation, message) -> None:
+    value = json.loads(Path("examples/inherited-change.json").read_text())
+    path = tmp_path / "request.json"
+    path.write_text(json.dumps(mutation(value)), encoding="utf-8")
+    with pytest.raises(ValueError, match=message):
+        load_inherited_change(path)
+
+
+def test_rejects_unreadable_invalid_and_oversized_inherited_change(tmp_path) -> None:
+    with pytest.raises(ValueError, match="invalid inherited-change"):
+        load_inherited_change(tmp_path / "missing")
+    invalid = tmp_path / "invalid.json"
+    invalid.write_text("not-json", encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid inherited-change"):
+        load_inherited_change(invalid)
+    oversized = tmp_path / "oversized.json"
+    oversized.write_text("x" * 2_000_001, encoding="utf-8")
+    with pytest.raises(ValueError, match="exceeds 2 MB"):
+        load_inherited_change(oversized)

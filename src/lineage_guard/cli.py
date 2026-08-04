@@ -11,10 +11,12 @@ from pathlib import Path
 from lineage_guard.adapters.mcp import DataHubMcpGraph, StdioMcpConfig, open_stdio_session
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
 from lineage_guard.chronos import build_chronos, build_demo_chronos, load_context_changes
+from lineage_guard.datahub_incidents import DataHubIncidentClient
 from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
 from lineage_guard.domain import QualitySignal, Severity
 from lineage_guard.enforcement import SignedWebhookConfig, SignedWebhookEnforcer
 from lineage_guard.events import load_quality_event
+from lineage_guard.immune_agent import InheritedMemoryAgent, load_inherited_change
 from lineage_guard.immune_memory import build_incident_memory
 from lineage_guard.proofgraph import build_demo_proofgraph, load_radar_weights
 from lineage_guard.recovery import (
@@ -41,6 +43,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--gms-url", help="DataHub GMS URL for MCP mode.")
     parser.add_argument("--source-urn", help="Source dataset URN for MCP mode.")
+    parser.add_argument(
+        "--datahub-graphql-url",
+        help="Optional DataHub /api/graphql URL for approved native Incident projection.",
+    )
+    parser.add_argument(
+        "--evaluate-change-file",
+        type=Path,
+        help="Evaluate a typed future change using immune memory retrieved from DataHub.",
+    )
     parser.add_argument(
         "--signal-file",
         help="Read a versioned quality event from this JSON file, or '-' for standard input.",
@@ -169,6 +180,12 @@ async def _run_mcp(args: argparse.Namespace) -> int:
     if (chronos_requested or proofgraph_requested) and not changes_file:
         raise SystemExit("live Chronos and ProofGuard require --changes-file")
     token = os.environ.get("DATAHUB_GMS_TOKEN")
+    graphql_url = getattr(args, "datahub_graphql_url", None)
+    inherited_file = getattr(args, "evaluate_change_file", None)
+    if graphql_url and not args.apply:
+        raise SystemExit("--datahub-graphql-url requires --apply approval.")
+    if inherited_file:
+        return await _run_inherited_change(args, token)
     signal_file = getattr(args, "signal_file", None)
     event = load_quality_event(signal_file) if signal_file else None
     source_urn = event.signal.asset_urn if event else args.source_urn
@@ -252,6 +269,12 @@ async def _run_mcp(args: argparse.Namespace) -> int:
             analyzer.apply_writeback(report, approved=True)
             graph.append_immune_memory(source_urn, memory)
             await graph.flush()
+            native_incident = None
+            if graphql_url:
+                native_incident = await asyncio.to_thread(
+                    DataHubIncidentClient(graphql_url, token).ensure_incident,
+                    report,
+                )
     payload = report.as_dict()
     payload["lineage_read_receipt"] = lineage_read.receipt.as_dict()
     payload["immune_memory"] = memory.as_dict()
@@ -265,6 +288,8 @@ async def _run_mcp(args: argparse.Namespace) -> int:
         ),
         "change_evidence_source": ("operator_supplied_bounded_file" if chronos else "not_supplied"),
     }
+    if args.apply and native_incident:
+        payload["datahub_incident"] = asdict(native_incident)
     if recovery:
         payload["recovery"] = recovery.as_dict()
     if chronos:
@@ -272,6 +297,36 @@ async def _run_mcp(args: argparse.Namespace) -> int:
     if proofgraph and proof_bundle:
         payload["proofgraph"] = proofgraph.as_dict()
         payload["proof_bundle"] = asdict(proof_bundle)
+    rendered = json.dumps(payload, indent=2)
+    if args.output:
+        args.output.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
+    return 0
+
+
+async def _run_inherited_change(args: argparse.Namespace, token: str | None) -> int:
+    if not args.gms_url or not token:
+        raise SystemExit("Inherited-change mode requires --gms-url and DATAHUB_GMS_TOKEN.")
+    request = load_inherited_change(args.evaluate_change_file)
+    if args.source_urn and args.source_urn != request.source_urn:
+        raise SystemExit("--source-urn does not match the inherited-change request.")
+    config = StdioMcpConfig(args.gms_url, token, enable_mutations=args.apply)
+    async with open_stdio_session(config) as session:
+        graph = await DataHubMcpGraph.load(session, request.source_urn)
+        payload = await InheritedMemoryAgent().evaluate(
+            graph,
+            request.source_urn,
+            request.change,
+            request.context,
+            approved=args.apply,
+            incident_id=request.incident_id,
+        )
+    payload["execution_context"] = {
+        "mode": "live_mcp_inherited_change",
+        "metadata_source": "datahub_mcp",
+        "live_datahub_connected": True,
+        "mutations_applied": bool(args.apply),
+    }
     rendered = json.dumps(payload, indent=2)
     if args.output:
         args.output.write_text(rendered + "\n", encoding="utf-8")

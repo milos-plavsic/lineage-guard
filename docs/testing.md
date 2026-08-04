@@ -45,6 +45,13 @@ first writes an incident record, the second retrieves it and blocks an unsafe ch
 reconstructs both the incident and its parent-linked prevention outcome. No in-process object is
 used for that handoff.
 
+Native-composition tests cover runtime Document capability negotiation, exact-digest retrieval,
+related-asset writes, malformed/incomplete Document search, fallback behavior, and semantic
+deduplication. Native Incident tests execute bounded GraphQL requests through a fake transport and
+cover idempotent discovery, authorization-safe configuration, malformed responses, oversized
+payloads, transport failures, and invalid URNs. The Agent B CLI is exercised independently in both
+proposal and approved modes.
+
 Proof construction is linear in the number of derived nodes and edges and rejects either collection
 above 10,000 items. A 1,000-iteration local check on the constrained Windows development machine,
 with allocation tracing enabled, measured 20.54 ms mean compilation and 1.16 MiB peak traced memory

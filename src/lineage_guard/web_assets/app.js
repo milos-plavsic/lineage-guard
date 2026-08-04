@@ -18,6 +18,17 @@ async function loadIncident() {
   text('memory-incident', `${data.immune_memory.incident.record_digest.slice(0, 18)}…`);
   text('memory-decision', data.immune_memory.decision.replaceAll('_', ' '));
   text('memory-outcome', `${data.immune_memory.prevention.record_digest.slice(0, 18)}…`);
+  document.getElementById('evaluate-inherited').addEventListener('click', () => {
+    const guardEnabled = document.getElementById('future-guard').value === 'true';
+    const evaluation = data.chronos.evaluations.find(
+      (item) => item.change.quality_guard_enabled === guardEnabled
+        && item.evaluated_context_sha256 === data.chronos.genome.context_sha256,
+    );
+    text(
+      'inherited-result',
+      `Agent B verified ${data.immune_memory.incident.record_digest.slice(0, 18)}… → ${evaluation.decision.replaceAll('_', ' ')}. ${evaluation.checks.find((check) => !check.passed)?.detail || 'Historical failure remains prevented.'}`,
+    );
+  });
   text('read-capability', receipt.capabilities.join(' · ').replaceAll('_', ' ').toLowerCase());
   text('read-source', receipt.readConsistency.source.toLowerCase().replaceAll('_', ' '));
   text('read-completeness', receipt.readConsistency.completeness.toLowerCase());

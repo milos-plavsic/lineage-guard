@@ -9,6 +9,8 @@ pinned by default so a new upstream release cannot silently change a judged buil
 - A least-privilege service account token.
 - `uvx` on `PATH`.
 - The `LineageGuard_Quarantined` tag created in DataHub before applying write-back.
+- Optional: a DataHub frontend `/api/graphql` endpoint and `Edit Incidents` privilege for native
+  Incident projection.
 
 Install the optional integration dependency:
 
@@ -60,6 +62,19 @@ are operator-supplied, versioned, bounded inputs whose origins are recorded in `
 The absence of `--apply` keeps mutation tools disabled at the MCP-server boundary. Adding `--apply`
 both enables those server tools and authorizes LineageGuard to invoke them. This double gate is
 intentional.
+
+When the server advertises `save_document` and `search_documents`, approved immune memories are
+stored as native Decision Documents related to the source asset. Otherwise LineageGuard uses its
+bounded description envelope. To additionally raise an idempotently discovered native Incident,
+provide `--datahub-graphql-url "$DATAHUB_FRONTEND_URL/api/graphql"` on the approved Agent A command.
+
+After Agent A exits, run a fresh Agent B process. Omit `--apply` for review-only evaluation:
+
+```bash
+lineage-guard --mode mcp --gms-url "$DATAHUB_GMS_URL" \
+  --evaluate-change-file examples/inherited-change.json \
+  --output inherited-evaluation.json
+```
 
 ## Failure behavior
 

@@ -8,9 +8,12 @@ from lineage_guard.adapters.mcp import (
     McpIntegrationError,
     _bounded_lineage_results,
     _confirms_exact_field_path,
+    _document_text,
     _tool_payload,
 )
 from lineage_guard.demo import BILLING, DEMOGRAPHICS, RAW, STAGING
+from lineage_guard.domain import Asset
+from lineage_guard.immune_memory import ImmuneMemoryRecord, MemoryRecordType, encode_memory
 
 
 def result(payload, *, is_error=False):
@@ -90,6 +93,109 @@ async def test_loads_normalized_snapshot_from_official_tools() -> None:
         graph.read_downstream_lineage(RAW, 6)
     with pytest.raises(ValueError, match="field scope"):
         graph.read_downstream_lineage(RAW, 5, field="billing_amount")
+
+
+@pytest.mark.asyncio
+async def test_native_document_memory_is_preferred_and_reconstructed() -> None:
+    record = ImmuneMemoryRecord.create(MemoryRecordType.INCIDENT, RAW, "incident-1", {})
+
+    class NativeSession(FakeSession):
+        def __init__(self):
+            super().__init__()
+            self.tools.tools.extend(
+                [SimpleNamespace(name="save_document"), SimpleNamespace(name="search_documents")]
+            )
+
+        async def call_tool(self, name, arguments):
+            if name == "search_documents":
+                self.calls.append((name, arguments))
+                return result({"searchResults": [{"entity": {"urn": "urn:li:document:memory-1"}}]})
+            if name == "get_entities" and arguments["urns"] == ["urn:li:document:memory-1"]:
+                self.calls.append((name, arguments))
+                return result(
+                    [
+                        {
+                            "urn": "urn:li:document:memory-1",
+                            "documentInfo": {"contents": {"text": encode_memory(record)}},
+                        }
+                    ]
+                )
+            return await super().call_tool(name, arguments)
+
+    session = NativeSession()
+    graph = await DataHubMcpGraph.load(session, RAW)
+    assert graph.get_immune_memories(RAW) == (record,)
+    graph.append_immune_memory(RAW, record)
+    assert not any(name == "save_document" for name, _ in graph._pending)
+    second = ImmuneMemoryRecord.create(
+        MemoryRecordType.PREVENTION_OUTCOME,
+        RAW,
+        "incident-1",
+        {},
+        parent_digest=record.record_digest,
+    )
+    graph.append_immune_memory(RAW, second)
+    await graph.flush()
+    save = next(arguments for name, arguments in session.calls if name == "save_document")
+    assert save["document_type"] == "Decision" and save["related_assets"] == [RAW]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("search_payload", "entity_payload", "message"),
+    [
+        ({"searchResults": "bad"}, None, "invalid"),
+        ({"searchResults": [{}]}, None, "malformed"),
+        (
+            {"searchResults": [{"entity": {"urn": "urn:li:document:one"}}]},
+            [],
+            "incomplete",
+        ),
+    ],
+)
+async def test_native_memory_search_fails_closed(search_payload, entity_payload, message) -> None:
+    class Session:
+        async def call_tool(self, name, arguments):
+            del arguments
+            return result(search_payload if name == "search_documents" else entity_payload)
+
+    with pytest.raises(McpIntegrationError, match=message):
+        await DataHubMcpGraph._load_memory_documents(Session(), RAW)
+
+
+@pytest.mark.asyncio
+async def test_native_memory_search_handles_no_documents() -> None:
+    class Session:
+        async def call_tool(self, name, arguments):
+            assert name == "search_documents" and arguments["num_results"] == 100
+            return result({"searchResults": []})
+
+    assert await DataHubMcpGraph._load_memory_documents(Session(), RAW) == ()
+
+
+def test_native_document_text_requires_supported_shape() -> None:
+    assert _document_text({"info": {"contents": {"text": "memory"}}}) == "memory"
+    with pytest.raises(McpIntegrationError, match="malformed"):
+        _document_text([])
+    with pytest.raises(McpIntegrationError, match="no textual"):
+        _document_text({"info": {}})
+
+
+def test_memory_merge_filters_foreign_subjects_and_duplicates() -> None:
+    record = ImmuneMemoryRecord.create(MemoryRecordType.INCIDENT, RAW, "incident", {})
+    foreign = ImmuneMemoryRecord.create(
+        MemoryRecordType.INCIDENT, "urn:li:dataset:foreign", "incident", {}
+    )
+    graph = DataHubMcpGraph(
+        FakeSession(),
+        {RAW: Asset(RAW, "raw", "")},
+        (),
+    )
+    graph._memory_documents = (
+        f"{encode_memory(foreign)}\n{encode_memory(record)}",
+        encode_memory(record),
+    )
+    assert graph.get_immune_memories(RAW) == (record,)
 
 
 @pytest.mark.asyncio

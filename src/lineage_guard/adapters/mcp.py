@@ -5,6 +5,7 @@ import os
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from hashlib import sha256
 from typing import Any, Protocol
 
 from lineage_guard.consistency import LineageRead, ReadConsistency, lineage_receipt
@@ -100,6 +101,7 @@ class DataHubMcpGraph:
     REQUIRED_WRITE_TOOLS = frozenset({"update_description", "add_tags"})
     FIELD_PATH_TOOL = "get_lineage_paths_between"
     MAX_FIELD_PATH_CHECKS = 20
+    NATIVE_MEMORY_TOOLS = frozenset({"save_document", "search_documents"})
 
     def __init__(
         self,
@@ -112,6 +114,8 @@ class DataHubMcpGraph:
         max_results: int = 0,
         source_field: str | None = None,
         consistency: ReadConsistency | None = None,
+        memory_documents: tuple[str, ...] = (),
+        native_memory: bool = False,
     ) -> None:
         self._session = session
         self._assets = dict(assets)
@@ -121,6 +125,8 @@ class DataHubMcpGraph:
         self._max_results = max_results
         self._source_field = source_field
         self._consistency = consistency or ReadConsistency()
+        self._memory_documents = memory_documents
+        self._native_memory = native_memory
         self._pending: list[tuple[str, dict[str, Any]]] = []
         self._completed: list[tuple[str, dict[str, Any]]] = []
 
@@ -194,6 +200,10 @@ class DataHubMcpGraph:
             raise McpIntegrationError(
                 f"DataHub returned incomplete entity context: {sorted(missing_entities)}"
             )
+        native_memory = available >= cls.NATIVE_MEMORY_TOOLS
+        memory_documents: tuple[str, ...] = ()
+        if native_memory:
+            memory_documents = await cls._load_memory_documents(session, source_urn)
         return cls(
             session,
             assets,
@@ -202,7 +212,35 @@ class DataHubMcpGraph:
             max_hops=max_hops,
             max_results=max_results,
             source_field=source_field,
+            memory_documents=memory_documents,
+            native_memory=native_memory,
         )
+
+    @staticmethod
+    async def _load_memory_documents(session: ToolSession, source_urn: str) -> tuple[str, ...]:
+        subject_key = sha256(source_urn.encode()).hexdigest()[:20]
+        result = await session.call_tool(
+            "search_documents",
+            {"query": f'"lineage-guard-memory-{subject_key}"', "num_results": 100},
+        )
+        payload = _tool_payload(result)
+        search_results = payload.get("searchResults", []) if isinstance(payload, Mapping) else []
+        if not isinstance(search_results, list) or len(search_results) > 100:
+            raise McpIntegrationError("DataHub returned invalid immune-memory document results")
+        urns = []
+        for item in search_results:
+            entity = item.get("entity") if isinstance(item, Mapping) else None
+            urn = entity.get("urn") if isinstance(entity, Mapping) else None
+            if not isinstance(urn, str) or not urn.startswith("urn:li:document:"):
+                raise McpIntegrationError("DataHub returned malformed immune-memory document")
+            urns.append(urn)
+        if not urns:
+            return ()
+        entities = _tool_payload(await session.call_tool("get_entities", {"urns": urns}))
+        values = entities if isinstance(entities, list) else [entities]
+        if len(values) != len(urns):
+            raise McpIntegrationError("DataHub returned incomplete immune-memory documents")
+        return tuple(_document_text(value) for value in values)
 
     @classmethod
     async def _exact_field_path_targets(
@@ -273,7 +311,16 @@ class DataHubMcpGraph:
         )
 
     def get_immune_memories(self, urn: str) -> tuple[ImmuneMemoryRecord, ...]:
-        return parse_memories(self.get_asset(urn).description)
+        asset = self.get_asset(urn)
+        descriptions = (*self._memory_documents, asset.description)
+        records = []
+        seen = set()
+        for description in descriptions:
+            for record in parse_memories(description):
+                if record.subject_urn == urn and record.record_digest not in seen:
+                    records.append(record)
+                    seen.add(record.record_digest)
+        return tuple(records)
 
     def append_immune_memory(self, urn: str, record: ImmuneMemoryRecord) -> None:
         if record.subject_urn != urn:
@@ -281,10 +328,24 @@ class DataHubMcpGraph:
         existing = self.get_immune_memories(urn)
         if record.record_digest in {item.record_digest for item in existing}:
             return
-        self._queue(
-            "update_description",
-            {"entity_urn": urn, "operation": "append", "description": encode_memory(record)},
-        )
+        block = encode_memory(record)
+        if self._native_memory:
+            subject_key = sha256(urn.encode()).hexdigest()[:20]
+            self._queue(
+                "save_document",
+                {
+                    "document_type": "Decision",
+                    "title": f"LineageGuard {record.record_type.value}: {record.incident_id}",
+                    "content": f"lineage-guard-memory-{subject_key}\n\n{block}",
+                    "topics": ["lineage-guard", "immune-memory", record.record_type.value],
+                    "related_assets": [urn],
+                },
+            )
+        else:
+            self._queue(
+                "update_description",
+                {"entity_urn": urn, "operation": "append", "description": block},
+            )
 
     def add_tag(self, urn: str, tag: str) -> None:
         if not tag.startswith("urn:li:tag:"):
@@ -300,7 +361,10 @@ class DataHubMcpGraph:
         if not self._pending:
             return
         available = {tool.name for tool in (await self._session.list_tools()).tools}
-        missing = self.REQUIRED_WRITE_TOOLS - available
+        required = set(self.REQUIRED_WRITE_TOOLS)
+        if any(name == "save_document" for name, _ in self._pending):
+            required.add("save_document")
+        missing = required - available
         if missing:
             raise McpIntegrationError(
                 "Mutation tools are unavailable. Set TOOLS_IS_MUTATION_ENABLED=true "
@@ -318,6 +382,17 @@ class DataHubMcpGraph:
                     f"{len(self._pending)} operation(s) remain retryable"
                 )
             self._completed.append(self._pending.pop(0))
+
+
+def _document_text(entity: Any) -> str:
+    if not isinstance(entity, Mapping):
+        raise McpIntegrationError("DataHub returned malformed immune-memory document content")
+    info = entity.get("documentInfo") or entity.get("info") or {}
+    contents = info.get("contents") if isinstance(info, Mapping) else None
+    text = contents.get("text") if isinstance(contents, Mapping) else None
+    if not isinstance(text, str):
+        raise McpIntegrationError("DataHub immune-memory document has no textual content")
+    return text
 
 
 def _bounded_lineage_results(payload: Any, max_results: int) -> list[Mapping[str, Any]]:
