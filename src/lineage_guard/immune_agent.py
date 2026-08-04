@@ -130,6 +130,7 @@ class InheritedMemoryAgent:
             "matching_incident_records": len(candidates),
             "chain_verification": chain.as_dict(),
             "context_source": "supplied" if context is not None else "fresh_datahub",
+            "evaluated_context": asdict(evaluated_context),
             "inherited_memory_digest": incident.record_digest,
             "evaluation": asdict(evaluation),
             "prevention_memory": outcome.as_dict(),
