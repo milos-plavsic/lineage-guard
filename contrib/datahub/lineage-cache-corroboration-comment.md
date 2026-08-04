@@ -1,6 +1,6 @@
 ## Independent MCP corroboration and agent-safety impact
 
-I independently observed the same empty-read failure family on DataHub GMS 1.6.0, DataHub CLI
+On 2026-08-02, I independently observed the same empty-read failure family on DataHub GMS 1.6.0, DataHub CLI
 1.6.0.17, and `mcp-server-datahub` 0.6.0 while building a lineage-aware incident agent.
 
 The MCP compact downstream column-lineage query returned empty for `billing_amount`, while:
