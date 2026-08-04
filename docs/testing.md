@@ -33,6 +33,11 @@ all five shared query operations, FastMCP tool registration/execution, CLI and a
 and unsigned authentication disclosure. Browser static tests assert the Trust Lens and Radar surface.
 The packaged-wheel smoke test executes the complete `--proofgraph` path.
 
+The live-path contract test feeds an MCP-derived report through operator-supplied recovery evidence,
+typed changes, custom Radar weights, Forge, Chronos, ProofGuard, and the complete artifact pack.
+Policy tests cover nested `ALL`/`ANY`, redundant supersets, policy reevaluation, and combinatorial
+bounds. Radar sensitivity tests prove that disclosed weight changes alter ranking predictably.
+
 Proof construction is linear in the number of derived nodes and edges and rejects either collection
 above 10,000 items. A 1,000-iteration local check on the constrained Windows development machine,
 with allocation tracing enabled, measured 20.54 ms mean compilation and 1.16 MiB peak traced memory

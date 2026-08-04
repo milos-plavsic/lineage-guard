@@ -58,6 +58,9 @@ and the integrity of DataHub write-back.
 | Proof substitution | Canonical hashes bind nodes, cuts, graph, report, certificate, and Genome | Bundle tamper tests |
 | Ranking manipulation | Transparent bounded factors; cost/privacy penalties; deterministic ordering | Radar tests and RFC |
 | Counterfactual abuse | Precomputed typed transitions only; no code or metadata mutation | Query-service and MCP tests |
+| Evidence-origin confusion | Persistent UI provenance banner and machine-readable execution context | Static/live path tests |
+| Policy combinatorial explosion | Monotone typed expressions; 10,000 candidate-cut bound | Exact-cut bound test |
+| Ranking policy substitution | Strict versioned weights, unknown-field rejection, visible factors | Radar contract/sensitivity tests |
 
 ## Residual risks
 

@@ -11,6 +11,9 @@ async function loadIncident() {
   if (!response.ok) response = await fetch('incident.json', { headers: { Accept: 'application/json' } });
   if (!response.ok) throw new Error(`Incident service returned ${response.status}`);
   const data = await response.json();
+  text('metadata-origin', data.provenance.metadata_source.replaceAll('_', ' '));
+  text('mutation-state', data.provenance.mutations_applied ? 'applied' : 'not applied');
+  text('proof-state', data.provenance.proof_authenticated ? 'authenticated' : 'integrity-valid · unsigned');
   text('incident-id', data.report.incident_id);
   text('overall-status', data.summary.status);
   text('affected-count', data.summary.affectedBranches);

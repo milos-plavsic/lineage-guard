@@ -5,6 +5,7 @@ import sqlite3
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from hashlib import sha256
+from pathlib import Path
 from typing import Any
 
 from lineage_guard.domain import IncidentReport
@@ -272,6 +273,35 @@ def demo_recovery_scenario() -> RecoveryScenario:
             RecoveryRow("patient-003", 8_000, "west"),
         ),
     )
+
+
+def load_recovery_scenario(path: Path) -> RecoveryScenario:
+    try:
+        if path.stat().st_size > 2_000_000:
+            raise ValueError("recovery scenario exceeds 2 MB")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict) or payload.get("schema_version") != 1:
+            raise ValueError("recovery scenario schema_version must be 1")
+        allowed = {"schema_version", "current", "trusted", "total_tolerance_cents"}
+        if set(payload) - allowed:
+            raise ValueError("recovery scenario contains unknown fields")
+        return RecoveryScenario(
+            tuple(_recovery_row(item) for item in payload.get("current", [])),
+            tuple(_recovery_row(item) for item in payload.get("trusted", [])),
+            payload.get("total_tolerance_cents", 0),
+        )
+    except (OSError, json.JSONDecodeError, TypeError, KeyError) as error:
+        raise ValueError("invalid recovery scenario") from error
+
+
+def _recovery_row(value: Any) -> RecoveryRow:
+    if not isinstance(value, dict) or set(value) != {
+        "record_id",
+        "billing_amount_cents",
+        "region",
+    }:
+        raise ValueError("recovery rows require record_id, billing_amount_cents, and region")
+    return RecoveryRow(value["record_id"], value["billing_amount_cents"], value["region"])
 
 
 def verify_certificate(certificate: RecoveryCertificate) -> bool:

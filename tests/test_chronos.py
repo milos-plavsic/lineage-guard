@@ -1,4 +1,5 @@
 from dataclasses import asdict, replace
+from pathlib import Path
 
 import pytest
 
@@ -12,8 +13,10 @@ from lineage_guard.chronos import (
     ChangeProposal,
     ImmunityContext,
     ImmunityStatus,
+    build_chronos,
     build_demo_chronos,
     demo_immunity_context,
+    load_context_changes,
     verify_passport,
 )
 from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
@@ -32,6 +35,45 @@ def evidence():
     report = IncidentAnalyzer(graph).analyze(negative_billing_signal())
     recovery = CounterfactualRecoveryLab().evaluate(report, demo_recovery_scenario())
     return report, recovery
+
+
+def test_loads_typed_changes_and_builds_non_demo_chronos() -> None:
+    report, recovery = evidence()
+    changes = load_context_changes(Path("examples/context-changes.json"))
+    bundle = build_chronos(report, recovery, demo_recovery_scenario(), changes)
+    assert [item.decision for item in bundle.evaluations] == [
+        ChangeDecision.BLOCKED,
+        ChangeDecision.ELIGIBLE_FOR_APPROVAL,
+        ChangeDecision.REVALIDATION_REQUIRED,
+    ]
+
+
+def test_change_contract_is_bounded_and_strict(tmp_path) -> None:
+    report, recovery = evidence()
+    with pytest.raises(ValueError, match="1 to 1000"):
+        build_chronos(report, recovery, demo_recovery_scenario(), ())
+    path = tmp_path / "changes.json"
+    path.write_text('{"schema_version":2}')
+    with pytest.raises(ValueError, match="schema_version"):
+        load_context_changes(path)
+    path.write_text('{"schema_version":1,"changes":"bad"}')
+    with pytest.raises(ValueError, match="malformed"):
+        load_context_changes(path)
+    path.write_text('{"schema_version":1,"changes":[{}]}')
+    with pytest.raises(ValueError, match="unknown or missing"):
+        load_context_changes(path)
+    path.write_text(
+        '{"schema_version":1,"changes":[{"change_id":"x","title":"x",'
+        '"quality_guard_enabled":true,"added_lineage_edges":"bad"}]}'
+    )
+    with pytest.raises(ValueError, match="must be a list"):
+        load_context_changes(path)
+    path.write_text("not-json")
+    with pytest.raises(ValueError, match="invalid change"):
+        load_context_changes(path)
+    path.write_bytes(b" " * 2_000_001)
+    with pytest.raises(ValueError, match="exceeds 2 MB"):
+        load_context_changes(path)
 
 
 def test_chronos_closes_the_contain_recover_prevent_loop() -> None:

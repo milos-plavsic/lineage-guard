@@ -1,4 +1,5 @@
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -9,11 +10,17 @@ from lineage_guard.domain import Action
 from lineage_guard.proof_service import ProofQueryService
 from lineage_guard.proofgraph import (
     EvidenceGapRadar,
+    PolicyExpression,
+    PolicyOperator,
     ProofBundle,
     ProofGraphEngine,
     ProofGuard,
+    RadarWeights,
     build_demo_proofgraph,
     build_proof_bundle,
+    evaluate_policy,
+    load_radar_weights,
+    minimal_sufficient_cuts,
     verify_proof_bundle,
 )
 from lineage_guard.recovery import CounterfactualRecoveryLab, demo_recovery_scenario
@@ -35,15 +42,17 @@ def test_proofgraph_derives_minimal_cuts_counterfactuals_and_gaps() -> None:
 
     assert len(graph.nodes) == 15 and len(graph.causal_cuts) == 3
     quarantine = next(cut for cut in graph.causal_cuts if ":quarantine:" in cut.decision_node_id)
-    assert quarantine.size == 4
+    assert quarantine.size == 3
     explanation = graph.explain(quarantine.decision_node_id)
-    assert len(explanation["evidence"]) == 4
+    assert len(explanation["evidence"]) == 3
     assert {item["resulting_action"] for item in explanation["counterfactuals"]} == {
         Action.CONTINUE,
         Action.MONITOR,
-        Action.REQUIRE_REVIEW,
     }
-    assert graph.evidence_gaps[0].gap_id.startswith("gap:governance:")
+    assert {item.gap_id.split(":")[1] for item in graph.evidence_gaps} == {
+        "freshness",
+        "governance",
+    }
     assert 0 <= graph.evidence_gaps[0].priority_score <= 100
     assert verify_proof_bundle(bundle, graph) and bundle.authenticated is False
 
@@ -116,7 +125,18 @@ def test_radar_handles_no_gaps_and_lineage_gap() -> None:
     )
     gaps = EvidenceGapRadar().rank(replace(report, decisions=(review,)))
     assert gaps[0].gap_id.startswith("gap:column-lineage:")
-    assert gaps[0].priority_score == 83
+    assert gaps[0].priority_score == 80
+
+    freshness_weights = RadarWeights(
+        uncertainty=0,
+        criticality=0,
+        freshness=100,
+        decisions_unlocked=0,
+        collection_cost=0,
+        privacy_risk=0,
+    )
+    ranked = EvidenceGapRadar(freshness_weights).rank(report)
+    assert ranked[0].gap_id.startswith("gap:freshness:")
 
 
 def test_graph_enforces_size_bound(monkeypatch) -> None:
@@ -131,3 +151,66 @@ def test_proofguard_fails_closed_if_internal_verification_fails(monkeypatch) -> 
     monkeypatch.setattr("lineage_guard.proofgraph.verify_proof_bundle", lambda *args: False)
     with pytest.raises(ValueError, match="failed integrity"):
         ProofGuard().compile(report, recovery, chronos)
+
+
+def test_exact_minimal_cut_engine_handles_nested_any_all_and_bounds(monkeypatch) -> None:
+    def leaf(name):
+        return PolicyExpression(name, PolicyOperator.EVIDENCE, name)
+
+    expression = PolicyExpression(
+        "root",
+        PolicyOperator.ALL,
+        children=(
+            leaf("signal"),
+            PolicyExpression("choice", PolicyOperator.ANY, children=(leaf("a"), leaf("b"))),
+        ),
+    )
+    assert minimal_sufficient_cuts(expression) == (("a", "signal"), ("b", "signal"))
+    assert evaluate_policy(expression, {"a", "signal"})
+    assert not evaluate_policy(expression, {"signal"})
+    redundant = PolicyExpression(
+        "redundant",
+        PolicyOperator.ANY,
+        children=(
+            leaf("a"),
+            PolicyExpression("both", PolicyOperator.ALL, children=(leaf("a"), leaf("b"))),
+        ),
+    )
+    assert minimal_sufficient_cuts(redundant) == (("a",),)
+    monkeypatch.setattr("lineage_guard.proofgraph.MAX_CUT_CANDIDATES", 1)
+    with pytest.raises(ValueError, match="cut safety bound"):
+        minimal_sufficient_cuts(expression)
+
+
+def test_policy_and_radar_configuration_validation() -> None:
+    with pytest.raises(ValueError, match="bounded"):
+        PolicyExpression("", PolicyOperator.EVIDENCE, "x")
+    with pytest.raises(ValueError, match="evidence expressions"):
+        PolicyExpression("bad", PolicyOperator.EVIDENCE)
+    with pytest.raises(ValueError, match="integer percentages"):
+        RadarWeights(uncertainty=True)
+    with pytest.raises(ValueError, match="sum to 100"):
+        RadarWeights(uncertainty=34)
+
+
+def test_loads_strict_radar_weights_and_derived_cut_guard(tmp_path, monkeypatch) -> None:
+    weights = load_radar_weights(Path("examples/radar-weights.json"))
+    assert weights == RadarWeights()
+    path = tmp_path / "weights.json"
+    path.write_text('{"schema_version":2}')
+    with pytest.raises(ValueError, match="schema_version"):
+        load_radar_weights(path)
+    path.write_text('{"schema_version":1,"uncertainty":100}')
+    with pytest.raises(ValueError, match="unknown or missing"):
+        load_radar_weights(path)
+    path.write_text("not-json")
+    with pytest.raises(ValueError, match="invalid Radar"):
+        load_radar_weights(path)
+    path.write_bytes(b" " * 64_001)
+    with pytest.raises(ValueError, match="exceeds 64 KB"):
+        load_radar_weights(path)
+
+    report, recovery, chronos = evidence()
+    monkeypatch.setattr("lineage_guard.proofgraph.evaluate_policy", lambda *args: False)
+    with pytest.raises(ValueError, match="does not satisfy"):
+        ProofGraphEngine().compile(report, recovery, chronos)

@@ -11,6 +11,16 @@ from lineage_guard.web import SECURITY_HEADERS, LineageGuardHandler, build_view_
 def test_dashboard_model_exposes_decisions_timeline_and_artifacts() -> None:
     model = build_view_model()
 
+    assert model["provenance"] == {
+        "execution_mode": "deterministic_fixture",
+        "metadata_source": "application_owned_datahub_shaped_fixture",
+        "live_datahub_connected": False,
+        "mutations_applied": False,
+        "proof_integrity_valid": True,
+        "proof_authenticated": False,
+        "approval_state": "not_requested",
+    }
+
     assert model["summary"] == {
         "status": "Contained",
         "affectedBranches": 1,

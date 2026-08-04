@@ -1,4 +1,5 @@
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -12,6 +13,7 @@ from lineage_guard.recovery import (
     RecoveryScenario,
     RecoveryVerdict,
     demo_recovery_scenario,
+    load_recovery_scenario,
     verify_certificate,
 )
 from lineage_guard.service import IncidentAnalyzer
@@ -20,6 +22,27 @@ from lineage_guard.service import IncidentAnalyzer
 def report():
     graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
     return IncidentAnalyzer(graph).analyze(negative_billing_signal())
+
+
+def test_loads_bounded_operator_recovery_evidence(tmp_path) -> None:
+    scenario = load_recovery_scenario(Path("examples/recovery-scenario.json"))
+    assert scenario == demo_recovery_scenario()
+    invalid = tmp_path / "invalid.json"
+    invalid.write_text('{"schema_version":2}')
+    with pytest.raises(ValueError, match="schema_version"):
+        load_recovery_scenario(invalid)
+    invalid.write_text('{"schema_version":1,"unknown":true}')
+    with pytest.raises(ValueError, match="unknown fields"):
+        load_recovery_scenario(invalid)
+    invalid.write_text('{"schema_version":1,"current":[{}],"trusted":[]}')
+    with pytest.raises(ValueError, match="recovery rows require"):
+        load_recovery_scenario(invalid)
+    invalid.write_text("not-json")
+    with pytest.raises(ValueError, match="invalid recovery"):
+        load_recovery_scenario(invalid)
+    invalid.write_bytes(b" " * 2_000_001)
+    with pytest.raises(ValueError, match="exceeds 2 MB"):
+        load_recovery_scenario(invalid)
 
 
 def test_counterfactual_lab_rejects_superficial_fix_and_certifies_safe_repair() -> None:

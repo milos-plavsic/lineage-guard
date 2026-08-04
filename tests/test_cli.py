@@ -45,7 +45,7 @@ def test_cli_runs_counterfactual_recovery_lab(tmp_path) -> None:
 
 
 def test_recovery_lab_rejects_live_mcp_mode() -> None:
-    with pytest.raises(SystemExit, match="deterministic demo scenario"):
+    with pytest.raises(SystemExit, match="recovery-scenario-file"):
         main(["--mode", "mcp", "--recovery-lab"])
 
 
@@ -72,8 +72,18 @@ def test_cli_compiles_temporal_immunity_pack(tmp_path) -> None:
 
 
 def test_chronos_rejects_live_mcp_mode() -> None:
-    with pytest.raises(SystemExit, match="deterministic demo scenarios"):
+    with pytest.raises(SystemExit, match="recovery-scenario-file"):
         main(["--mode", "mcp", "--chronos"])
+    with pytest.raises(SystemExit, match="changes-file"):
+        main(
+            [
+                "--mode",
+                "mcp",
+                "--chronos",
+                "--recovery-scenario-file",
+                "examples/recovery-scenario.json",
+            ]
+        )
 
 
 def test_cli_builds_complete_proofgraph_pack(tmp_path) -> None:
@@ -87,7 +97,7 @@ def test_cli_builds_complete_proofgraph_pack(tmp_path) -> None:
 
 
 def test_proofgraph_rejects_live_mcp_mode() -> None:
-    with pytest.raises(SystemExit, match="deterministic demo scenarios"):
+    with pytest.raises(SystemExit, match="recovery-scenario-file"):
         main(["--mode", "mcp", "--proofgraph"])
 
 

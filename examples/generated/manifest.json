@@ -68,19 +68,19 @@
     },
     {
       "path": "proofgraph/graphs/9edb78125e19.json",
-      "sha256": "6a6281705adc0b4a72cb321938c1c53e2109f312995d2260452e512576345454"
+      "sha256": "21cd928b0b3b95419a46db8a63218dcbed19e2076610dae6fe283076f7ba48a1"
     },
     {
       "path": "proofgraph/bundles/9edb78125e19.intoto.json",
-      "sha256": "3aab4ded0ba596b7796f014a6e52f15a5a1bc4d3cf1efe29b940961d4e1d861e"
+      "sha256": "b65368f9ac5f35e72caa875795fb43c24b5bf40b1ebb10b68e16bd22a8af6409"
     },
     {
       "path": "proofgraph/evidence-gaps.json",
-      "sha256": "e15be5045e2ae2496e9964da335ec94d9979a4853626dd1dc5235d8d83e62a1b"
+      "sha256": "ac29048d5cfce4aba3906c2dfcb4d6fd949638e227c664e388a856e284cab179"
     },
     {
       "path": "proofgraph/causal-cuts.json",
-      "sha256": "92060176fbfcacccb66688a981dd3da7cf9b3763300050ed399c5e50e35748fb"
+      "sha256": "4a686dff1284ce1684c7a903fe20b7a21481640824fed1c6df6aca674ee298ff"
     }
   ]
 }

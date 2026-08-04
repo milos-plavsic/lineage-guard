@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
 from lineage_guard.chronos import IN_TOTO_STATEMENT_V1, ChronosBundle
@@ -10,6 +12,7 @@ from lineage_guard.recovery import RecoveryBundle, canonical_sha256, verify_cert
 
 PROOF_BUNDLE_PREDICATE_V1 = "https://lineageguard.dev/attestations/proof-bundle/v1"
 MAX_GRAPH_ITEMS = 10_000
+MAX_CUT_CANDIDATES = 10_000
 
 
 class ProofNodeKind(StrEnum):
@@ -24,6 +27,27 @@ class ProofRelation(StrEnum):
     USED = "used"
     GENERATED = "generated"
     DERIVED_FROM = "derived_from"
+
+
+class PolicyOperator(StrEnum):
+    EVIDENCE = "evidence"
+    ALL = "all"
+    ANY = "any"
+
+
+@dataclass(frozen=True, slots=True)
+class PolicyExpression:
+    expression_id: str
+    operator: PolicyOperator
+    evidence_node_id: str | None = None
+    children: tuple[PolicyExpression, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not self.expression_id or len(self.expression_id) > 256:
+            raise ValueError("policy expression IDs must be bounded non-empty text")
+        leaf = self.operator == PolicyOperator.EVIDENCE
+        if leaf != (self.evidence_node_id is not None) or leaf == bool(self.children):
+            raise ValueError("evidence expressions have one evidence ID; groups have children")
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +96,30 @@ class EvidenceGap:
     collection_cost: int
     privacy_risk: int
     priority_score: int
+    scoring_factors: tuple[tuple[str, int], ...]
+
+
+@dataclass(frozen=True, slots=True)
+class RadarWeights:
+    uncertainty: int = 35
+    criticality: int = 30
+    freshness: int = 15
+    decisions_unlocked: int = 10
+    collection_cost: int = 7
+    privacy_risk: int = 3
+
+    def __post_init__(self) -> None:
+        values = asdict(self).values()
+        if any(
+            isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= 100
+            for value in values
+        ):
+            raise ValueError("Radar weights must be integer percentages from 0 to 100")
+        if sum(values) != 100:
+            raise ValueError("Radar weights must sum to 100")
+
+
+DEFAULT_RADAR_WEIGHTS = RadarWeights()
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,6 +162,9 @@ class ProofGraph:
 
 
 class ProofGraphEngine:
+    def __init__(self, radar_weights: RadarWeights | None = None) -> None:
+        self._radar_weights = radar_weights
+
     def compile(
         self,
         report: IncidentReport,
@@ -166,7 +217,7 @@ class ProofGraphEngine:
             )
         )
         edges.append(ProofEdge(recovery_id, genome_id, ProofRelation.USED))
-        gaps = EvidenceGapRadar().rank(report)
+        gaps = EvidenceGapRadar(self._radar_weights).rank(report)
         if len(nodes) > MAX_GRAPH_ITEMS or len(edges) > MAX_GRAPH_ITEMS:
             raise ValueError("proof graph exceeds the 10000-item safety bound")
         body = {
@@ -252,7 +303,6 @@ class ProofGraphEngine:
                 ProofNodeKind.RULE,
                 "selective-containment-policy-v1",
                 "lineageguard-sentinel",
-                decisive=True,
             ),
             _node(
                 decision_id,
@@ -266,11 +316,22 @@ class ProofGraphEngine:
             ProofEdge(lineage_id, policy_id, ProofRelation.USED),
             ProofEdge(policy_id, decision_id, ProofRelation.GENERATED),
         ]
-        evidence_ids = [signal_id, lineage_id, policy_id]
+        evidence_ids = [signal_id, lineage_id]
         if decision.action == Action.QUARANTINE:
             branch_edges.append(ProofEdge(impact_id, policy_id, ProofRelation.USED))
             evidence_ids.append(impact_id)
-        evidence_ids = sorted(evidence_ids)
+        expression = PolicyExpression(
+            policy_id,
+            PolicyOperator.ALL,
+            children=tuple(
+                PolicyExpression(f"{policy_id}:{index}", PolicyOperator.EVIDENCE, node_id)
+                for index, node_id in enumerate(evidence_ids)
+            ),
+        )
+        evidence_ids = list(minimal_sufficient_cuts(expression)[0])
+        available = set(evidence_ids)
+        if not evaluate_policy(expression, available):
+            raise ValueError("derived causal cut does not satisfy its policy")
         cut_body = {"decision_node_id": decision_id, "evidence_node_ids": evidence_ids}
         cut = CausalCut(
             decision_id, tuple(evidence_ids), len(evidence_ids), canonical_sha256(cut_body)
@@ -289,12 +350,6 @@ class ProofGraphEngine:
                 resulting,
                 f"Without this lineage claim, fail closed from {decision.action} to {resulting}.",
             ),
-            Counterfactual(
-                policy_id,
-                decision.action,
-                Action.REQUIRE_REVIEW,
-                "Without the governing policy, automation has no authority and requires review.",
-            ),
         ]
         if decision.action == Action.QUARANTINE:
             counterfactuals.append(
@@ -309,63 +364,127 @@ class ProofGraphEngine:
 
 
 class EvidenceGapRadar:
+    def __init__(self, weights: RadarWeights | None = None) -> None:
+        self._weights = weights or DEFAULT_RADAR_WEIGHTS
+
     def rank(self, report: IncidentReport) -> tuple[EvidenceGap, ...]:
         gaps = []
         for decision in report.decisions:
             if decision.action not in {Action.MONITOR, Action.REQUIRE_REVIEW}:
                 continue
-            uncertainty = {
+            base_uncertainty = {
                 EvidenceStrength.CONFIRMED_DEPENDENCY: 35,
                 EvidenceStrength.METADATA_INDICATION: 70,
                 EvidenceStrength.INSUFFICIENT: 100,
                 EvidenceStrength.CONFIRMED_EXCLUSION: 0,
             }[decision.evidence_strength]
             criticality = min(100, decision.risk_score)
-            freshness = 80 if decision.distance <= 1 else 60
-            cost = 35 if decision.evidence_strength == EvidenceStrength.CONFIRMED_DEPENDENCY else 55
             privacy = 20 if "clinical" in " ".join(decision.asset.owners).casefold() else 10
-            unlocked = 1
-            score = round(
-                0.35 * uncertainty
-                + 0.30 * criticality
-                + 0.15 * freshness
-                + 0.10 * (unlocked * 100)
-                - 0.07 * cost
-                - 0.03 * privacy
-            )
             needs_governance = decision.evidence_strength == EvidenceStrength.CONFIRMED_DEPENDENCY
-            gap_kind = "governance" if needs_governance else "column-lineage"
-            gap_id = f"gap:{gap_kind}:{canonical_sha256(decision.asset.urn)[:12]}"
-            title = (
-                f"Resolve business impact classification for {decision.asset.name}"
-                if needs_governance
-                else f"Resolve exact field lineage for {decision.asset.name}"
-            )
-            recommendation = (
-                f"Add an authoritative owner, criticality, and concern classification for "
-                f"{decision.asset.name}."
+            definitions = (
+                (
+                    (
+                        "governance",
+                        f"Resolve business impact classification for {decision.asset.name}",
+                        f"Add authoritative criticality and concern classification for "
+                        f"{decision.asset.name}.",
+                        base_uncertainty,
+                        35,
+                        50,
+                    ),
+                    (
+                        "freshness",
+                        f"Prove context freshness for {decision.asset.name}",
+                        "Record observation time and enforce a governed maximum evidence age.",
+                        max(25, base_uncertainty - 20),
+                        25,
+                        100,
+                    ),
+                )
                 if needs_governance
                 else (
-                    f"Ingest complete column lineage from {report.signal.field} to "
-                    f"{decision.asset.name}, including explicit negative evidence."
+                    (
+                        "column-lineage",
+                        f"Resolve exact field lineage for {decision.asset.name}",
+                        f"Ingest complete column lineage from {report.signal.field} to "
+                        f"{decision.asset.name}, including explicit negative evidence.",
+                        base_uncertainty,
+                        55,
+                        60,
+                    ),
+                    (
+                        "completeness",
+                        f"Attest lineage completeness for {decision.asset.name}",
+                        "Publish an authenticated completeness assertion for the observed "
+                        "lineage scope.",
+                        max(30, base_uncertainty - 15),
+                        45,
+                        90,
+                    ),
                 )
             )
-            gaps.append(
-                EvidenceGap(
-                    gap_id,
-                    decision.asset.urn,
-                    title,
-                    recommendation,
-                    unlocked,
-                    uncertainty,
-                    criticality,
-                    freshness,
-                    cost,
-                    privacy,
-                    max(0, min(100, score)),
+            for gap_kind, title, recommendation, uncertainty, cost, gap_freshness in definitions:
+                gaps.append(
+                    self._gap(
+                        decision,
+                        gap_kind,
+                        title,
+                        recommendation,
+                        uncertainty,
+                        criticality,
+                        gap_freshness,
+                        cost,
+                        privacy,
+                    )
                 )
-            )
         return tuple(sorted(gaps, key=lambda item: (-item.priority_score, item.gap_id)))
+
+    def _gap(
+        self,
+        decision: BranchDecision,
+        kind: str,
+        title: str,
+        recommendation: str,
+        uncertainty: int,
+        criticality: int,
+        freshness: int,
+        cost: int,
+        privacy: int,
+    ) -> EvidenceGap:
+        factors = (
+            ("uncertainty", uncertainty),
+            ("criticality", criticality),
+            ("freshness", freshness),
+            ("decisions_unlocked", 100),
+            ("collection_cost", cost),
+            ("privacy_risk", privacy),
+        )
+        weights = self._weights
+        score = round(
+            (
+                weights.uncertainty * uncertainty
+                + weights.criticality * criticality
+                + weights.freshness * freshness
+                + weights.decisions_unlocked * 100
+                - weights.collection_cost * cost
+                - weights.privacy_risk * privacy
+            )
+            / 100
+        )
+        return EvidenceGap(
+            f"gap:{kind}:{canonical_sha256(decision.asset.urn)[:12]}",
+            decision.asset.urn,
+            title,
+            recommendation,
+            1,
+            uncertainty,
+            criticality,
+            freshness,
+            cost,
+            privacy,
+            max(0, min(100, score)),
+            factors,
+        )
 
 
 def build_proof_bundle(
@@ -442,6 +561,34 @@ def _without_lineage(decision: BranchDecision) -> Action:
     return Action.REQUIRE_REVIEW
 
 
+def minimal_sufficient_cuts(expression: PolicyExpression) -> tuple[tuple[str, ...], ...]:
+    """Return every subset-minimal sufficient evidence set for a bounded monotone expression."""
+    if expression.operator == PolicyOperator.EVIDENCE:
+        return ((expression.evidence_node_id or "",),)
+    child_cuts = [minimal_sufficient_cuts(child) for child in expression.children]
+    candidates: list[frozenset[str]] = []
+    if expression.operator == PolicyOperator.ANY:
+        candidates = [frozenset(cut) for cuts in child_cuts for cut in cuts]
+    else:
+        candidates = [frozenset()]
+        for cuts in child_cuts:
+            candidates = [base | frozenset(cut) for base in candidates for cut in cuts]
+            if len(candidates) > MAX_CUT_CANDIDATES:
+                raise ValueError("policy expression exceeds the 10000-cut safety bound")
+    minimal: list[frozenset[str]] = []
+    for candidate in sorted(set(candidates), key=lambda item: (len(item), tuple(sorted(item)))):
+        if not any(existing <= candidate for existing in minimal):
+            minimal.append(candidate)
+    return tuple(tuple(sorted(item)) for item in minimal)
+
+
+def evaluate_policy(expression: PolicyExpression, available_evidence: set[str]) -> bool:
+    if expression.operator == PolicyOperator.EVIDENCE:
+        return (expression.evidence_node_id or "") in available_evidence
+    outcomes = [evaluate_policy(child, available_evidence) for child in expression.children]
+    return any(outcomes) if expression.operator == PolicyOperator.ANY else all(outcomes)
+
+
 def _graph_digest(graph: ProofGraph) -> str:
     return canonical_sha256(
         {
@@ -459,13 +606,16 @@ def _graph_digest(graph: ProofGraph) -> str:
 class ProofGuard:
     """Fail-closed facade that compiles and verifies cross-pillar proof-carrying metadata."""
 
+    def __init__(self, radar_weights: RadarWeights | None = None) -> None:
+        self._radar_weights = radar_weights
+
     def compile(
         self,
         report: IncidentReport,
         recovery: RecoveryBundle,
         chronos: ChronosBundle,
     ) -> tuple[ProofGraph, ProofBundle]:
-        graph = ProofGraphEngine().compile(report, recovery, chronos)
+        graph = ProofGraphEngine(self._radar_weights).compile(report, recovery, chronos)
         bundle = build_proof_bundle(report, recovery, chronos, graph)
         if not verify_proof_bundle(bundle, graph):
             raise ValueError("compiled Proof Bundle failed integrity verification")
@@ -473,6 +623,23 @@ class ProofGuard:
 
 
 def build_demo_proofgraph(
-    report: IncidentReport, recovery: RecoveryBundle, chronos: ChronosBundle
+    report: IncidentReport,
+    recovery: RecoveryBundle,
+    chronos: ChronosBundle,
+    radar_weights: RadarWeights | None = None,
 ) -> tuple[ProofGraph, ProofBundle]:
-    return ProofGuard().compile(report, recovery, chronos)
+    return ProofGuard(radar_weights).compile(report, recovery, chronos)
+
+
+def load_radar_weights(path: Path) -> RadarWeights:
+    try:
+        if path.stat().st_size > 64_000:
+            raise ValueError("Radar weights document exceeds 64 KB")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict) or payload.pop("schema_version", None) != 1:
+            raise ValueError("Radar weights schema_version must be 1")
+        if set(payload) != set(asdict(DEFAULT_RADAR_WEIGHTS)):
+            raise ValueError("Radar weights contain unknown or missing fields")
+        return RadarWeights(**payload)
+    except (OSError, json.JSONDecodeError, TypeError) as error:
+        raise ValueError("invalid Radar weights document") from error

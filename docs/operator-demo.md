@@ -4,6 +4,11 @@ The dashboard presents the same deterministic containment, counterfactual recove
 immunity, and artifacts exposed by the CLI. It is a judge-facing demonstration and an operator
 decision aid, not a production control plane.
 
+A persistent amber provenance banner identifies the hosted view as an application-owned
+DataHub-shaped fixture with no live connection or applied mutation. It separately reports metadata
+origin, mutation state, proof integrity, and authentication. Live MCP JSON uses `execution_context`
+to identify DataHub metadata and separately supplied recovery/change evidence.
+
 ```bash
 uv sync --extra dev
 uv run lineage-guard-web

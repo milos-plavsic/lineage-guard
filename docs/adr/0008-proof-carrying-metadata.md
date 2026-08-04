@@ -17,14 +17,16 @@ LineageGuard constructs a bounded immutable derivation DAG. Nodes are observatio
 decisions, or proofs. Typed edges map to W3C PROV concepts. The decision and explanation are projections
 of this same graph.
 
-For every branch decision, the engine computes a minimal Causal Cut: the smallest evidence set
-sufficient under the encoded policy. Because the current policy is a bounded monotone conjunction,
-the exact cut is computed during derivation without an exponential search. Every decisive input has a
-precomputed, typed, fail-closed counterfactual. No arbitrary code is evaluated.
+For every branch decision, the engine computes all subset-minimal sufficient evidence sets from a
+validated bounded monotone policy expression supporting nested `ALL` and `ANY`. Candidate expansion
+is capped at 10,000 cuts. The selected Causal Cut is policy-reevaluated before publication. Every
+decisive input has a typed, fail-closed counterfactual. No arbitrary code is evaluated.
 
-Evidence Gap Radar ranks unresolved decisions using explicit factors: uncertainty reduction,
-criticality, freshness need, decisions unlocked, collection cost, and privacy risk. Scores are bounded
-to 0–100 and deterministically tie-broken. Recommendations never authorize continuation.
+Evidence Gap Radar emits independently actionable governance, freshness, column-lineage, and
+completeness gaps. It uses explicit factors: uncertainty reduction, criticality, freshness need,
+decisions unlocked, collection cost, and privacy risk. Versioned operator-supplied weights must sum
+to 100; scores are bounded and deterministically tie-broken. Recommendations never authorize
+continuation.
 
 The portable Proof Bundle uses the in-toto Statement v1 shape and binds the Sentinel report, Forge
 certificate, Chronos Genome, ProofGraph, and all causal cuts. It is unsigned in the demo and therefore

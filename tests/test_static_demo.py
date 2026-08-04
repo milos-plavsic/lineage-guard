@@ -25,6 +25,7 @@ def test_static_demo_is_self_contained_and_integrity_manifested(tmp_path) -> Non
     assert 'id="immunity-coverage"' in html
     assert 'id="decision-select"' in html
     assert 'id="evidence-gaps"' in html
+    assert 'id="provenance-title"' in html
     assert incident["summary"]["reviewBranches"] == 1
     assert incident["recovery"]["evaluations"][0]["verdict"] == "rejected"
     assert incident["recovery"]["evaluations"][1]["verdict"] == "verified"

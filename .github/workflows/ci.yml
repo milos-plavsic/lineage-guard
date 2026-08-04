@@ -39,6 +39,9 @@ jobs:
         run: |
           wheel=$(find dist -name '*.whl' -print -quit)
           uv run --isolated --no-project --with "$wheel" lineage-guard --proofgraph \
+            --recovery-scenario-file examples/recovery-scenario.json \
+            --changes-file examples/context-changes.json \
+            --radar-weights-file examples/radar-weights.json \
             --output smoke-report.json --artifacts-dir smoke-artifacts
           test -s smoke-report.json
           test -s smoke-artifacts/recovery/evaluations.json

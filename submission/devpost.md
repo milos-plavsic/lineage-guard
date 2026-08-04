@@ -54,6 +54,11 @@ Evidence Gap Radar ranks exactly which DataHub context improvement would unlock 
 Five read-only MCP tools expose these proofs to other agents, while one portable unsigned in-toto
 Proof Bundle binds containment, recovery, prevention, and every cut.
 
+The same chain is available in live MCP mode: DataHub supplies the incident graph and governance
+context, while operators provide versioned recovery rows and typed future changes that cannot be
+safely inferred. Output provenance distinguishes live metadata, supplied evidence, proposed
+mutations, integrity validity, and unsigned authentication state.
+
 ## How we built it
 
 The Python domain core is deterministic and transport-independent. A durable agent state machine

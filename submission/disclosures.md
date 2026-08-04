@@ -27,5 +27,8 @@
 - Chronos evaluates bounded, application-owned change proposals in the deterministic demo. It does
   not execute arbitrary pull-request code, and its DataHub immunity write-back is an approval-gated
   proposal rather than a claimed live mutation.
-- Evidence Gap Radar uses disclosed application-owned weights and deterministic demo context. It is
-  advisory, does not claim universal calibration, and never grants continuation or mutation authority.
+- Evidence Gap Radar uses disclosed default or versioned operator-supplied weights. It is advisory,
+  does not claim universal calibration, and never grants continuation or mutation authority.
+- In live MCP mode, incident metadata comes from DataHub; recovery rows and future change proposals
+  are separately supplied bounded evidence because LineageGuard does not infer them from catalog
+  context. Every output records these origins.

@@ -308,12 +308,45 @@ async def test_mcp_cli_complete_flow(tmp_path, monkeypatch, capsys) -> None:
         artifacts_dir=artifacts,
         output=output,
         enforcement_webhook="http://localhost/hook",
+        recovery_lab=False,
+        chronos=False,
+        proofgraph=False,
+        recovery_scenario_file=None,
+        changes_file=None,
     )
     assert await cli._run_mcp(args) == 0
     assert configs[-1].enable_mutations is True
     assert output.is_file() and (artifacts / "manifest.json").is_file()
     assert graph.flushed
     assert enforced
+
+    args.apply = False
+    args.enforcement_webhook = None
+    args.recovery_lab = True
+    args.recovery_scenario_file = Path("examples/recovery-scenario.json")
+    args.output = tmp_path / "recovery-report.json"
+    args.artifacts_dir = tmp_path / "recovery-artifacts"
+    assert await cli._run_mcp(args) == 0
+    assert json.loads(args.output.read_text())["recovery"]["certificate"]
+
+    args.recovery_lab = False
+    args.chronos = True
+    args.changes_file = Path("examples/context-changes.json")
+    args.output = tmp_path / "chronos-report.json"
+    args.artifacts_dir = tmp_path / "chronos-artifacts"
+    assert await cli._run_mcp(args) == 0
+    assert json.loads(args.output.read_text())["chronos"]["genome"]
+
+    args.chronos = False
+    args.proofgraph = True
+    args.radar_weights_file = Path("examples/radar-weights.json")
+    args.output = tmp_path / "full-report.json"
+    args.artifacts_dir = tmp_path / "full-artifacts"
+    assert await cli._run_mcp(args) == 0
+    full = json.loads(args.output.read_text())
+    assert full["execution_context"]["mode"] == "live_mcp"
+    assert full["proofgraph"]["causal_cuts"]
+    assert (args.artifacts_dir / "proofgraph" / "causal-cuts.json").is_file()
     assert "incident_id" in capsys.readouterr().out
 
     args.apply = False

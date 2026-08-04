@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "changes": [
+    {
+      "change_id": "pr-unsafe-guard-removal",
+      "title": "Remove the billing quality guard",
+      "quality_guard_enabled": false,
+      "added_lineage_edges": []
+    },
+    {
+      "change_id": "pr-safe-guard-preserved",
+      "title": "Preserve the billing quality guard",
+      "quality_guard_enabled": true,
+      "added_lineage_edges": []
+    },
+    {
+      "change_id": "pr-context-drift",
+      "title": "Add a new downstream ML dependency",
+      "quality_guard_enabled": true,
+      "added_lineage_edges": [
+        "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.raw_patients,PROD)->urn:li:dataset:new_ml_feature"
+      ]
+    }
+  ]
+}

@@ -42,6 +42,15 @@ def build_view_model() -> dict[str, Any]:
         item.action in {Action.MONITOR, Action.REQUIRE_REVIEW} for item in report.decisions
     )
     return {
+        "provenance": {
+            "execution_mode": "deterministic_fixture",
+            "metadata_source": "application_owned_datahub_shaped_fixture",
+            "live_datahub_connected": False,
+            "mutations_applied": False,
+            "proof_integrity_valid": True,
+            "proof_authenticated": False,
+            "approval_state": "not_requested",
+        },
         "report": report.as_dict(),
         "summary": {
             "status": "Contained",

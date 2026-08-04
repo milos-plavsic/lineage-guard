@@ -41,6 +41,22 @@ lineage-guard \
   --output incident-report.json
 ```
 
+Run the full proof pipeline from the same live MCP-derived report by supplying bounded, reviewable
+recovery evidence and typed change proposals:
+
+```bash
+lineage-guard --mode mcp --gms-url "$DATAHUB_GMS_URL" --signal-file quality-event.json \
+  --recovery-lab --chronos --proofgraph \
+  --recovery-scenario-file examples/recovery-scenario.json \
+  --changes-file examples/context-changes.json \
+  --radar-weights-file examples/radar-weights.json \
+  --output live-proof-report.json --artifacts-dir live-proof-pack
+```
+
+The incident report, assets, lineage, owners, tags, and risk decisions in this path come from live
+DataHub MCP. Recovery rows and future changes cannot be inferred safely from catalog metadata; they
+are operator-supplied, versioned, bounded inputs whose origins are recorded in `execution_context`.
+
 The absence of `--apply` keeps mutation tools disabled at the MCP-server boundary. Adding `--apply`
 both enables those server tools and authorizes LineageGuard to invoke them. This double gate is
 intentional.

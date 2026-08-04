@@ -2,17 +2,82 @@
   "schema_version": 1,
   "evidence_gaps": [
     {
+      "gap_id": "gap:freshness:db28d5374eee",
+      "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)",
+      "title": "Prove context freshness for staging_patients",
+      "recommended_action": "Record observation time and enforce a governed maximum evidence age.",
+      "decisions_unlocked": 1,
+      "uncertainty_reduction": 25,
+      "criticality": 85,
+      "freshness_need": 100,
+      "collection_cost": 25,
+      "privacy_risk": 10,
+      "priority_score": 57,
+      "scoring_factors": [
+        [
+          "uncertainty",
+          25
+        ],
+        [
+          "criticality",
+          85
+        ],
+        [
+          "freshness",
+          100
+        ],
+        [
+          "decisions_unlocked",
+          100
+        ],
+        [
+          "collection_cost",
+          25
+        ],
+        [
+          "privacy_risk",
+          10
+        ]
+      ]
+    },
+    {
       "gap_id": "gap:governance:db28d5374eee",
       "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)",
       "title": "Resolve business impact classification for staging_patients",
-      "recommended_action": "Add an authoritative owner, criticality, and concern classification for staging_patients.",
+      "recommended_action": "Add authoritative criticality and concern classification for staging_patients.",
       "decisions_unlocked": 1,
       "uncertainty_reduction": 35,
       "criticality": 85,
-      "freshness_need": 80,
+      "freshness_need": 50,
       "collection_cost": 35,
       "privacy_risk": 10,
-      "priority_score": 57
+      "priority_score": 52,
+      "scoring_factors": [
+        [
+          "uncertainty",
+          35
+        ],
+        [
+          "criticality",
+          85
+        ],
+        [
+          "freshness",
+          50
+        ],
+        [
+          "decisions_unlocked",
+          100
+        ],
+        [
+          "collection_cost",
+          35
+        ],
+        [
+          "privacy_risk",
+          10
+        ]
+      ]
     }
   ]
 }

@@ -10,13 +10,17 @@ from pathlib import Path
 
 from lineage_guard.adapters.mcp import DataHubMcpGraph, StdioMcpConfig, open_stdio_session
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
-from lineage_guard.chronos import build_demo_chronos
+from lineage_guard.chronos import build_chronos, build_demo_chronos, load_context_changes
 from lineage_guard.demo import assets, edges, field_dependencies, negative_billing_signal
 from lineage_guard.domain import QualitySignal, Severity
 from lineage_guard.enforcement import SignedWebhookConfig, SignedWebhookEnforcer
 from lineage_guard.events import load_quality_event
-from lineage_guard.proofgraph import build_demo_proofgraph
-from lineage_guard.recovery import CounterfactualRecoveryLab, demo_recovery_scenario
+from lineage_guard.proofgraph import build_demo_proofgraph, load_radar_weights
+from lineage_guard.recovery import (
+    CounterfactualRecoveryLab,
+    demo_recovery_scenario,
+    load_recovery_scenario,
+)
 from lineage_guard.remediation import RemediationGenerator
 from lineage_guard.service import IncidentAnalyzer
 
@@ -58,6 +62,21 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Build causal proofs, ranked evidence gaps, and a portable Proof Bundle.",
     )
+    parser.add_argument(
+        "--recovery-scenario-file",
+        type=Path,
+        help="Bounded trusted/current evidence required for non-demo recovery.",
+    )
+    parser.add_argument(
+        "--changes-file",
+        type=Path,
+        help="Bounded typed changes required for non-demo Chronos and ProofGuard.",
+    )
+    parser.add_argument(
+        "--radar-weights-file",
+        type=Path,
+        help="Optional versioned Evidence Gap Radar weights; defaults remain explicit.",
+    )
     parser.add_argument("--field", default="billing_amount", help="Failing field name.")
     parser.add_argument(
         "--concern",
@@ -80,18 +99,32 @@ def main(argv: Sequence[str] | None = None) -> int:
     graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
     analyzer = IncidentAnalyzer(graph)
     report = analyzer.analyze(negative_billing_signal())
+    scenario = (
+        load_recovery_scenario(args.recovery_scenario_file)
+        if args.recovery_scenario_file
+        else demo_recovery_scenario()
+    )
     recovery = (
-        CounterfactualRecoveryLab().evaluate(report, demo_recovery_scenario())
-        if args.recovery_lab or args.chronos or args.proofgraph
+        CounterfactualRecoveryLab().evaluate(report, scenario)
+        if (args.recovery_lab or args.chronos or args.proofgraph)
         else None
     )
     chronos = (
-        build_demo_chronos(report, recovery)
+        (
+            build_chronos(report, recovery, scenario, load_context_changes(args.changes_file))
+            if args.changes_file
+            else build_demo_chronos(report, recovery)
+        )
         if (args.chronos or args.proofgraph) and recovery
         else None
     )
     proofgraph, proof_bundle = (
-        build_demo_proofgraph(report, recovery, chronos)
+        build_demo_proofgraph(
+            report,
+            recovery,
+            chronos,
+            load_radar_weights(args.radar_weights_file) if args.radar_weights_file else None,
+        )
         if args.proofgraph and recovery and chronos
         else (None, None)
     )
@@ -102,6 +135,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.apply:
         analyzer.apply_writeback(report, approved=True)
     payload = report.as_dict()
+    payload["execution_context"] = {
+        "mode": "deterministic_fixture",
+        "metadata_source": "application_owned_fixture",
+        "live_datahub_connected": False,
+        "mutations_applied": bool(args.apply),
+    }
     if recovery is not None:
         payload["recovery"] = recovery.as_dict()
     if chronos is not None:
@@ -117,14 +156,17 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 async def _run_mcp(args: argparse.Namespace) -> int:
-    if (
-        getattr(args, "recovery_lab", False)
-        or getattr(args, "chronos", False)
-        or getattr(args, "proofgraph", False)
-    ):
-        raise SystemExit(
-            "recovery, Chronos, and ProofGraph use deterministic demo scenarios; select --mode demo"
-        )
+    recovery_lab = getattr(args, "recovery_lab", False)
+    chronos_requested = getattr(args, "chronos", False)
+    proofgraph_requested = getattr(args, "proofgraph", False)
+    scenario_file = getattr(args, "recovery_scenario_file", None)
+    changes_file = getattr(args, "changes_file", None)
+    radar_weights_file = getattr(args, "radar_weights_file", None)
+    full_requested = recovery_lab or chronos_requested or proofgraph_requested
+    if full_requested and not scenario_file:
+        raise SystemExit("live recovery requires --recovery-scenario-file")
+    if (chronos_requested or proofgraph_requested) and not changes_file:
+        raise SystemExit("live Chronos and ProofGuard require --changes-file")
     token = os.environ.get("DATAHUB_GMS_TOKEN")
     signal_file = getattr(args, "signal_file", None)
     event = load_quality_event(signal_file) if signal_file else None
@@ -158,8 +200,36 @@ async def _run_mcp(args: argparse.Namespace) -> int:
         graph = await DataHubMcpGraph.load(session, source_urn, source_field=signal.field)
         analyzer = IncidentAnalyzer(graph)
         report = analyzer.analyze(signal)
+        recovery = None
+        chronos = None
+        proofgraph = None
+        proof_bundle = None
+        if full_requested:
+            scenario = load_recovery_scenario(scenario_file)
+            recovery = CounterfactualRecoveryLab().evaluate(report, scenario)
+            if chronos_requested or proofgraph_requested:
+                chronos = build_chronos(
+                    report,
+                    recovery,
+                    scenario,
+                    load_context_changes(changes_file),
+                )
+            if proofgraph_requested and chronos:
+                proofgraph, proof_bundle = build_demo_proofgraph(
+                    report,
+                    recovery,
+                    chronos,
+                    load_radar_weights(radar_weights_file) if radar_weights_file else None,
+                )
         if args.artifacts_dir:
-            RemediationGenerator().write(report, args.artifacts_dir)
+            RemediationGenerator().write(
+                report,
+                args.artifacts_dir,
+                recovery,
+                chronos,
+                proofgraph,
+                proof_bundle,
+            )
         if args.apply:
             if webhook:
                 enforcer = SignedWebhookEnforcer(
@@ -168,7 +238,25 @@ async def _run_mcp(args: argparse.Namespace) -> int:
                 await asyncio.to_thread(enforcer.enforce, report)
             analyzer.apply_writeback(report, approved=True)
             await graph.flush()
-    rendered = json.dumps(report.as_dict(), indent=2)
+    payload = report.as_dict()
+    payload["execution_context"] = {
+        "mode": "live_mcp",
+        "metadata_source": "datahub_mcp",
+        "live_datahub_connected": True,
+        "mutations_applied": bool(args.apply),
+        "recovery_evidence_source": (
+            "operator_supplied_bounded_file" if recovery else "not_supplied"
+        ),
+        "change_evidence_source": ("operator_supplied_bounded_file" if chronos else "not_supplied"),
+    }
+    if recovery:
+        payload["recovery"] = recovery.as_dict()
+    if chronos:
+        payload["chronos"] = chronos.as_dict()
+    if proofgraph and proof_bundle:
+        payload["proofgraph"] = proofgraph.as_dict()
+        payload["proof_bundle"] = asdict(proof_bundle)
+    rendered = json.dumps(payload, indent=2)
     if args.output:
         args.output.write_text(rendered + "\n", encoding="utf-8")
     print(rendered)

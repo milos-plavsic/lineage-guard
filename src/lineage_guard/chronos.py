@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
 from lineage_guard.domain import Action, IncidentReport
@@ -280,32 +282,80 @@ class CausalImmunityEngine:
 
 
 def build_demo_chronos(report: IncidentReport, recovery: RecoveryBundle) -> ChronosBundle:
+    scenario = demo_recovery_scenario()
+    changes = (
+        ProposedContextChange(
+            ChangeProposal("pr-unsafe-guard-removal", "Remove the billing quality guard", False)
+        ),
+        ProposedContextChange(
+            ChangeProposal("pr-safe-guard-preserved", "Preserve the billing quality guard", True)
+        ),
+        ProposedContextChange(
+            ChangeProposal("pr-context-drift", "Add a new downstream ML dependency", True),
+            (f"{report.source.urn}->urn:li:dataset:new_ml_feature",),
+        ),
+    )
+    return build_chronos(report, recovery, scenario, changes)
+
+
+@dataclass(frozen=True, slots=True)
+class ProposedContextChange:
+    proposal: ChangeProposal
+    added_lineage_edges: tuple[str, ...] = ()
+
+
+def build_chronos(
+    report: IncidentReport,
+    recovery: RecoveryBundle,
+    scenario: RecoveryScenario,
+    changes: tuple[ProposedContextChange, ...],
+) -> ChronosBundle:
+    if not changes or len(changes) > 1_000:
+        raise ValueError("changes must contain 1 to 1000 proposals")
     engine = CausalImmunityEngine()
     context = demo_immunity_context(report)
-    scenario = demo_recovery_scenario()
     genome = engine.compile(report, recovery, context, scenario)
-    unsafe = engine.evaluate_change(
-        genome,
-        ChangeProposal("pr-unsafe-guard-removal", "Remove the billing quality guard", False),
-        context,
-    )
-    safe = engine.evaluate_change(
-        genome,
-        ChangeProposal("pr-safe-guard-preserved", "Preserve the billing quality guard", True),
-        context,
-    )
-    drifted = ImmunityContext(
-        context.schema_fields,
-        (*context.lineage_edges, f"{report.source.urn}->urn:li:dataset:new_ml_feature"),
-        context.governance_labels,
-    )
-    stale = engine.evaluate_change(
-        genome,
-        ChangeProposal("pr-context-drift", "Add a new downstream ML dependency", True),
-        drifted,
-    )
-    return ChronosBundle(
-        1, genome, scenario.current, (unsafe, safe, stale), engine.coverage(report)
+    evaluations = []
+    for item in changes:
+        evaluated_context = ImmunityContext(
+            context.schema_fields,
+            (*context.lineage_edges, *item.added_lineage_edges),
+            context.governance_labels,
+        )
+        evaluations.append(engine.evaluate_change(genome, item.proposal, evaluated_context))
+    return ChronosBundle(1, genome, scenario.current, tuple(evaluations), engine.coverage(report))
+
+
+def load_context_changes(path: Path) -> tuple[ProposedContextChange, ...]:
+    try:
+        if path.stat().st_size > 2_000_000:
+            raise ValueError("change proposal document exceeds 2 MB")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict) or payload.get("schema_version") != 1:
+            raise ValueError("change proposal schema_version must be 1")
+        if set(payload) != {"schema_version", "changes"} or not isinstance(
+            payload["changes"], list
+        ):
+            raise ValueError("change proposal document is malformed")
+        return tuple(_context_change(item) for item in payload["changes"])
+    except (OSError, json.JSONDecodeError, TypeError, KeyError) as error:
+        raise ValueError("invalid change proposal document") from error
+
+
+def _context_change(value: Any) -> ProposedContextChange:
+    if not isinstance(value, dict) or set(value) != {
+        "change_id",
+        "title",
+        "quality_guard_enabled",
+        "added_lineage_edges",
+    }:
+        raise ValueError("change proposals contain unknown or missing fields")
+    edges = value["added_lineage_edges"]
+    if not isinstance(edges, list):
+        raise ValueError("added_lineage_edges must be a list")
+    return ProposedContextChange(
+        ChangeProposal(value["change_id"], value["title"], value["quality_guard_enabled"]),
+        tuple(edges),
     )
 
 

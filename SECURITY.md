@@ -28,6 +28,9 @@ include production tokens or sensitive catalog content.
   execute user-supplied code or mutate DataHub, policies, evidence, or source systems.
 - Evidence Gap Radar uses an explicit integer-bounded scoring model. Privacy and collection cost are
   penalties, recommendations are advisory, and missing evidence never authorizes continuation.
+- Non-demo recovery, changes, and Radar weights require strict versioned files with size, row,
+  identifier, type, unknown-field, and combinatorial bounds. Their operator-supplied origin is
+  recorded separately from live DataHub metadata.
 - The built-in dashboard binds to loopback and has no authentication. Never expose it directly to an
   untrusted network.
 

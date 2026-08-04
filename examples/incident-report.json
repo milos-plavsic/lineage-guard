@@ -106,6 +106,12 @@
       }
     ]
   },
+  "execution_context": {
+    "mode": "deterministic_fixture",
+    "metadata_source": "application_owned_fixture",
+    "live_datahub_connected": false,
+    "mutations_applied": false
+  },
   "recovery": {
     "schema_version": 1,
     "incident_id": "9edb78125e19",
@@ -492,7 +498,7 @@
         "claim": "selective-containment-policy-v1",
         "source": "lineageguard-sentinel",
         "sha256": "8f513525c19c8e54962d6484a601f58df3244239dcfc0ebcea46b684b1269c0b",
-        "decisive": true
+        "decisive": false
       },
       {
         "node_id": "decision:monitor:db28d5374eee",
@@ -524,7 +530,7 @@
         "claim": "selective-containment-policy-v1",
         "source": "lineageguard-sentinel",
         "sha256": "0d3f4aceb30b0ffea09dcb5fd1a26fa01ea8b6e0e15d91f6b90266c1e8a27419",
-        "decisive": true
+        "decisive": false
       },
       {
         "node_id": "decision:quarantine:67a7cb887174",
@@ -556,7 +562,7 @@
         "claim": "selective-containment-policy-v1",
         "source": "lineageguard-sentinel",
         "sha256": "bf2f7b08d23fd69e9ce0baedb4aca05475dfa6cb095ab8d61b11d570b6250605",
-        "decisive": true
+        "decisive": false
       },
       {
         "node_id": "decision:continue:fc5a35f41f1c",
@@ -645,32 +651,29 @@
         "decision_node_id": "decision:monitor:db28d5374eee",
         "evidence_node_ids": [
           "context:lineage:db28d5374eee",
-          "observation:signal:9edb78125e19",
-          "rule:containment:db28d5374eee"
+          "observation:signal:9edb78125e19"
         ],
-        "size": 3,
-        "sha256": "010fd87024bd2066a0f418f684febe734dbdc0d06094e788b07192274c057e6f"
+        "size": 2,
+        "sha256": "c4f9161e64c33d5684551a9042e45ec2e9fdfa1e74c2f221cfe5ae67150e0f40"
       },
       {
         "decision_node_id": "decision:quarantine:67a7cb887174",
         "evidence_node_ids": [
           "context:impact:67a7cb887174",
           "context:lineage:67a7cb887174",
-          "observation:signal:9edb78125e19",
-          "rule:containment:67a7cb887174"
+          "observation:signal:9edb78125e19"
         ],
-        "size": 4,
-        "sha256": "5edc011946098ba26e081e6a74959ed5b2deec2b85bfdf80add9185b79b0da85"
+        "size": 3,
+        "sha256": "40da072948344892307313c1c0642940b60f35a09ea1cd4b9fc5c88f4c7fbead"
       },
       {
         "decision_node_id": "decision:continue:fc5a35f41f1c",
         "evidence_node_ids": [
           "context:lineage:fc5a35f41f1c",
-          "observation:signal:9edb78125e19",
-          "rule:containment:fc5a35f41f1c"
+          "observation:signal:9edb78125e19"
         ],
-        "size": 3,
-        "sha256": "72967b9c3536a785d37c93bdff2e249f2652ac29308dd4cb6b69fa36be97ea29"
+        "size": 2,
+        "sha256": "5c0b46e3ef2b64c5572db8f2fc8d0e2dbfd61ea93f52b3f3988a4eff3cd5d7a7"
       }
     ],
     "counterfactuals": [
@@ -687,12 +690,6 @@
         "explanation": "Without this lineage claim, fail closed from monitor to require_review."
       },
       {
-        "evidence_node_id": "rule:containment:db28d5374eee",
-        "original_action": "monitor",
-        "resulting_action": "require_review",
-        "explanation": "Without the governing policy, automation has no authority and requires review."
-      },
-      {
         "evidence_node_id": "observation:signal:9edb78125e19",
         "original_action": "quarantine",
         "resulting_action": "continue",
@@ -703,12 +700,6 @@
         "original_action": "quarantine",
         "resulting_action": "monitor",
         "explanation": "Without this lineage claim, fail closed from quarantine to monitor."
-      },
-      {
-        "evidence_node_id": "rule:containment:67a7cb887174",
-        "original_action": "quarantine",
-        "resulting_action": "require_review",
-        "explanation": "Without the governing policy, automation has no authority and requires review."
       },
       {
         "evidence_node_id": "context:impact:67a7cb887174",
@@ -727,30 +718,89 @@
         "original_action": "continue",
         "resulting_action": "require_review",
         "explanation": "Without this lineage claim, fail closed from continue to require_review."
-      },
-      {
-        "evidence_node_id": "rule:containment:fc5a35f41f1c",
-        "original_action": "continue",
-        "resulting_action": "require_review",
-        "explanation": "Without the governing policy, automation has no authority and requires review."
       }
     ],
     "evidence_gaps": [
       {
+        "gap_id": "gap:freshness:db28d5374eee",
+        "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)",
+        "title": "Prove context freshness for staging_patients",
+        "recommended_action": "Record observation time and enforce a governed maximum evidence age.",
+        "decisions_unlocked": 1,
+        "uncertainty_reduction": 25,
+        "criticality": 85,
+        "freshness_need": 100,
+        "collection_cost": 25,
+        "privacy_risk": 10,
+        "priority_score": 57,
+        "scoring_factors": [
+          [
+            "uncertainty",
+            25
+          ],
+          [
+            "criticality",
+            85
+          ],
+          [
+            "freshness",
+            100
+          ],
+          [
+            "decisions_unlocked",
+            100
+          ],
+          [
+            "collection_cost",
+            25
+          ],
+          [
+            "privacy_risk",
+            10
+          ]
+        ]
+      },
+      {
         "gap_id": "gap:governance:db28d5374eee",
         "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.staging_patients,PROD)",
         "title": "Resolve business impact classification for staging_patients",
-        "recommended_action": "Add an authoritative owner, criticality, and concern classification for staging_patients.",
+        "recommended_action": "Add authoritative criticality and concern classification for staging_patients.",
         "decisions_unlocked": 1,
         "uncertainty_reduction": 35,
         "criticality": 85,
-        "freshness_need": 80,
+        "freshness_need": 50,
         "collection_cost": 35,
         "privacy_risk": 10,
-        "priority_score": 57
+        "priority_score": 52,
+        "scoring_factors": [
+          [
+            "uncertainty",
+            35
+          ],
+          [
+            "criticality",
+            85
+          ],
+          [
+            "freshness",
+            50
+          ],
+          [
+            "decisions_unlocked",
+            100
+          ],
+          [
+            "collection_cost",
+            35
+          ],
+          [
+            "privacy_risk",
+            10
+          ]
+        ]
       }
     ],
-    "graph_sha256": "55bdb53776b3e1ab0600ddf97344e8d1abdfa6227f1d8fe96dc7aae49870e6da"
+    "graph_sha256": "43668760d95c9657efc99854a094e3851f119b55da6cae573397f9ebaf77c06d"
   },
   "proof_bundle": {
     "statement": {
@@ -765,14 +815,14 @@
       ],
       "predicateType": "https://lineageguard.dev/attestations/proof-bundle/v1",
       "predicate": {
-        "proofgraph_sha256": "55bdb53776b3e1ab0600ddf97344e8d1abdfa6227f1d8fe96dc7aae49870e6da",
+        "proofgraph_sha256": "43668760d95c9657efc99854a094e3851f119b55da6cae573397f9ebaf77c06d",
         "sentinel_report_sha256": "12ac841ca138157222bd50c6112fa15f24c4a032e29685d435289655933b0e92",
         "forge_certificate_sha256": "b4b2e580e72d11e198900ffe34eda0f66e301123f235362ec65e650f9414ac41",
         "chronos_genome_sha256": "26c677d5a45f7e6ccfd5ab584da937665d787a9135b3d496fe8d3c33959e9233",
         "causal_cut_sha256": [
-          "010fd87024bd2066a0f418f684febe734dbdc0d06094e788b07192274c057e6f",
-          "5edc011946098ba26e081e6a74959ed5b2deec2b85bfdf80add9185b79b0da85",
-          "72967b9c3536a785d37c93bdff2e249f2652ac29308dd4cb6b69fa36be97ea29"
+          "c4f9161e64c33d5684551a9042e45ec2e9fdfa1e74c2f221cfe5ae67150e0f40",
+          "40da072948344892307313c1c0642940b60f35a09ea1cd4b9fc5c88f4c7fbead",
+          "5c0b46e3ef2b64c5572db8f2fc8d0e2dbfd61ea93f52b3f3988a4eff3cd5d7a7"
         ],
         "standards": {
           "provenance": "https://www.w3.org/TR/prov-o/",
@@ -781,7 +831,7 @@
         }
       }
     },
-    "statement_sha256": "3434454906a98ebdbf6a12dda469c750e52d10b47dd72ef3a3c2437df16d672a",
+    "statement_sha256": "e65bb57812c2f0484faf99069cce68f39db5d816af915c7f085b7ca65b60d83b",
     "authenticated": false
   }
 }

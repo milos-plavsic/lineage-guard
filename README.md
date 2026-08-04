@@ -80,6 +80,11 @@ ranks missing context with Evidence Gap Radar. Its unsigned in-toto Proof Bundle
 Forge, Chronos, and every causal cut. The optional read-only MCP server exposes five bounded tools;
 install `.[mcp]` before running it.
 
+The full pipeline also runs from a live MCP-derived incident. Recovery rows and future changes are
+not guessed from metadata: operators supply strict, bounded, versioned evidence files, and the output
+records their origin. See the [live integration guide](docs/live-datahub.md) and the committed
+`recovery-scenario.json`, `context-changes.json`, and `radar-weights.json` examples.
+
 For a real DataHub instance, install the `mcp` extra and follow the
 [live integration guide](docs/live-datahub.md). The adapter starts the official, version-pinned
 DataHub MCP Server and uses its lineage, entity, description, and tag tools.

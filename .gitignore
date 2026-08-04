@@ -11,4 +11,6 @@ build/
 /incident-report.json
 /.fixtures/
 /site/
+/smoke-artifacts/
+/smoke-report.json
 /NUL
