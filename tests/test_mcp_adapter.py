@@ -79,6 +79,17 @@ async def test_loads_normalized_snapshot_from_official_tools() -> None:
         (BILLING, 2),
         (DEMOGRAPHICS, 2),
     ]
+    read = graph.read_downstream_lineage(RAW, 5)
+    assert read.targets == graph.get_downstream_lineage(RAW, 5)
+    assert read.receipt.as_dict()["capabilities"] == ["USE_AS_OBSERVATION"]
+    assert "ASSERT_ABSENCE_AT_REFERENCE" not in read.receipt.as_dict()["capabilities"]
+
+    with pytest.raises(LookupError, match="different source"):
+        graph.read_downstream_lineage(BILLING, 5)
+    with pytest.raises(ValueError, match="hop bound"):
+        graph.read_downstream_lineage(RAW, 6)
+    with pytest.raises(ValueError, match="field scope"):
+        graph.read_downstream_lineage(RAW, 5, field="billing_amount")
 
 
 @pytest.mark.asyncio

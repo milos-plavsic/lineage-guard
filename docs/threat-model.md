@@ -36,6 +36,7 @@ and the integrity of DataHub write-back.
 | Artifact path escape | Resolved-path containment check | Remediation generator |
 | Oversized or truncated MCP response | 2 MB ceiling; explicit total/cap checks stop analysis | MCP adapter tests |
 | Missing metadata | Incomplete snapshots raise and stop analysis | MCP adapter contract |
+| Stale lineage mistaken for current truth | Capability-based receipts default unverifiable consistency facts to `UNKNOWN`; scoped receipts reject mismatched queries | Consistency and MCP adapter tests |
 | Unauthorized write | Dry-run default and double approval gate | Write-back tests |
 | Credential leakage | Environment-only tokens; explicit child-process environment allowlist | MCP adapter tests |
 | Fixture substitution | Pinned commit, size, and Git-blob verification | Acquisition tests and manifest |

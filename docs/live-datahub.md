@@ -91,3 +91,19 @@ before the append, so a missing-tag failure cannot partially duplicate the narra
 transport failure after DataHub commits an append but before acknowledging it remains an upstream
 at-least-once boundary; operators can reconcile the stable incident marker if that rare ambiguity
 occurs.
+
+## Read-consistency receipts
+
+`DataHubMcpGraph.read_downstream_lineage` returns normalized targets plus a versioned receipt. The
+receipt independently records source, consistency, completeness, response-cache disposition,
+projection reference, safe capabilities, and limitations. It also content-addresses the query and
+result for stable audit correlation. The digest is tamper-evident correlation, not authentication
+or anonymization.
+
+The pinned MCP surface does not expose a projection watermark or cache disposition, so these values
+truthfully default to `UNKNOWN`. Such a read permits `USE_AS_OBSERVATION`; it never permits an
+absence or current-state assertion. The legacy `get_downstream_lineage` method remains compatible
+for callers that do not yet consume receipts.
+
+The interoperable wire contract is
+[`schemas/lineage-read-receipt-v1.schema.json`](../schemas/lineage-read-receipt-v1.schema.json).

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/milos-plavsic/lineage-guard/schemas/lineage-read-receipt-v1.schema.json",
+  "title": "LineageGuard lineage read receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "queryDigest",
+    "resultDigest",
+    "readConsistency",
+    "capabilities",
+    "limitations",
+    "receiptDigest"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "queryDigest": { "$ref": "#/$defs/digest" },
+    "resultDigest": { "$ref": "#/$defs/digest" },
+    "receiptDigest": { "$ref": "#/$defs/digest" },
+    "readConsistency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "consistency",
+        "completeness",
+        "responseCache",
+        "asOf",
+        "watermark"
+      ],
+      "properties": {
+        "source": { "enum": ["SEARCH_INDEX", "GRAPH_STORE", "UNKNOWN"] },
+        "consistency": { "enum": ["EVENTUAL", "READ_YOUR_WRITES", "UNKNOWN"] },
+        "completeness": { "enum": ["COMPLETE", "INCOMPLETE", "UNKNOWN"] },
+        "responseCache": {
+          "enum": ["HIT", "MISS", "BYPASSED", "NOT_APPLICABLE", "UNKNOWN"]
+        },
+        "asOf": {
+          "oneOf": [
+            { "type": "string", "format": "date-time", "maxLength": 64 },
+            { "type": "null" }
+          ]
+        },
+        "watermark": {
+          "oneOf": [
+            { "type": "string", "minLength": 1, "maxLength": 512 },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "USE_AS_OBSERVATION",
+          "ASSERT_STATE_AT_REFERENCE",
+          "ASSERT_ABSENCE_AT_REFERENCE"
+        ]
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "SOURCE_UNVERIFIED",
+          "CONSISTENCY_UNVERIFIED",
+          "EVENTUAL_PROJECTION",
+          "COMPLETENESS_UNVERIFIED",
+          "TRAVERSAL_INCOMPLETE",
+          "RESPONSE_CACHE_UNOBSERVABLE",
+          "PROJECTION_WATERMARK_UNAVAILABLE"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

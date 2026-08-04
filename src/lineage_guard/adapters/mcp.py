@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from lineage_guard.consistency import LineageRead, ReadConsistency, lineage_receipt
 from lineage_guard.domain import Asset, LineageTarget
 
 
@@ -104,10 +105,21 @@ class DataHubMcpGraph:
         session: ToolSession,
         assets: Mapping[str, Asset],
         targets: tuple[LineageTarget, ...],
+        *,
+        source_urn: str = "",
+        max_hops: int = 0,
+        max_results: int = 0,
+        source_field: str | None = None,
+        consistency: ReadConsistency | None = None,
     ) -> None:
         self._session = session
         self._assets = dict(assets)
         self._targets = targets
+        self._source_urn = source_urn
+        self._max_hops = max_hops
+        self._max_results = max_results
+        self._source_field = source_field
+        self._consistency = consistency or ReadConsistency()
         self._pending: list[tuple[str, dict[str, Any]]] = []
         self._completed: list[tuple[str, dict[str, Any]]] = []
 
@@ -181,7 +193,15 @@ class DataHubMcpGraph:
             raise McpIntegrationError(
                 f"DataHub returned incomplete entity context: {sorted(missing_entities)}"
             )
-        return cls(session, assets, targets)
+        return cls(
+            session,
+            assets,
+            targets,
+            source_urn=source_urn,
+            max_hops=max_hops,
+            max_results=max_results,
+            source_field=source_field,
+        )
 
     @classmethod
     async def _exact_field_path_targets(
@@ -223,6 +243,27 @@ class DataHubMcpGraph:
         del urn
         del field
         return tuple(target for target in self._targets if target.distance <= max_hops)
+
+    def read_downstream_lineage(
+        self, urn: str, max_hops: int, *, field: str | None = None
+    ) -> LineageRead:
+        """Return lineage with a fail-closed, content-addressed epistemic receipt."""
+        if urn != self._source_urn:
+            raise LookupError(f"MCP snapshot was loaded for a different source: {urn}")
+        if max_hops > self._max_hops:
+            raise ValueError("Receipt scope exceeds the MCP snapshot hop bound")
+        if field != self._source_field:
+            raise ValueError("Receipt field does not match the MCP snapshot field scope")
+        targets = self.get_downstream_lineage(urn, max_hops, field=field)
+        receipt = lineage_receipt(
+            source_urn=urn,
+            max_hops=max_hops,
+            max_results=self._max_results,
+            source_field=field,
+            targets=targets,
+            consistency=self._consistency,
+        )
+        return LineageRead(targets, receipt)
 
     def append_incident_summary(self, urn: str, summary: str) -> None:
         self._queue(

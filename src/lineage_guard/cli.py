@@ -200,6 +200,7 @@ async def _run_mcp(args: argparse.Namespace) -> int:
         graph = await DataHubMcpGraph.load(session, source_urn, source_field=signal.field)
         analyzer = IncidentAnalyzer(graph)
         report = analyzer.analyze(signal)
+        lineage_read = graph.read_downstream_lineage(source_urn, 5, field=signal.field)
         recovery = None
         chronos = None
         proofgraph = None
@@ -239,6 +240,7 @@ async def _run_mcp(args: argparse.Namespace) -> int:
             analyzer.apply_writeback(report, approved=True)
             await graph.flush()
     payload = report.as_dict()
+    payload["lineage_read_receipt"] = lineage_read.receipt.as_dict()
     payload["execution_context"] = {
         "mode": "live_mcp",
         "metadata_source": "datahub_mcp",

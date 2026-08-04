@@ -27,6 +27,7 @@ from lineage_guard.adapters.mcp import (
     open_stdio_session,
 )
 from lineage_guard.adapters.memory import InMemoryMetadataGraph
+from lineage_guard.consistency import LineageRead, lineage_receipt
 from lineage_guard.demo import RAW, assets, edges, negative_billing_signal
 from lineage_guard.domain import Asset, LineageEdge, LineageTarget, QualitySignal, Severity
 from lineage_guard.remediation import GeneratedArtifact, RemediationGenerator
@@ -273,6 +274,19 @@ async def test_mcp_cli_complete_flow(tmp_path, monkeypatch, capsys) -> None:
         async def flush(self):
             self.flushed = True
 
+        def read_downstream_lineage(self, urn, max_hops, *, field=None):
+            targets = self.get_downstream_lineage(urn, max_hops, field=field)
+            return LineageRead(
+                targets,
+                lineage_receipt(
+                    source_urn=urn,
+                    max_hops=max_hops,
+                    max_results=100,
+                    source_field=field,
+                    targets=targets,
+                ),
+            )
+
     graph = Graph(assets(), edges())
 
     configs = []
@@ -345,6 +359,8 @@ async def test_mcp_cli_complete_flow(tmp_path, monkeypatch, capsys) -> None:
     assert await cli._run_mcp(args) == 0
     full = json.loads(args.output.read_text())
     assert full["execution_context"]["mode"] == "live_mcp"
+    assert full["lineage_read_receipt"]["capabilities"] == ["USE_AS_OBSERVATION"]
+    assert "PROJECTION_WATERMARK_UNAVAILABLE" in full["lineage_read_receipt"]["limitations"]
     assert full["proofgraph"]["causal_cuts"]
     assert (args.artifacts_dir / "proofgraph" / "causal-cuts.json").is_file()
     assert "incident_id" in capsys.readouterr().out
