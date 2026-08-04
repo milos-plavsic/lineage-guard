@@ -99,7 +99,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--apply",
         action="store_true",
-        help="Apply proposed metadata mutations (demo adapter only in this milestone).",
+        help="Apply explicitly approved mutations; omitted by default for review-only operation.",
     )
     return parser
 

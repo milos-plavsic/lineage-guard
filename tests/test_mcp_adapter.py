@@ -141,6 +141,19 @@ async def test_native_document_memory_is_preferred_and_reconstructed() -> None:
 
 
 @pytest.mark.asyncio
+async def test_save_document_seeds_catalog_before_document_search_is_advertised() -> None:
+    record = ImmuneMemoryRecord.create(MemoryRecordType.INCIDENT, RAW, "incident-1", {})
+    session = FakeSession()
+    session.tools.tools.append(SimpleNamespace(name="save_document"))
+
+    graph = await DataHubMcpGraph.load(session, RAW)
+    graph.append_immune_memory(RAW, record)
+
+    assert any(name == "save_document" for name, _ in graph._pending)
+    assert not any(name == "search_documents" for name, _ in session.calls)
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("search_payload", "entity_payload", "message"),
     [

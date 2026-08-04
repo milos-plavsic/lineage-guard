@@ -101,7 +101,8 @@ class DataHubMcpGraph:
     REQUIRED_WRITE_TOOLS = frozenset({"update_description", "add_tags"})
     FIELD_PATH_TOOL = "get_lineage_paths_between"
     MAX_FIELD_PATH_CHECKS = 20
-    NATIVE_MEMORY_TOOLS = frozenset({"save_document", "search_documents"})
+    NATIVE_MEMORY_WRITE_TOOL = "save_document"
+    NATIVE_MEMORY_READ_TOOL = "search_documents"
 
     def __init__(
         self,
@@ -200,9 +201,12 @@ class DataHubMcpGraph:
             raise McpIntegrationError(
                 f"DataHub returned incomplete entity context: {sorted(missing_entities)}"
             )
-        native_memory = available >= cls.NATIVE_MEMORY_TOOLS
+        # DataHub MCP deliberately hides document search until the catalog has
+        # its first Document.  Treat read and write capabilities independently
+        # so save_document can seed that first native memory.
+        native_memory = cls.NATIVE_MEMORY_WRITE_TOOL in available
         memory_documents: tuple[str, ...] = ()
-        if native_memory:
+        if cls.NATIVE_MEMORY_READ_TOOL in available:
             memory_documents = await cls._load_memory_documents(session, source_urn)
         return cls(
             session,
