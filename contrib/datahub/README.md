@@ -10,9 +10,10 @@ Published on 2026-08-04:
    before converting the full local draft to DataHub's formal RFC template. The repository did not
    expose the `RFC` label named in the process documentation; the issue is therefore currently
    unlabeled and maintainers can apply their preferred workflow label.
-3. `lineage-read-consistency-contract.md` is a draft cross-surface contract that separates response
-   caching, projection convergence, and authoritative reads. It includes additive API semantics,
-   trade-offs, staged adoption, and executable convergence and authorization acceptance scenarios.
+3. `lineage-read-consistency-contract.md` is a cross-surface contract that separates response
+   caching, projection convergence, and authoritative reads. Its additive API semantics, trade-offs,
+   staged adoption, and executable acceptance scenarios were shared on
+   [`datahub-project/datahub#18809`](https://github.com/datahub-project/datahub/issues/18809#issuecomment-5183109813).
 
 The comment clearly identifies the 2026-08-02 observation date and versions. It is
 corroborating historical evidence, not a claim that the latest server still reproduces. Offer a
