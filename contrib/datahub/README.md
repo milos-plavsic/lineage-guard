@@ -8,8 +8,8 @@ Published on 2026-08-04:
 2. `evidence-aspect-rfc-proposal.md` opened
    [`datahub-project/rfcs#13`](https://github.com/datahub-project/rfcs/issues/13) for model direction
    before converting the full local draft to DataHub's formal RFC template. The repository did not
-   expose the `RFC` label named in the process documentation, so the available `enhancement` label
-   was used.
+   expose the `RFC` label named in the process documentation; the issue is therefore currently
+   unlabeled and maintainers can apply their preferred workflow label.
 
 The comment clearly identifies the 2026-08-02 observation date and versions. It is
 corroborating historical evidence, not a claim that the latest server still reproduces. Offer a
