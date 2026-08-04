@@ -87,9 +87,10 @@ class InheritedMemoryAgent:
         approved: bool = False,
         incident_id: str | None = None,
     ) -> dict[str, Any]:
+        memories = graph.get_immune_memories(source_urn)
         candidates = [
             record
-            for record in graph.get_immune_memories(source_urn)
+            for record in memories
             if record.record_type == MemoryRecordType.INCIDENT
             and (incident_id is None or record.incident_id == incident_id)
             and record.payload.get("genome") is not None
@@ -112,6 +113,8 @@ class InheritedMemoryAgent:
         return {
             "schema_version": 1,
             "status": "written" if approved else "proposed",
+            "memory_records_observed": len(memories),
+            "matching_incident_records": len(candidates),
             "inherited_memory_digest": incident.record_digest,
             "evaluation": asdict(evaluation),
             "prevention_memory": outcome.as_dict(),

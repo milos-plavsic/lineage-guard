@@ -69,6 +69,8 @@ async def test_second_agent_inherits_blocks_and_writes_outcome() -> None:
         demo_immunity_context(report),
     )
     assert dry_run["status"] == "proposed"
+    assert dry_run["memory_records_observed"] == 1
+    assert dry_run["matching_incident_records"] == 1
     assert dry_run["evaluation"]["decision"] == ChangeDecision.BLOCKED
     assert len(graph.get_immune_memories(RAW)) == 1
     written = await agent.evaluate(
