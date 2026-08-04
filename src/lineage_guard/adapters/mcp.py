@@ -240,8 +240,11 @@ class DataHubMcpGraph:
         )
         payload = _tool_payload(result)
         search_results = payload.get("searchResults", []) if isinstance(payload, Mapping) else []
+        total = payload.get("total") if isinstance(payload, Mapping) else None
         if not isinstance(search_results, list) or len(search_results) > 100:
             raise McpIntegrationError("DataHub returned invalid immune-memory document results")
+        if isinstance(total, int) and total > len(search_results):
+            raise McpIntegrationError("DataHub immune-memory document search is truncated")
         urns = []
         for item in search_results:
             entity = item.get("entity") if isinstance(item, Mapping) else None

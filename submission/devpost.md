@@ -65,6 +65,9 @@ carrier is a content-indexed Decision Document related to the affected asset; ol
 bounded description envelope. An optional native DataHub Incident supplies operational lifecycle.
 All carriers and the proposed Evidence aspect preserve the same canonical record identity. Digests
 prove integrity rather than authorship; DataHub remains the authorization and audit boundary.
+The complete native handoff was rerun against DataHub OSS 1.6.0; sanitized capability, URN, digest,
+idempotency, and third-process read evidence is committed in
+`examples/live-datahub-immune-verification.json`.
 
 ProofGraph makes the entire trinity accountable. Every decision and explanation comes from the same
 deterministic derivation DAG. Its Causal Cut reveals the smallest evidence set that forces an outcome;

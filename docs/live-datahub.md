@@ -87,13 +87,19 @@ view and permissions.
 
 ## Verified compatibility
 
-The complete workflow was verified on August 2, 2026 in a disposable 4-core, 16 GB GitHub
-Codespace against DataHub GMS 1.6.0, DataHub CLI 1.6.0.17, and the pinned DataHub MCP Server 0.6.0.
-The test covered fixture ingestion, six dataset relationships, four column relationships, exact
-column-path confirmation, entity context reads, signed event intake, durable replay/retry, signed
-default-hold enforcement, mutation gating, description write-back, and quarantine-tag write-back.
-Sanitized machine-readable results are available in
+The base workflow was verified on August 2, 2026 in a disposable GitHub Codespace against DataHub
+GMS 1.6.0, DataHub CLI 1.6.0.17, and the pinned DataHub MCP Server 0.6.0. That test covered fixture
+ingestion, six dataset relationships, four column relationships, exact column-path confirmation,
+entity context reads, signed event intake, durable replay/retry, signed default-hold enforcement,
+mutation gating, description write-back, and quarantine-tag write-back. Sanitized results are in
 [`examples/live-datahub-verification.json`](../examples/live-datahub-verification.json).
+
+The native immune loop was freshly verified on August 4, 2026 against the same pinned versions.
+Agent A seeded a related Decision Document and projected a native Incident; retry reused the same
+Incident. A separate Agent B process retrieved and verified the exact incident digest, blocked guard
+removal, and wrote a parent-linked prevention Document. A third process observed both records.
+Sanitized digests, URNs, capability results, and explicit limitations are in
+[`examples/live-datahub-immune-verification.json`](../examples/live-datahub-immune-verification.json).
 
 MCP Server 0.6.0 returned an empty compact column-lineage result for this DataHub 1.6 graph even
 though DataHub's SDK and the MCP `get_lineage_paths_between` tool returned the four stored paths.

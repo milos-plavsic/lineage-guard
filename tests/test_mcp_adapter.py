@@ -158,6 +158,7 @@ async def test_save_document_seeds_catalog_before_document_search_is_advertised(
     ("search_payload", "entity_payload", "message"),
     [
         ({"searchResults": "bad"}, None, "invalid"),
+        ({"searchResults": [], "total": 1}, None, "truncated"),
         ({"searchResults": [{}]}, None, "malformed"),
         (
             {"searchResults": [{"entity": {"urn": "urn:li:document:one"}}]},
@@ -184,6 +185,19 @@ async def test_native_memory_search_handles_no_documents() -> None:
             return result({"searchResults": []})
 
     assert await DataHubMcpGraph._load_memory_documents(Session(), RAW) == ()
+
+
+@pytest.mark.asyncio
+async def test_native_memory_requires_content_when_grep_is_unavailable() -> None:
+    class Session:
+        async def call_tool(self, name, arguments):
+            del arguments
+            if name == "search_documents":
+                return result({"searchResults": [{"entity": {"urn": "urn:li:document:one"}}]})
+            return result([{"urn": "urn:li:document:one"}])
+
+    with pytest.raises(McpIntegrationError, match="no textual content"):
+        await DataHubMcpGraph._load_memory_documents(Session(), RAW)
 
 
 @pytest.mark.asyncio
@@ -236,6 +250,21 @@ async def test_native_memory_rejects_truncated_dedicated_content() -> None:
             )
 
     with pytest.raises(McpIntegrationError, match="truncated"):
+        await DataHubMcpGraph._load_memory_documents(Session(), RAW, use_grep=True)
+
+
+@pytest.mark.asyncio
+async def test_native_memory_rejects_malformed_dedicated_content_results() -> None:
+    class Session:
+        async def call_tool(self, name, arguments):
+            del arguments
+            if name == "search_documents":
+                return result({"searchResults": [{"entity": {"urn": "urn:li:document:one"}}]})
+            if name == "get_entities":
+                return result([{"urn": "urn:li:document:one"}])
+            return result({"results": "invalid"})
+
+    with pytest.raises(McpIntegrationError, match="invalid.*excerpts"):
         await DataHubMcpGraph._load_memory_documents(Session(), RAW, use_grep=True)
 
 

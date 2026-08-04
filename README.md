@@ -29,6 +29,9 @@ named components below are stages of this loop, not separate products.
 The [DataHub immune-system design](docs/datahub-immune-system.md) specifies the canonical envelope,
 native Incident/Document composition, compatibility carrier, proposed Evidence-aspect mapping,
 security limits, and executable two-agent acceptance path.
+[Sanitized live evidence](examples/live-datahub-immune-verification.json) records native Incident
+create/reuse, two related Decision Documents, the independent blocked decision, and a third-process
+read of both linked records against DataHub OSS 1.6.0.
 
 ## Current vertical slice
 

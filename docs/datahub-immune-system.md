@@ -27,8 +27,10 @@ canonical JSON bytes and SHA-256 identity are used in both mappings:
 | `parent_digest` | related record encoded in content | payload link | typed evidence relationship |
 | `record_type` | Document subtype/topic and payload | payload discriminator | evidence type discriminator |
 
-At runtime, LineageGuard prefers native Documents only when the MCP server advertises the complete
-`save_document` path with independently negotiated `search_documents`. Documents are content indexed, related to the affected
+At runtime, LineageGuard prefers native Documents when the MCP server advertises `save_document`.
+It negotiates `search_documents` independently because DataHub hides document search until the
+catalog contains its first Document; `grep_documents` supplies bounded content on OSS versions
+whose generic entity projection omits it. Documents are content indexed, related to the affected
 asset, owned and audited by DataHub, and retrievable by a fresh agent. Older servers fall back to the
 verified description envelope. The canonical record—not either carrier—is the semantic source of
 truth, so both decode to the same digest.

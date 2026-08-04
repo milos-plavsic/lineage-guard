@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-08-04T20:56:42Z",
+  "verification_commit": "32a3b3d51b0247c906a49f02bdca7012873b355f",
+  "environment": {
+    "datahub_gms": "1.6.0",
+    "datahub_cli": "1.6.0.17",
+    "datahub_mcp_server": "0.6.0",
+    "fixture": "datahub-project/static-assets datasets/healthcare",
+    "fixture_lineage_relationships": 6,
+    "execution_host": "disposable GitHub Codespace"
+  },
+  "capability_negotiation": {
+    "save_document": true,
+    "search_documents": true,
+    "grep_documents": true,
+    "native_document_seeded_before_search_was_advertised": true,
+    "description_fallback_used_for_final_chain": false
+  },
+  "agent_a": {
+    "fresh_process": true,
+    "source_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.main.raw_patients,PROD)",
+    "incident_id": "87dc946bac7b",
+    "decision_count": 6,
+    "lineage_receipt_digest": "sha256:73a6c9744f3d47a7bf92be9da1a8f30bbfc9c536853e8dc1439cb5f48daff98a",
+    "genome_sha256": "b19b1923f4b20f2bf13eeb79ddaf3ba566ac63ce22d5401a3594dc18a4e2b334",
+    "proof_statement_sha256": "7abe035a1ca7c0d5afd9849bddecc11c6ce567b0455407cdda578e50174d00e0",
+    "memory_record_digest": "sha256:c8d1a16a79454397c54af1af1720ab4fcefa90b33d33f510eac5475ece36dd60",
+    "document_urn": "urn:li:document:shared-607ee48a-502d-4c3a-a7e7-40f2a7684509"
+  },
+  "native_incident": {
+    "urn": "urn:li:incident:a4da7f5b-5136-4637-9d3b-03ee51c7d105",
+    "first_projection_created": true,
+    "retry_reused_existing": true
+  },
+  "agent_b": {
+    "separate_fresh_process": true,
+    "inherited_memory_digest": "sha256:c8d1a16a79454397c54af1af1720ab4fcefa90b33d33f510eac5475ece36dd60",
+    "context_fingerprint_matched": true,
+    "quality_guard_check_passed": false,
+    "decision": "blocked",
+    "review_only_status": "proposed",
+    "approved_status": "written",
+    "outcome_record_digest": "sha256:0a96a1b8a9d0e89f9e96e4e8dbb76bd0a0db0ca58f680be75f3c3b04088db082",
+    "parent_digest": "sha256:c8d1a16a79454397c54af1af1720ab4fcefa90b33d33f510eac5475ece36dd60",
+    "document_urn": "urn:li:document:shared-5adda1b0-a0f3-4843-9702-a2bb0a53164c"
+  },
+  "fresh_read_after_agent_b": {
+    "fresh_process": true,
+    "memory_records_observed": 2,
+    "matching_incident_records": 1,
+    "decision": "blocked"
+  },
+  "security_and_claims": {
+    "token_recorded": false,
+    "review_only_mutations_applied": false,
+    "write_process_mutations_explicitly_approved": true,
+    "native_document_sdk_warning": "DataHub MCP 0.6.0 labels its underlying new DataHub SDK import experimental",
+    "lineage_completeness_claimed": false
+  }
+}

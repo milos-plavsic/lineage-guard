@@ -9,7 +9,7 @@ published media, or organizer action; **optional** is not required for eligibili
 | Working software application | Proved locally | CLI, authenticated agent listener, durable journal, dashboard, enforcement contract, SQL execution test, and package build. |
 | DataHub OSS plus an eligible agent technology | Proved live | Official MCP adapter plus `examples/live-datahub-verification.json`. |
 | Agents That Do Real Work category | Proved | Durable DataHub tool loop, graph write-back, proof-gated recovery, and a fresh-agent incident-memory inheritance test. |
-| Meaningful context-graph use | Proved live | Six downstream assets resolved; approved description and tag write-back verified directly in DataHub. Native Document/Incident composition and fresh Agent B handoff have executable contract tests; refreshed external verification is recorded separately when run. |
+| Meaningful context-graph use | Proved live | Six downstream assets resolved; native Incident create/reuse, related Decision Documents, fresh Agent B inheritance, blocked guard removal, linked outcome write-back, and a third-process two-record read are recorded in `examples/live-datahub-immune-verification.json`. |
 | Function matches video and description | Pending external | Record only the committed workflow; verify final video against the runbook. |
 | Public, easily testable project URL | Proved externally | Public HTTPS demo: <https://milos-plavsic.github.io/lineage-guard/>; URL recorded in `submission/submission.json`. |
 | Public source repository | Proved externally | Public repository: <https://github.com/milos-plavsic/lineage-guard>. |
