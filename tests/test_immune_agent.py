@@ -185,7 +185,10 @@ async def test_fresh_mcp_agents_handoff_only_through_datahub() -> None:
 
 def test_loads_bounded_inherited_change_contract() -> None:
     request = load_inherited_change(Path("examples/inherited-change.json"))
-    assert request.source_urn == RAW
+    assert request.source_urn == (
+        "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.main.raw_patients,PROD)"
+    )
+    assert request.incident_id is None
     assert not request.change.quality_guard_enabled
     assert request.context is None
 
