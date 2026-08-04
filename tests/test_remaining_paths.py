@@ -54,6 +54,16 @@ def test_mcp_config_and_payload_variants(monkeypatch) -> None:
         _tool_payload(large)
 
 
+def test_stdio_launcher_can_target_an_installed_upstream_build(monkeypatch) -> None:
+    monkeypatch.setenv("LINEAGE_GUARD_MCP_COMMAND", "/opt/datahub/mcp-server-datahub")
+    monkeypatch.setenv("LINEAGE_GUARD_MCP_PACKAGE", "")
+    config = StdioMcpConfig("http://gms", "token")
+    assert config.command == "/opt/datahub/mcp-server-datahub"
+    assert config.package == ""
+    with pytest.raises(ValueError, match="must not be empty"):
+        StdioMcpConfig("http://gms", "token", command="")
+
+
 def test_mcp_normalizers_cover_rich_and_invalid_entities() -> None:
     assert _lineage_target({"entity": {"urn": RAW}, "degree": "3+"}).distance == 3
     with pytest.raises(McpIntegrationError, match="Malformed"):

@@ -4,7 +4,7 @@ import json
 import os
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha256
 from typing import Any, Protocol
 
@@ -58,9 +58,17 @@ class ToolSession(Protocol):
 class StdioMcpConfig:
     gms_url: str
     token: str
-    command: str = "uvx"
-    package: str = "mcp-server-datahub@0.6.0"
+    command: str = field(default_factory=lambda: os.environ.get("LINEAGE_GUARD_MCP_COMMAND", "uvx"))
+    package: str = field(
+        default_factory=lambda: os.environ.get(
+            "LINEAGE_GUARD_MCP_PACKAGE", "mcp-server-datahub@0.6.0"
+        )
+    )
     enable_mutations: bool = False
+
+    def __post_init__(self) -> None:
+        if not self.command:
+            raise ValueError("MCP command must not be empty")
 
     def environment(self) -> dict[str, str]:
         # Do not expose unrelated CI or developer secrets to the child process.
@@ -89,7 +97,7 @@ async def open_stdio_session(config: StdioMcpConfig) -> AsyncIterator[ToolSessio
 
     parameters = StdioServerParameters(
         command=config.command,
-        args=[config.package],
+        args=[config.package] if config.package else [],
         env=config.environment(),
     )
     try:

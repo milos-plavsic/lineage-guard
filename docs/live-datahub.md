@@ -30,6 +30,11 @@ PowerShell:
 $env:DATAHUB_GMS_TOKEN = "..."
 ```
 
+The default launcher is the pinned `mcp-server-datahub@0.6.0` through `uvx`. For validation against
+an installed upstream build, set `LINEAGE_GUARD_MCP_COMMAND` to its MCP server executable and set
+`LINEAGE_GUARD_MCP_PACKAGE` to an empty string. These process-level settings are explicit operator
+configuration; reports never include them.
+
 Run a read-only analysis:
 
 ```bash
