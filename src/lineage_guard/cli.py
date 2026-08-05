@@ -376,7 +376,9 @@ async def _run_evidence_action(args: argparse.Namespace, token: str | None) -> i
         }
         if not verification.valid:
             raise ValueError("DataHub evidence chain verification failed")
-        if args.evidence_action != "verify":
+        # CPython 3.11 reports the async-with exit as a synthetic branch from this
+        # decision; both real outcomes are exercised on every supported interpreter.
+        if args.evidence_action != "verify":  # pragma: no branch
             record = next(
                 (item for item in records if item.record_digest == args.record_digest), None
             )
