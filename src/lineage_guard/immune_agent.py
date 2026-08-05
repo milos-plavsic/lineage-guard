@@ -112,9 +112,27 @@ class InheritedMemoryAgent:
             raise LookupError(
                 "DataHub contains no matching incident memory with an immunity genome"
             )
-        incident = candidates[-1]
-        genome = genome_from_memory(incident)
-        evaluated_context = context or graph.get_immunity_context(source_urn, genome.failed_field)
+        candidate_genomes = tuple((record, genome_from_memory(record)) for record in candidates)
+        contexts: dict[str, ImmunityContext] = {}
+        if context is not None:
+            matching = tuple(
+                item for item in candidate_genomes if item[1].context_sha256 == context.sha256
+            )
+        else:
+            for _, candidate_genome in candidate_genomes:
+                contexts.setdefault(
+                    candidate_genome.failed_field,
+                    graph.get_immunity_context(source_urn, candidate_genome.failed_field),
+                )
+            matching = tuple(
+                item
+                for item in candidate_genomes
+                if item[1].context_sha256 == contexts[item[1].failed_field].sha256
+            )
+        incident, genome = max(
+            matching or candidate_genomes, key=lambda item: item[0].record_digest
+        )
+        evaluated_context = context or contexts[genome.failed_field]
         evaluation = CausalImmunityEngine().evaluate_change(genome, change, evaluated_context)
         gaps = tuple(
             gap for gap in incident.payload.get("evidence_gaps", []) if isinstance(gap, dict)
@@ -130,6 +148,7 @@ class InheritedMemoryAgent:
             "matching_incident_records": len(candidates),
             "chain_verification": chain.as_dict(),
             "context_source": "supplied" if context is not None else "fresh_datahub",
+            "memory_selection": "context_match" if matching else "fail_closed_fallback",
             "evaluated_context": asdict(evaluated_context),
             "inherited_memory_digest": incident.record_digest,
             "evaluation": asdict(evaluation),

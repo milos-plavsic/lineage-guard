@@ -23,11 +23,16 @@ from lineage_guard.demo import (
 )
 from lineage_guard.immune_agent import InheritedMemoryAgent, load_inherited_change
 from lineage_guard.immune_memory import (
+    ImmuneMemoryRecord,
     MemoryRecordType,
     build_incident_memory,
     build_lifecycle_memory,
 )
-from lineage_guard.recovery import CounterfactualRecoveryLab, demo_recovery_scenario
+from lineage_guard.recovery import (
+    CounterfactualRecoveryLab,
+    canonical_sha256,
+    demo_recovery_scenario,
+)
 from lineage_guard.service import IncidentAnalyzer
 
 
@@ -84,6 +89,7 @@ async def test_second_agent_inherits_blocks_and_writes_outcome() -> None:
         demo_immunity_context(report),
     )
     assert dry_run["status"] == "proposed"
+    assert dry_run["memory_selection"] == "context_match"
     assert dry_run["evaluated_context"] == asdict(demo_immunity_context(report))
     assert dry_run["memory_records_observed"] == 1
     assert dry_run["matching_incident_records"] == 1
@@ -142,6 +148,45 @@ async def test_second_agent_rejects_invalid_or_inactive_chain() -> None:
         await InheritedMemoryAgent().evaluate(
             graph, RAW, ChangeProposal("pr", "Change", True), None
         )
+
+
+@pytest.mark.asyncio
+async def test_agent_selects_active_memory_matching_fresh_context() -> None:
+    graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
+    report = IncidentAnalyzer(graph).analyze(negative_billing_signal())
+    chronos = build_demo_chronos(
+        report, CounterfactualRecoveryLab().evaluate(report, demo_recovery_scenario())
+    )
+    current = build_incident_memory(
+        report,
+        graph.read_downstream_lineage(RAW, 5, field="billing_amount"),
+        genome=chronos.genome,
+    )
+    stale_payload = dict(current.payload)
+    stale_genome = dict(stale_payload["genome"])
+    stale_genome["context_sha256"] = "0" * 64
+    genome_body = {
+        key: value
+        for key, value in stale_genome.items()
+        if key not in {"genome_id", "genome_sha256"}
+    }
+    stale_genome_digest = canonical_sha256(genome_body)
+    stale_genome["genome_id"] = f"lg-genome-{stale_genome_digest[:16]}"
+    stale_genome["genome_sha256"] = stale_genome_digest
+    stale_payload["genome"] = stale_genome
+    stale_payload["genome_sha256"] = canonical_sha256(stale_genome)
+    stale = ImmuneMemoryRecord.create(
+        MemoryRecordType.INCIDENT, RAW, current.incident_id, stale_payload
+    )
+    graph.append_immune_memory(RAW, stale)
+    graph.append_immune_memory(RAW, current)
+
+    result = await InheritedMemoryAgent().evaluate(
+        graph, RAW, ChangeProposal("pr", "Remove guard", False), None
+    )
+
+    assert result["memory_selection"] == "context_match"
+    assert result["inherited_memory_digest"] == current.record_digest
 
 
 @pytest.mark.asyncio
