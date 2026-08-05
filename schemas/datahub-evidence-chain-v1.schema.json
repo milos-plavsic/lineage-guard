@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lineageguard.dev/schemas/datahub-evidence-chain-v1.schema.json",
+  "title": "LineageGuard DataHub Evidence Chain",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "records"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "records": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {"$ref": "datahub-immune-memory-v1.schema.json"}
+    }
+  }
+}

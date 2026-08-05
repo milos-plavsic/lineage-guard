@@ -10,7 +10,11 @@
   ],
   "properties": {
     "schema_version": {"const": 1},
-    "record_type": {"enum": ["incident", "prevention_outcome"]},
+    "record_type": {
+      "enum": [
+        "incident", "prevention_outcome", "supersession", "expiry", "revocation"
+      ]
+    },
     "subject_urn": {"type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^urn:li:"},
     "incident_id": {"type": "string", "minLength": 1, "maxLength": 128},
     "producer": {"type": "string", "minLength": 1, "maxLength": 128},

@@ -120,6 +120,23 @@ def test_all_envelope_safety_bounds(monkeypatch) -> None:
         parse_memories(encode_memory(record))
 
 
+def test_memory_rejects_nested_sensitive_fields_without_false_positives() -> None:
+    with pytest.raises(ValueError, match="sensitive field"):
+        ImmuneMemoryRecord.create(
+            MemoryRecordType.INCIDENT,
+            RAW,
+            "incident",
+            {"connector": {"access_token": "must-not-persist"}},
+        )
+    record = ImmuneMemoryRecord.create(
+        MemoryRecordType.INCIDENT,
+        RAW,
+        "incident",
+        {"owner": {"secretary": "permitted metadata"}},
+    )
+    assert record.payload["owner"]["secretary"] == "permitted metadata"
+
+
 @pytest.mark.parametrize(
     ("changes", "message"),
     [

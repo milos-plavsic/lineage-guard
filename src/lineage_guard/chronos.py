@@ -21,6 +21,7 @@ MAX_CONTEXT_ITEMS = 1_000
 MAX_CONTEXT_TEXT = 1_024
 IN_TOTO_STATEMENT_V1 = "https://in-toto.io/Statement/v1"
 PASSPORT_PREDICATE_V1 = "https://lineageguard.dev/attestations/change-passport/v1"
+OPERATIONAL_GOVERNANCE_TAGS = frozenset({"urn:li:tag:LineageGuard_Quarantined"})
 
 
 class ChangeDecision(StrEnum):
@@ -54,6 +55,9 @@ class ImmunityContext:
                 for value in values
             ):
                 raise ValueError(f"{label} values must contain 1 to 1024 characters")
+        object.__setattr__(self, "schema_fields", tuple(sorted(self.schema_fields)))
+        object.__setattr__(self, "lineage_edges", tuple(sorted(self.lineage_edges)))
+        object.__setattr__(self, "governance_labels", tuple(sorted(self.governance_labels)))
 
     @property
     def sha256(self) -> str:
@@ -379,7 +383,12 @@ def demo_immunity_context(report: IncidentReport) -> ImmunityContext:
             sorted(
                 {
                     *(f"owner:{owner}" for item in report.decisions for owner in item.asset.owners),
-                    *(f"tag:{tag}" for item in report.decisions for tag in item.asset.tags),
+                    *(
+                        f"tag:{tag}"
+                        for item in report.decisions
+                        for tag in item.asset.tags
+                        if tag not in OPERATIONAL_GOVERNANCE_TAGS
+                    ),
                 }
             )
         ),

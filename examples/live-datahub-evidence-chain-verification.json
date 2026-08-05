@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-08-05T00:21:17Z",
+  "verification_commit": "e04e218",
+  "environment": {
+    "execution_host": "disposable GitHub Codespace",
+    "datahub_gms": "1.6.0",
+    "published_datahub_mcp_server": "0.6.0",
+    "source_urn": "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.main.raw_patients,PROD)"
+  },
+  "published_server_failure_probe": {
+    "caller_supplied_urn_rejected": true,
+    "lineage_guard_detected_structured_failure": true,
+    "failure_mode": "ItemNotFoundError was treated as an unverifiable update",
+    "silent_success_allowed": false
+  },
+  "upstream_fix": {
+    "pull_request": "https://github.com/datahub-project/datahub/pull/18888",
+    "commit": "0301a67e42",
+    "behavior": "ItemNotFoundError enters the safe create path; all other lookup errors fail closed",
+    "validation": {
+      "ruff": "passed",
+      "format": "passed",
+      "mypy_source_files": 106,
+      "tests_passed": 633,
+      "tests_expected_xfail": 3
+    }
+  },
+  "content_addressed_incident": {
+    "record_digest": "sha256:23263faeae615a9b40571a12054517338fe050a562b4914b5b1aa6907efb86a2",
+    "document_urn": "urn:li:document:lineage-guard-23263faeae615a9b40571a12054517338fe050a562b4914b5b1aa6907efb86a2",
+    "write_success": true
+  },
+  "fresh_agent_b": {
+    "separate_process": true,
+    "context_source": "fresh_datahub",
+    "memory_selection": "context_match",
+    "inherited_memory_digest": "sha256:23263faeae615a9b40571a12054517338fe050a562b4914b5b1aa6907efb86a2",
+    "unsafe_change_decision": "blocked",
+    "chain_valid_before_decision": true
+  },
+  "content_addressed_outcome": {
+    "record_digest": "sha256:2e952764e929ae09841a14d63e8e06f3052ee3c494c2fa0d7c0db5cd0e07659d",
+    "parent_digest": "sha256:23263faeae615a9b40571a12054517338fe050a562b4914b5b1aa6907efb86a2",
+    "document_urn": "urn:li:document:lineage-guard-2e952764e929ae09841a14d63e8e06f3052ee3c494c2fa0d7c0db5cd0e07659d",
+    "first_write_success": true,
+    "retry_write_success": true,
+    "retry_reused_same_urn": true,
+    "related_document_requested": "urn:li:document:lineage-guard-23263faeae615a9b40571a12054517338fe050a562b4914b5b1aa6907efb86a2"
+  },
+  "lifecycle": {
+    "record_type": "revocation",
+    "record_digest": "sha256:d3d249750e77c7db105362853781b4bc08a034c55afa9ea420d60869f9dba25c",
+    "parent_digest": "sha256:2e952764e929ae09841a14d63e8e06f3052ee3c494c2fa0d7c0db5cd0e07659d",
+    "document_urn": "urn:li:document:lineage-guard-d3d249750e77c7db105362853781b4bc08a034c55afa9ea420d60869f9dba25c",
+    "parent_state_after_effective_time": "revoked"
+  },
+  "final_verification": {
+    "valid": true,
+    "records_observed": 5,
+    "roots_observed": 2,
+    "issues": [],
+    "chain_digest": "sha256:d3aa83c06b88262ceb25bbd3d6aacd3d98d21ded3d5e33f16841822a56b3dfcd",
+    "read_via_published_mcp_server_0_6_0": true
+  },
+  "security_and_claims": {
+    "token_recorded": false,
+    "row_data_recorded": false,
+    "integrity_claimed": true,
+    "authorship_claimed_from_digest": false,
+    "native_relation_observed_after_write": false,
+    "portable_parent_digest_verified": true
+  }
+}

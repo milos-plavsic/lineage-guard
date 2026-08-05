@@ -37,6 +37,7 @@ def test_dashboard_model_exposes_decisions_timeline_and_artifacts() -> None:
         model["immune_memory"]["prevention"]["parent_digest"]
         == (model["immune_memory"]["incident"]["record_digest"])
     )
+    assert model["immune_memory"]["chain_verification"]["valid"] is True
     artifact_paths = {artifact["relative_path"] for artifact in model["artifacts"]}
     assert len(artifact_paths) == 20
     assert "proofgraph/causal-cuts.json" in artifact_paths

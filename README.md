@@ -29,9 +29,15 @@ named components below are stages of this loop, not separate products.
 The [DataHub immune-system design](docs/datahub-immune-system.md) specifies the canonical envelope,
 native Incident/Document composition, compatibility carrier, proposed Evidence-aspect mapping,
 security limits, and executable two-agent acceptance path.
+The [DataHub Evidence Chain](docs/datahub-evidence-chain.md) extends it with deterministic Document
+identity, native causal links, fail-closed verification, fresh-context evaluation, governed
+supersession/expiry/revocation, credential rejection, and detached attestations.
 [Sanitized live evidence](examples/live-datahub-immune-verification.json) records native Incident
 create/reuse, two related Decision Documents, the independent blocked decision, and a third-process
 read of both linked records against DataHub OSS 1.6.0.
+[Evidence Chain live evidence](examples/live-datahub-evidence-chain-verification.json) additionally
+records deterministic Document identities, retry convergence, fresh-context memory selection,
+lifecycle revocation, full-chain verification, and the upstream create-path defect and fix.
 
 ## Current vertical slice
 
@@ -92,6 +98,7 @@ Build the complete proof-carrying metadata layer:
 ```bash
 lineage-guard --proofgraph --output proof-report.json --artifacts-dir proof-pack
 lineage-guard-proof-mcp
+lineage-guard-evidence-mcp
 ```
 
 ProofGuard is the fail-closed facade over ProofGraph and Evidence Gap Radar. ProofGraph derives each
@@ -100,6 +107,10 @@ smallest decisive Causal Cut, precomputes fail-closed counterfactuals for every 
 ranks missing context with Evidence Gap Radar. Its unsigned in-toto Proof Bundle binds Sentinel,
 Forge, Chronos, and every causal cut. The optional read-only MCP server exposes five bounded tools;
 install `.[mcp]` before running it.
+
+The Evidence Chain MCP server exposes three bounded, read-only verification tools for chain
+integrity, current lifecycle state, and detached attestations. Attestation secrets are read only
+from `LINEAGE_GUARD_ATTESTATION_SECRET`; they are never accepted as MCP tool arguments.
 
 The full pipeline also runs from a live MCP-derived incident. Recovery rows and future changes are
 not guessed from metadata: operators supply strict, bounded, versioned evidence files, and the output

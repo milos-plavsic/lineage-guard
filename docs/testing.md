@@ -52,6 +52,13 @@ cover idempotent discovery, authorization-safe configuration, malformed response
 payloads, transport failures, and invalid URNs. The Agent B CLI is exercised independently in both
 proposal and approved modes.
 
+Evidence Chain tests cover canonical record integrity, missing and cross-chain parents, forged
+cycles and digest collisions, bounded scans, deterministic Document URNs, supersession, expiry,
+revocation, future-effective transitions, missing replacements, recursively rejected credential
+fields, detached HMAC authentication, fresh DataHub context, and exclusion of the system-generated
+quarantine marker. The three-tool Evidence Chain MCP server is tested end to end and never accepts
+secrets as tool arguments.
+
 Proof construction is linear in the number of derived nodes and edges and rejects either collection
 above 10,000 items. A 1,000-iteration local check on the constrained Windows development machine,
 with allocation tracing enabled, measured 20.54 ms mean compilation and 1.16 MiB peak traced memory

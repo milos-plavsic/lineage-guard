@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from dataclasses import replace
 
+from lineage_guard.chronos import OPERATIONAL_GOVERNANCE_TAGS, ImmunityContext
 from lineage_guard.consistency import LineageRead, ReadConsistency, lineage_receipt
 from lineage_guard.domain import Asset, LineageEdge, LineageTarget
 from lineage_guard.immune_memory import ImmuneMemoryRecord, encode_memory, parse_memories
@@ -77,6 +78,27 @@ class InMemoryMetadataGraph:
 
     def get_immune_memories(self, urn: str) -> tuple[ImmuneMemoryRecord, ...]:
         return parse_memories(self.get_asset(urn).description)
+
+    def get_immunity_context(self, urn: str, field: str) -> ImmunityContext:
+        targets = self.get_downstream_lineage(urn, 5, field=field)
+        assets = tuple(self.get_asset(target.urn) for target in targets)
+        return ImmunityContext(
+            (field,),
+            tuple(f"{urn}->{target.urn}" for target in targets),
+            tuple(
+                sorted(
+                    {
+                        *(f"owner:{owner}" for asset in assets for owner in asset.owners),
+                        *(
+                            f"tag:{tag}"
+                            for asset in assets
+                            for tag in asset.tags
+                            if tag not in OPERATIONAL_GOVERNANCE_TAGS
+                        ),
+                    }
+                )
+            ),
+        )
 
     def append_immune_memory(self, urn: str, record: ImmuneMemoryRecord) -> None:
         if record.subject_urn != urn:

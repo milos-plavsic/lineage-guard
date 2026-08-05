@@ -1,4 +1,5 @@
 import json
+from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -12,10 +13,26 @@ from lineage_guard.chronos import (
     build_demo_chronos,
     demo_immunity_context,
 )
-from lineage_guard.demo import RAW, assets, edges, field_dependencies, negative_billing_signal
+from lineage_guard.demo import (
+    BILLING,
+    RAW,
+    assets,
+    edges,
+    field_dependencies,
+    negative_billing_signal,
+)
 from lineage_guard.immune_agent import InheritedMemoryAgent, load_inherited_change
-from lineage_guard.immune_memory import build_incident_memory
-from lineage_guard.recovery import CounterfactualRecoveryLab, demo_recovery_scenario
+from lineage_guard.immune_memory import (
+    ImmuneMemoryRecord,
+    MemoryRecordType,
+    build_incident_memory,
+    build_lifecycle_memory,
+)
+from lineage_guard.recovery import (
+    CounterfactualRecoveryLab,
+    canonical_sha256,
+    demo_recovery_scenario,
+)
 from lineage_guard.service import IncidentAnalyzer
 
 
@@ -61,6 +78,9 @@ async def test_second_agent_inherits_blocks_and_writes_outcome() -> None:
         evidence_gaps=({"kind": "consistency", "detail": "watermark unavailable"},),
     )
     graph.append_immune_memory(RAW, incident)
+    assert graph.get_immunity_context(RAW, "billing_amount") == demo_immunity_context(report)
+    graph.add_tag(BILLING, "urn:li:tag:LineageGuard_Quarantined")
+    assert graph.get_immunity_context(RAW, "billing_amount") == demo_immunity_context(report)
     agent = InheritedMemoryAgent()
     dry_run = await agent.evaluate(
         graph,
@@ -69,6 +89,8 @@ async def test_second_agent_inherits_blocks_and_writes_outcome() -> None:
         demo_immunity_context(report),
     )
     assert dry_run["status"] == "proposed"
+    assert dry_run["memory_selection"] == "context_match"
+    assert dry_run["evaluated_context"] == asdict(demo_immunity_context(report))
     assert dry_run["memory_records_observed"] == 1
     assert dry_run["matching_incident_records"] == 1
     assert dry_run["evaluation"]["decision"] == ChangeDecision.BLOCKED
@@ -95,6 +117,76 @@ async def test_second_agent_requires_retrievable_genome() -> None:
             ChangeProposal("pr", "Change", True),
             demo_immunity_context(IncidentAnalyzer(graph).analyze(negative_billing_signal())),
         )
+
+
+@pytest.mark.asyncio
+async def test_second_agent_rejects_invalid_or_inactive_chain() -> None:
+    graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
+    report = IncidentAnalyzer(graph).analyze(negative_billing_signal())
+    chronos = build_demo_chronos(
+        report, CounterfactualRecoveryLab().evaluate(report, demo_recovery_scenario())
+    )
+    incident = build_incident_memory(
+        report,
+        graph.read_downstream_lineage(RAW, 5, field="billing_amount"),
+        genome=chronos.genome,
+    )
+    dangling = build_lifecycle_memory(
+        incident,
+        MemoryRecordType.REVOCATION,
+        reason="compromised evidence",
+        effective_at="2020-01-01T00:00:00Z",
+    )
+    graph.append_immune_memory(RAW, dangling)
+    with pytest.raises(ValueError, match="chain verification"):
+        await InheritedMemoryAgent().evaluate(
+            graph, RAW, ChangeProposal("pr", "Change", True), None
+        )
+
+    graph.append_immune_memory(RAW, incident)
+    with pytest.raises(LookupError, match="no matching incident"):
+        await InheritedMemoryAgent().evaluate(
+            graph, RAW, ChangeProposal("pr", "Change", True), None
+        )
+
+
+@pytest.mark.asyncio
+async def test_agent_selects_active_memory_matching_fresh_context() -> None:
+    graph = InMemoryMetadataGraph(assets(), edges(), field_dependencies=field_dependencies())
+    report = IncidentAnalyzer(graph).analyze(negative_billing_signal())
+    chronos = build_demo_chronos(
+        report, CounterfactualRecoveryLab().evaluate(report, demo_recovery_scenario())
+    )
+    current = build_incident_memory(
+        report,
+        graph.read_downstream_lineage(RAW, 5, field="billing_amount"),
+        genome=chronos.genome,
+    )
+    stale_payload = dict(current.payload)
+    stale_genome = dict(stale_payload["genome"])
+    stale_genome["context_sha256"] = "0" * 64
+    genome_body = {
+        key: value
+        for key, value in stale_genome.items()
+        if key not in {"genome_id", "genome_sha256"}
+    }
+    stale_genome_digest = canonical_sha256(genome_body)
+    stale_genome["genome_id"] = f"lg-genome-{stale_genome_digest[:16]}"
+    stale_genome["genome_sha256"] = stale_genome_digest
+    stale_payload["genome"] = stale_genome
+    stale_payload["genome_sha256"] = canonical_sha256(stale_genome)
+    stale = ImmuneMemoryRecord.create(
+        MemoryRecordType.INCIDENT, RAW, current.incident_id, stale_payload
+    )
+    graph.append_immune_memory(RAW, stale)
+    graph.append_immune_memory(RAW, current)
+
+    result = await InheritedMemoryAgent().evaluate(
+        graph, RAW, ChangeProposal("pr", "Remove guard", False), None
+    )
+
+    assert result["memory_selection"] == "context_match"
+    assert result["inherited_memory_digest"] == current.record_digest
 
 
 @pytest.mark.asyncio
@@ -140,29 +232,24 @@ async def test_fresh_mcp_agents_handoff_only_through_datahub() -> None:
 
 def test_loads_bounded_inherited_change_contract() -> None:
     request = load_inherited_change(Path("examples/inherited-change.json"))
-    assert request.source_urn == RAW
+    assert request.source_urn == (
+        "urn:li:dataset:(urn:li:dataPlatform:sqlite,healthcare.main.raw_patients,PROD)"
+    )
+    assert request.incident_id is None
     assert not request.change.quality_guard_enabled
-    assert request.context.schema_fields == ("billing_amount",)
+    assert request.context is None
 
 
 @pytest.mark.parametrize(
     ("mutation", "message"),
     [
         (lambda value: [], "malformed"),
-        (lambda value: {**value, "schema_version": 2}, "malformed"),
+        (lambda value: {**value, "schema_version": 3}, "malformed"),
         (lambda value: {**value, "change": []}, "proposal"),
         (lambda value: {**value, "change": {}}, "proposal"),
-        (lambda value: {**value, "context": []}, "context is malformed"),
-        (lambda value: {**value, "context": {}}, "context is malformed"),
+        (lambda value: {**value, "context": []}, "malformed"),
         (lambda value: {**value, "source_urn": "bad"}, "DataHub URN"),
         (lambda value: {**value, "incident_id": 7}, "text or null"),
-        (
-            lambda value: {
-                **value,
-                "context": {**value["context"], "schema_fields": None},
-            },
-            "context is invalid",
-        ),
     ],
 )
 def test_rejects_malformed_inherited_change(tmp_path, mutation, message) -> None:
@@ -170,6 +257,34 @@ def test_rejects_malformed_inherited_change(tmp_path, mutation, message) -> None
     path = tmp_path / "request.json"
     path.write_text(json.dumps(mutation(value)), encoding="utf-8")
     with pytest.raises(ValueError, match=message):
+        load_inherited_change(path)
+
+
+def test_loads_legacy_request_context(tmp_path) -> None:
+    value = json.loads(Path("examples/inherited-change.json").read_text())
+    value["schema_version"] = 1
+    value["context"] = {
+        "schema_fields": ["billing_amount"],
+        "lineage_edges": [f"{RAW}->urn:li:dataset:downstream"],
+        "governance_labels": ["tag:critical"],
+    }
+    path = tmp_path / "legacy.json"
+    path.write_text(json.dumps(value), encoding="utf-8")
+
+    request = load_inherited_change(path)
+
+    assert request.context and request.context.schema_fields == ("billing_amount",)
+    value["context"] = {}
+    path.write_text(json.dumps(value), encoding="utf-8")
+    with pytest.raises(ValueError, match="context is malformed"):
+        load_inherited_change(path)
+    value["context"] = {
+        "schema_fields": None,
+        "lineage_edges": [],
+        "governance_labels": [],
+    }
+    path.write_text(json.dumps(value), encoding="utf-8")
+    with pytest.raises(ValueError, match="context is invalid"):
         load_inherited_change(path)
 
 

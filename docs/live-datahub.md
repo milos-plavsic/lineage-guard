@@ -30,6 +30,11 @@ PowerShell:
 $env:DATAHUB_GMS_TOKEN = "..."
 ```
 
+The default launcher is the pinned `mcp-server-datahub@0.6.0` through `uvx`. For validation against
+an installed upstream build, set `LINEAGE_GUARD_MCP_COMMAND` to its MCP server executable and set
+`LINEAGE_GUARD_MCP_PACKAGE` to an empty string. These process-level settings are explicit operator
+configuration; reports never include them.
+
 Run a read-only analysis:
 
 ```bash
@@ -100,6 +105,13 @@ Incident. A separate Agent B process retrieved and verified the exact incident d
 removal, and wrote a parent-linked prevention Document. A third process observed both records.
 Sanitized digests, URNs, capability results, and explicit limitations are in
 [`examples/live-datahub-immune-verification.json`](../examples/live-datahub-immune-verification.json).
+
+The Evidence Chain extension was verified on August 5, 2026. It caught a published Agent Context
+create-path defect fail-closed, validated the upstream repair, created deterministic incident,
+outcome, and revocation Documents, converged a repeated outcome write onto the same URN, selected
+the matching active memory from a fresh Agent B context, and verified the resulting five-record
+chain through the published MCP reader. Sanitized evidence is in
+[`examples/live-datahub-evidence-chain-verification.json`](../examples/live-datahub-evidence-chain-verification.json).
 
 MCP Server 0.6.0 returned an empty compact column-lineage result for this DataHub 1.6 graph even
 though DataHub's SDK and the MCP `get_lineage_paths_between` tool returned the four stored paths.

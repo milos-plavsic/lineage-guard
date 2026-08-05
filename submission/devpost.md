@@ -63,11 +63,17 @@ from a fresh DataHub read, verifies and reconstructs the genome, blocks an unsaf
 writes a parent-linked prevention outcome back to DataHub. When advertised by MCP, the preferred
 carrier is a content-indexed Decision Document related to the affected asset; older servers use a
 bounded description envelope. An optional native DataHub Incident supplies operational lifecycle.
-All carriers and the proposed Evidence aspect preserve the same canonical record identity. Digests
-prove integrity rather than authorship; DataHub remains the authorization and audit boundary.
+All carriers preserve the same canonical record identity. The DataHub Evidence Chain adds
+deterministic Document URNs, causal parent links, full-chain verification, and immutable
+supersession, expiry, and revocation. A three-tool read-only MCP server lets other agents verify the
+chain, query lifecycle state, and authenticate detached attestations without receiving mutation
+authority or secrets in tool arguments. Digests prove integrity rather than authorship; DataHub
+remains the authorization and audit boundary.
 The complete native handoff was rerun against DataHub OSS 1.6.0; sanitized capability, URN, digest,
 idempotency, and third-process read evidence is committed in
 `examples/live-datahub-immune-verification.json`.
+The stronger deterministic/lifecycle proof is committed in
+`examples/live-datahub-evidence-chain-verification.json`.
 
 ProofGraph makes the entire trinity accountable. Every decision and explanation comes from the same
 deterministic derivation DAG. Its Causal Cut reveals the smallest evidence set that forces an outcome;
@@ -121,9 +127,14 @@ tools. Generated source-system remediation remains reviewable output rather than
 - Temporal causal immunity: Incident Genomes, historical replay, proof passports, and drift expiry.
 - Proof-carrying metadata with exact Causal Cuts, interactive counterfactuals, and Evidence Gap Radar.
 - A five-tool read-only ProofGraph MCP server and a published DataHub Evidence aspect proposal.
+- A three-tool read-only Evidence Chain MCP server with versioned portable JSON contracts.
 - A capability-based lineage read receipt that makes unknown freshness machine-actionable.
 - A tested two-agent DataHub immune-memory handoff with linked prevention write-back.
 - A mergeable DataHub Agent Context pagination fix with its relevant upstream build passing.
+- A second upstream Agent Context improvement that makes Document excerpt completeness explicit;
+  all 637 upstream tests and prescribed lint pass.
+- A third upstream fix, discovered through the live protocol probe, that restores retry-safe
+  caller-supplied Document creation without weakening hierarchy validation.
 - Reproducible, executable remediation artifacts with integrity hashes.
 - Fail-closed handling for malformed, incomplete, or oversized MCP context.
 - A judge-readable demo that runs without credentials while retaining the real MCP boundary.

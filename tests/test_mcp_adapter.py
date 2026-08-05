@@ -86,9 +86,15 @@ async def test_loads_normalized_snapshot_from_official_tools() -> None:
     assert read.targets == graph.get_downstream_lineage(RAW, 5)
     assert read.receipt.as_dict()["capabilities"] == ["USE_AS_OBSERVATION"]
     assert "ASSERT_ABSENCE_AT_REFERENCE" not in read.receipt.as_dict()["capabilities"]
+    context = graph.get_immunity_context(RAW, "billing_amount")
+    assert context.schema_fields == ("billing_amount",)
+    assert len(context.lineage_edges) == 3
+    assert "tag:urn:li:tag:LineageGuard_Quarantined" not in context.governance_labels
 
     with pytest.raises(LookupError, match="different source"):
         graph.read_downstream_lineage(BILLING, 5)
+    with pytest.raises(LookupError, match="different source"):
+        graph.get_immunity_context(BILLING, "billing_amount")
     with pytest.raises(ValueError, match="hop bound"):
         graph.read_downstream_lineage(RAW, 6)
     with pytest.raises(ValueError, match="field scope"):
@@ -138,6 +144,10 @@ async def test_native_document_memory_is_preferred_and_reconstructed() -> None:
     await graph.flush()
     save = next(arguments for name, arguments in session.calls if name == "save_document")
     assert save["document_type"] == "Decision" and save["related_assets"] == [RAW]
+    assert save["urn"].endswith(second.record_digest[7:])
+    assert save["related_documents"] == [
+        f"urn:li:document:lineage-guard-{record.record_digest[7:]}"
+    ]
 
 
 @pytest.mark.asyncio
@@ -522,6 +532,24 @@ async def test_mutation_failure_is_reported() -> None:
     await graph.flush()
     assert sum(name == "update_description" for name, _ in session.calls) == 1
 
+
+@pytest.mark.asyncio
+async def test_structured_mutation_failure_is_reported() -> None:
+    session = FakeSession()
+    graph = await DataHubMcpGraph.load(session, RAW)
+    graph.append_incident_summary(RAW, "summary")
+    original = session.call_tool
+
+    async def failing(name, arguments):
+        if name == "update_description":
+            return result({"success": False, "message": "rejected"})
+        return await original(name, arguments)
+
+    session.call_tool = failing
+    with pytest.raises(McpIntegrationError, match="mutation failed"):
+        await graph.flush()
+
+    session.call_tool = original
     graph.append_incident_summary(RAW, "summary")
     await graph.flush()
     assert sum(name == "update_description" for name, _ in session.calls) == 1
