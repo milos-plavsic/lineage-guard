@@ -35,6 +35,9 @@ supersession/expiry/revocation, credential rejection, and detached attestations.
 [Sanitized live evidence](examples/live-datahub-immune-verification.json) records native Incident
 create/reuse, two related Decision Documents, the independent blocked decision, and a third-process
 read of both linked records against DataHub OSS 1.6.0.
+[Evidence Chain live evidence](examples/live-datahub-evidence-chain-verification.json) additionally
+records deterministic Document identities, retry convergence, fresh-context memory selection,
+lifecycle revocation, full-chain verification, and the upstream create-path defect and fix.
 
 ## Current vertical slice
 

@@ -72,6 +72,8 @@ remains the authorization and audit boundary.
 The complete native handoff was rerun against DataHub OSS 1.6.0; sanitized capability, URN, digest,
 idempotency, and third-process read evidence is committed in
 `examples/live-datahub-immune-verification.json`.
+The stronger deterministic/lifecycle proof is committed in
+`examples/live-datahub-evidence-chain-verification.json`.
 
 ProofGraph makes the entire trinity accountable. Every decision and explanation comes from the same
 deterministic derivation DAG. Its Causal Cut reveals the smallest evidence set that forces an outcome;
@@ -131,6 +133,8 @@ tools. Generated source-system remediation remains reviewable output rather than
 - A mergeable DataHub Agent Context pagination fix with its relevant upstream build passing.
 - A second upstream Agent Context improvement that makes Document excerpt completeness explicit;
   all 637 upstream tests and prescribed lint pass.
+- A third upstream fix, discovered through the live protocol probe, that restores retry-safe
+  caller-supplied Document creation without weakening hierarchy validation.
 - Reproducible, executable remediation artifacts with integrity hashes.
 - Fail-closed handling for malformed, incomplete, or oversized MCP context.
 - A judge-readable demo that runs without credentials while retaining the real MCP boundary.

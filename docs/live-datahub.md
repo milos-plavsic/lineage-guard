@@ -106,6 +106,13 @@ removal, and wrote a parent-linked prevention Document. A third process observed
 Sanitized digests, URNs, capability results, and explicit limitations are in
 [`examples/live-datahub-immune-verification.json`](../examples/live-datahub-immune-verification.json).
 
+The Evidence Chain extension was verified on August 5, 2026. It caught a published Agent Context
+create-path defect fail-closed, validated the upstream repair, created deterministic incident,
+outcome, and revocation Documents, converged a repeated outcome write onto the same URN, selected
+the matching active memory from a fresh Agent B context, and verified the resulting five-record
+chain through the published MCP reader. Sanitized evidence is in
+[`examples/live-datahub-evidence-chain-verification.json`](../examples/live-datahub-evidence-chain-verification.json).
+
 MCP Server 0.6.0 returned an empty compact column-lineage result for this DataHub 1.6 graph even
 though DataHub's SDK and the MCP `get_lineage_paths_between` tool returned the four stored paths.
 LineageGuard therefore uses the compact result first and, only when it is empty, checks exact
